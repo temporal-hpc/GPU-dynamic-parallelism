@@ -1,0 +1,27 @@
+NAME=mandelbrot
+SRC=$(NAME).cu
+TGT=$(NAME)
+TMP=*~ $(TGT)
+
+H=0
+W=0
+MAX_DWELL=0
+BSX=0
+BSY=0
+MAX_DEPTH=5
+SUBDIV=0
+SUBDIV_ELEMSX=0
+SUBDIV_ELEMSP=0
+SUBDIV_ELEMS=0
+SUBDIV_ELEMS2=0
+
+
+build:	$(TGT)
+$(TGT):	$(SRC) Makefile
+	nvcc -O3 -arch=sm_75 -rdc=true -lcudadevrt -Xcompiler -fopenmp -lpng $(SRC) -o $(TGT) -DW=$(W) -DH=$(H) -DBSY=$(BSY) -DBSX=$(BSX) -DMAX_DWELL=$(MAX_DWELL) -DMAX_DEPTH=$(MAX_DEPTH)  -DSUBDIV=$(SUBDIV) -DSUBDIV_ELEMSX=$(SUBDIV_ELEMSX) -DSUBDIV_ELEMSP=$(SUBDIV_ELEMSP) -DSUBDIV_ELEMS=$(SUBDIV_ELEMS) -DSUBDIV_ELEMS2=$(SUBDIV_ELEMS2)
+
+run:	$(TGT)
+	./$(TGT)
+
+clean:
+	rm -f $(TMP)

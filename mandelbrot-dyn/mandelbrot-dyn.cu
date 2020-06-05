@@ -120,18 +120,24 @@ inline __host__ __device__ complex operator/
 								 (a.im * b.re - b.im * a.re) * invabs2);
 }  // operator/
 
+#ifndef MAX_DWELL
 #define MAX_DWELL 512
+#endif
 /** block size along */
-#define BSX 16
-#define BSY 16
+#define BSX 64
+#define BSY 4
 /** maximum recursion depth */
-#define MAX_DEPTH 4
+#ifndef MAX_DEPTH
+#define MAX_DEPTH 5
+#endif
 /** region below which do per-pixel */
+#ifndef MIN_SIZE
 #define MIN_SIZE 32
+#endif
 /** subdivision factor along each axis */
 #define SUBDIV 4
 /** subdivision when launched from host */
-#define INIT_SUBDIV 64
+#define INIT_SUBDIV 32
 
 /** find the dwell for the pixel */
 __device__ int pixel_dwell(int w, int h, complex cmin, complex cmax, int x, int y) {
@@ -289,8 +295,14 @@ void dwell_color(int *r, int *g, int *b, int dwell) {
 }  // dwell_color
 
 /** data size */
-#define H (16 * 1024)
-#define W (16 * 1024)
+#ifndef H
+#define H (32 * 1024)
+#endif
+
+#ifndef W
+#define W (32 * 1024)
+#endif
+
 #define IMAGE_PATH "./mandelbrot.png"
 
 int main(int argc, char **argv) {
@@ -303,10 +315,11 @@ int main(int argc, char **argv) {
 
 	// compute the dwells, copy them back
 	double t1 = omp_get_wtime();
-	dim3 bs(BSX, BSY), grid(INIT_SUBDIV, INIT_SUBDIV);
-	mandelbrot_block_k<<<grid, bs>>>
-		(d_dwells, w, h, complex(-1.5, -1), complex(0.5, 1), 0, 0, W / INIT_SUBDIV, 1);
-	cucheck(cudaThreadSynchronize());
+
+        dim3 bs(BSX, BSY), grid(INIT_SUBDIV, INIT_SUBDIV);
+        mandelbrot_block_k<<<grid, bs>>>
+            (d_dwells, w, h, complex(-1.5, -1), complex(0.5, 1), 0, 0, W / INIT_SUBDIV, 1);
+        cucheck(cudaThreadSynchronize());
 	double t2 = omp_get_wtime();
 	cucheck(cudaMemcpy(h_dwells, d_dwells, dwell_sz, cudaMemcpyDeviceToHost));
 	gpu_time = t2 - t1;
@@ -315,9 +328,10 @@ int main(int argc, char **argv) {
 	save_image(IMAGE_PATH, h_dwells, w, h);
 
 	// print performance
-	printf("Mandelbrot set computed in %.3lf s, at %.3lf Mpix/s\n", gpu_time, 
-				 h * w * 1e-6 / gpu_time);
+	//printf("Mandelbrot set computed in %.5lf s, at %.3lf Mpix/s\n", gpu_time, 
+	//			 h * w * 1e-6 / gpu_time);
 
+    printf("%f\n", gpu_time);
 	// free data
 	cudaFree(d_dwells);
 	free(h_dwells);
