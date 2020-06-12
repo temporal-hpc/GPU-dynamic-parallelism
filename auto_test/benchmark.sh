@@ -9,7 +9,7 @@ do
             bsy=$2
             for l in 3 4 5
             do 
-                for p in "2 1 2 4 8" "4 3 3 16 32" "8 7 4 64 128"
+                for p in "4 3 3 16 32" "8 7 4 64 128"
                 do
                     set -- $p
                     subdiv=$1
@@ -19,7 +19,14 @@ do
                     e2=$5
                     make -B H=$((1024+1024*$i)) W=$((1024+1024*$i)) MAX_DWELL=$j MAX_DEPTH=$l BSX=$bsx BSY=$bsy SUBDIV=$subdiv SUBDIV_ELEMS=$e SUBDIV_ELEMS2=$e2 SUBDIV_ELEMSP=$ep SUBDIV_ELEMSX=$ex
                     a=$(exec ./mandelbrot)
-                    echo $a >> data/output.dat
+                    if [ $? -eq 0 ]
+                    then
+                        echo $a >> data/output.dat
+                        echo $a
+                    else
+                      echo "ERROR!!!!"
+                      exit 2
+                    fi
                 done
             done
         done

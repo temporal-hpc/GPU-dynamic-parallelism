@@ -188,7 +188,7 @@ __device__ int same_dwell(int d1, int d2) {
 
 /** evaluates the common border dwell, if it exists */
 __device__ int border_dwell
-(int w, int h, complex cmin, complex cmax, int x0, int y0, int d) {
+(int* dwells, int w, int h, complex cmin, complex cmax, int x0, int y0, int d) {
 	// check whether all boundary pixels have the same dwell
 	int tid = threadIdx.y * blockDim.x + threadIdx.x;
 	int bs = blockDim.x * blockDim.y;
@@ -201,6 +201,7 @@ __device__ int border_dwell
 			int y = b % 2 == 0 ? y0 + r : (b == 1 ? y0 + d - 1 : y0);
 			int dwell = pixel_dwell(w, h, cmin, cmax, x, y);
 			comm_dwell = same_dwell(comm_dwell, dwell);
+            dwells[y * w + x] = 666;//pixel_dwell(w, h, cmin, cmax, x, y);
 		}
 	}  // for all boundary pixels
 	// reduce across threads in the block
@@ -224,6 +225,7 @@ __global__ void dwell_fill_k
 	int y = threadIdx.y + blockIdx.y * blockDim.y;
 	if(x < d && y < d) {
 		x += x0, y += y0; 
+        if (dwells[y * w + x] != 666)
 		dwells[y * w + x] = dwell;
 	}
 }  // dwell_fill_k
@@ -236,6 +238,7 @@ __global__ void mandelbrot_pixel_k
 	int y = threadIdx.y + blockDim.y * blockIdx.y;
 	if(x < d && y < d) {
 		x += x0, y += y0;
+        if (dwells[y * w + x] != 666)
 		dwells[y * w + x] = pixel_dwell(w, h, cmin, cmax, x, y);
 	}
 }  // mandelbrot_pixel_k
@@ -253,13 +256,13 @@ __device__ void check_error(int x0, int y0, int d) {
 __global__ void border_dwell2
 (int* d_ns, int* d_offs1, int* d_offs2, int* dwells, int w, int h, complex cmin, complex cmax, int d, int depth, int subdiv) {
 	// check whether all boundary pixels have the same dwell
-    int use = blockIdx.x*SUBDIV_ELEMS2 + (blockIdx.z*gridDim.y+blockIdx.y)*2;
-    int x0 = d_offs1[use];
-    int y0 = d_offs1[use + 1];
+    unsigned int use = blockIdx.x*SUBDIV_ELEMS2 + (blockIdx.z*gridDim.y+blockIdx.y)*2;
+    unsigned int x0 = d_offs1[use];
+    unsigned int y0 = d_offs1[use + 1];
     
     //int x0 = d_offs[(blockIdx.x)*2];
     //int y0 = d_offs[(blockIdx.x)*2 + 1];
-    __shared__ int off_index;
+    __shared__ unsigned int off_index;
 
 	int tid = threadIdx.y * blockDim.x + threadIdx.x;
     /*if (tid == 0){
@@ -275,7 +278,7 @@ __global__ void border_dwell2
 			int y = b % 2 == 0 ? y0 + r : (b == 1 ? y0 + d - 1 : y0);
 			int dwell = pixel_dwell(w, h, cmin, cmax, x, y);
 			comm_dwell = same_dwell(comm_dwell, dwell);
-            //dwells[y * w + x] = 666;//pixel_dwell(w, h, cmin, cmax, x, y);
+            dwells[y * w + x] = 666;//pixel_dwell(w, h, cmin, cmax, x, y);
 		}
 	}  // for all boundary pixels
 	// reduce across threads in the block
@@ -300,23 +303,34 @@ __global__ void border_dwell2
             for (int rx=x; rx < d; rx+=blockDim.x){
                 if(rx < d && ry < d) {
                     int rxx = rx+x0, ryy = ry+y0;
-                    //if (dwells[ryy * w + rxx] != 666)
+                    if (dwells[ryy * w + rxx] != 666)
                     dwells[ryy * w + rxx] = comm_dwell;
                 }
 
             }
         }
-    } else if(depth + 1 < MAX_DEPTH) {
+    } else if(depth + 1 < MAX_DEPTH && d/SUBDIV>=1) {
         if (tid == 0){
             off_index = atomicAdd(d_ns, 1);
             //printf("%i\n", off_index);
         }
         __syncthreads();
         if (tid < SUBDIV_ELEMS2){
-            d_offs2[(off_index*SUBDIV_ELEMS2)+tid]
-                = (x0 + ((tid>>1)&SUBDIV_ELEMSX)*d/SUBDIV)*((tid+1)&1)
-                + (y0 + (tid>>SUBDIV_ELEMSP)*d/SUBDIV)*((tid)&1);
+            if (tid%2 == 0)
+                d_offs2[(off_index*SUBDIV_ELEMS2)+tid]
+                    = (x0 + ((tid>>1)&SUBDIV_ELEMSX)*d/SUBDIV);
+            else
+                d_offs2[(off_index*SUBDIV_ELEMS2)+tid]
+                     = (y0 + (tid>>SUBDIV_ELEMSP)*d/SUBDIV);
+
         }
+        __syncthreads();
+            if(blockIdx.x == 0 && blockIdx.x == 0 && threadIdx.x == 0 &&
+                    threadIdx.y == 0){
+                for (int s=0; s<SUBDIV_ELEMS2; s+=2){
+                    printf("%i, %i\n", d_offs2[s], d_offs2[s+1]);
+                }
+            }
     } else {
         //return;
         int x = threadIdx.x ;
@@ -325,7 +339,7 @@ __global__ void border_dwell2
             for (int rx=x; rx < d; rx+=blockDim.x){
                 if(rx < d && ry < d) {
                     int rxx = rx+x0, ryy = ry+y0;
-                    //if (dwells[ryy * w + rxx] != 666)
+                    if (dwells[ryy * w + rxx] != 666)
                     dwells[ryy * w + rxx] = pixel_dwell(w, h, cmin, cmax, rxx, ryy);
                 }
 
@@ -341,7 +355,8 @@ void mandelbrot_pseudo_dynamic_parallelism(int *dwell, int* h_nextSize, int* d_n
 	dim3 b(BSX, BSY, 1), g(1, INIT_SUBDIV, INIT_SUBDIV);
     //printf("Running kernel with b(%i,%i) and g(%i, %i, %i) and d=%i\n", b.x, b.y, g.x, g.y, g.z, d);
     border_dwell2<<<g, b>>>(d_nextSize, d_offsets1, d_offsets2, dwell, h, w, cmin, cmax, d, depth, INIT_SUBDIV);
-    for (int i=depth+1; i<MAX_DEPTH; i++){
+    for (int i=depth+1; i<MAX_DEPTH && d/SUBDIV>=1; i++){
+        cudaDeviceSynchronize();
         cudaMemcpy(h_nextSize, d_nextSize, sizeof(int), cudaMemcpyDeviceToHost);
         cudaMemset(d_nextSize, 0, sizeof(int));
         std::swap(d_offsets1, d_offsets2);
@@ -394,7 +409,7 @@ __global__ void mandelbrot_block_k
 (int *dwells, int w, int h, complex cmin, complex cmax, int x0, int y0, 
  int d, int depth) {
 	x0 += d * blockIdx.x, y0 += d * blockIdx.y;
-	int comm_dwell = border_dwell(w, h, cmin, cmax, x0, y0, d);
+	int comm_dwell = border_dwell(dwells, w, h, cmin, cmax, x0, y0, d);
 	if(threadIdx.x == 0 && threadIdx.y == 0) {
 		if(comm_dwell != DIFF_DWELL) {
 			// uniform dwell, just fill
@@ -420,7 +435,7 @@ int checkArray(int* a, int* b, int w, int h){
     int cont = 0;
     for (int i=0; i<w*h; i++){
         if (a[i] != b[i]){
-            printf("%i, %i\n", i%h, i/h);
+            //printf("%i, %i\n", i%h, i/h);
             cont++;
         }
     }
@@ -459,10 +474,14 @@ int main(int argc, char **argv) {
     int *d_nextSize;
     int *d_offsets1;
     int *d_offsets2;
-	h_nextSize = (int*)malloc(sizeof(int));
+
+    unsigned int max_elements = 2*(INIT_SUBDIV*INIT_SUBDIV)*pow(SUBDIV*SUBDIV,
+            MAX_DEPTH-1)/3;
+    printf("%u\n",max_elements);
+
+    h_nextSize = (int*)malloc(sizeof(int));
 	h_offsets
-        = (int*)malloc(sizeof(int)*2*(INIT_SUBDIV*INIT_SUBDIV)*pow(SUBDIV*SUBDIV,
-                    MAX_DEPTH-1)/3);
+        = (int*)malloc(sizeof(int)*max_elements);
     for (int i=0; i<INIT_SUBDIV*INIT_SUBDIV*2; i+=2){
         h_offsets[i] = ((i/2)%INIT_SUBDIV)*(W/INIT_SUBDIV);
         h_offsets[i+1] = ((i/2)/INIT_SUBDIV)*(W/INIT_SUBDIV);
@@ -471,15 +490,11 @@ int main(int argc, char **argv) {
     }
     *h_nextSize = INIT_SUBDIV*INIT_SUBDIV;
 	cucheck(cudaMalloc((void**)&d_nextSize, sizeof(int)));
-	cucheck(cudaMalloc((void**)&d_offsets1,
-                sizeof(int)*2*(INIT_SUBDIV*INIT_SUBDIV)*pow(SUBDIV*SUBDIV,
-                    MAX_DEPTH-1)/3));
-	cucheck(cudaMalloc((void**)&d_offsets2,
-                sizeof(int)*2*(INIT_SUBDIV*INIT_SUBDIV)*pow(SUBDIV*SUBDIV,
-                    MAX_DEPTH-1)/3));
-    cucheck(cudaMemcpy(d_offsets1, h_offsets,
-                sizeof(int)*2*(INIT_SUBDIV*INIT_SUBDIV)*pow(SUBDIV*SUBDIV,
-                    MAX_DEPTH-1)/3, cudaMemcpyHostToDevice))
+
+	cucheck(cudaMalloc((void**)&d_offsets1, sizeof(int)*max_elements));
+	cucheck(cudaMalloc((void**)&d_offsets2, sizeof(int)*max_elements));
+
+    cucheck(cudaMemcpy(d_offsets1, h_offsets, sizeof(int)*max_elements, cudaMemcpyHostToDevice))
     cucheck(cudaMemset(d_nextSize, 0, sizeof(int)));
 	// compute the dwells, copy them back
 
@@ -529,12 +544,11 @@ int main(int argc, char **argv) {
 	cucheck(cudaMemcpy(h_dwells3, d_dwells, dwell_sz, cudaMemcpyDeviceToHost));
 	
     // save the image to PNG file
-	//save_image("res1.png", h_dwells1, w, h);
-	//save_image("res2.png", h_dwells2, w, h);
-	//save_image("res3.png", h_dwells3, w, h);
+	save_image("res1.png", h_dwells1, w, h);
+	save_image("res2.png", h_dwells2, w, h);
+	save_image("res3.png", h_dwells3, w, h);
 
 	// print performance
-	/*printf("Mandelbrot set computed in %.5lf s, at %.3lf Mpix/s\n", gpu_time, h * w * 1e-6 / gpu_time);
     int res1 = 0;
     int res2 = 0;
     int res3 = 0;
@@ -545,12 +559,9 @@ int main(int argc, char **argv) {
     //printf("Check 3:\n");
     res3 = checkArray(h_dwells2, h_dwells3, W, H);
 
-    if (res1 != 0 || res2 != 0 || res3 != 0){
-        printf("Problem. RES: %i, %i, %i de %i\n", res1, res2, res3, w*h);
-    } else {
-        printf("Todo OK!\n");
-    }*/
-
+    if (res1 != res2){
+        exit(99);
+    } 
 
     printf("%i, %i, %i, %i, %i, %i, %i, %f, %f, %f\n", BSX, BSY, W, H, MAX_DWELL, MAX_DEPTH,
             SUBDIV, t1, t2, t3);
@@ -560,5 +571,5 @@ int main(int argc, char **argv) {
 	free(h_dwells1);
 	free(h_dwells2);
 	free(h_dwells3);
-	return 0;
+    exit(0);
 }  // main
