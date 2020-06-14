@@ -1,15 +1,15 @@
 for i in {0..64..4}
 do
-    for j in 128 256 512
+    for j in 128 512
     do
-        for k in "64 4" "16 16" "32 16" "32 32" 
+        for k in "64 4" "16 16" "32 32" 
         do
             set -- $k
             bsx=$1
             bsy=$2
             for l in 3 4 5
             do 
-                for p in "4 3 3 16 32" "8 7 4 64 128"
+                for p in "2 1 2 4 8" "4 3 3 16 32" "8 7 4 64 128"
                 do
                     set -- $p
                     subdiv=$1
