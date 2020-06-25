@@ -1,14 +1,14 @@
 for i in {0..64..4}
 do
-    for j in 128 512
+    for j in 512
     do
-        for k in "64 4" "16 16" "32 32" 
+        for k in "32 32"
         do
             set -- $k
             bsx=$1
             bsy=$2
-            for l in 3 4 5
-            do 
+            for l in 24
+            do
                 for p in "2 1 2 4 8" "4 3 3 16 32" "8 7 4 64 128"
                 do
                     set -- $p
@@ -21,9 +21,14 @@ do
                     a=$(exec ./mandelbrot)
                     if [ $? -eq 0 ]
                     then
-                        echo $a >> data/output.dat
+                        echo $a >> data/output-rtx.dat
                         echo $a
+                    elif [ $? -eq 22 ]
+                    then
+                        echo "0,0,0,0,0,0,0,0,0,0" >> data/output-rtx.dat
+                        echo "algo malo"
                     else
+                        echo $?
                       echo "ERROR!!!!"
                       exit 2
                     fi

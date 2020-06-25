@@ -15,7 +15,7 @@
 	if(res != cudaSuccess) {\
 	const char* err_str = cudaGetErrorString(res);\
 	fprintf(stderr, "%s (%d): %s in %s", __FILE__, __LINE__, err_str, #call);	\
-	exit(-1);\
+	exit(22);\
 	}\
 	}
 
@@ -134,7 +134,7 @@ inline __host__ __device__ complex operator/
 #define MAX_DEPTH 5
 #endif
 /** region below which do per-pixel */
-#define MIN_SIZE 4
+#define MIN_SIZE 32
 /** subdivision factor along each axis */
 
 #ifndef SUBDIV
@@ -310,7 +310,8 @@ __global__ void border_dwell2
 
             }
         }
-    } else if(depth + 1 < MAX_DEPTH && d/SUBDIV > MIN_SIZE) {
+    //} else if(depth + 1 < MAX_DEPTH && d/SUBDIV > MIN_SIZE) {
+    } else if(d/SUBDIV > MIN_SIZE) {
         if (tid == 0){
             off_index = atomicAdd(d_ns, 1);
         }
@@ -344,7 +345,7 @@ void mandelbrot_pseudo_dynamic_parallelism(int *dwell, unsigned int* h_nextSize,
 	dim3 b(BSX, BSY, 1), g(1, INIT_SUBDIV, INIT_SUBDIV);
     //printf("Running kernel with b(%i,%i) and g(%i, %i, %i) and d=%i\n", b.x, b.y, g.x, g.y, g.z, d);
     border_dwell2<<<g, b>>>(d_nextSize, d_offsets1, d_offsets2, dwell, h, w, cmin, cmax, d, depth, INIT_SUBDIV);
-    for (int i=depth+1; i<MAX_DEPTH && d/SUBDIV>MIN_SIZE; i++){
+    for (int i=depth+1; d/SUBDIV>MIN_SIZE; i++){
         cudaDeviceSynchronize();
         cudaMemcpy(h_nextSize, d_nextSize, sizeof(int), cudaMemcpyDeviceToHost);
         cudaMemset(d_nextSize, 0, sizeof(int));
@@ -404,7 +405,8 @@ __global__ void mandelbrot_block_k
 			// uniform dwell, just fill
 			dim3 bs(BSX, BSY), grid(divup(d, BSX), divup(d, BSY));
 			dwell_fill_k<<<grid, bs>>>(dwells, w, x0, y0, d, comm_dwell);
-		} else if(depth + 1 < MAX_DEPTH && d / SUBDIV > MIN_SIZE) {
+		//} else if(depth + 1 < MAX_DEPTH && d / SUBDIV > MIN_SIZE) {
+		} else if(d / SUBDIV > MIN_SIZE) {
 			// subdivide recursively
 			dim3 bs(blockDim.x, blockDim.y), grid(SUBDIV, SUBDIV);
 			mandelbrot_block_k<<<grid, bs>>>
@@ -440,7 +442,7 @@ int checkArray(int* a, int* b, int w, int h){
 #endif
 
 #define IMAGE_PATH "./mandelbrot.png"
-#define REPEATS 10
+#define REPEATS 1
 
 int main(int argc, char **argv) {
 	// allocate memory
@@ -465,9 +467,14 @@ int main(int argc, char **argv) {
     int *d_offsets1;
     int *d_offsets2;
 
+    int md = 1;
+    int aw = w/INIT_SUBDIV;
+    while (aw>MIN_SIZE){
+        aw = aw/SUBDIV;
+        md++;
+    }
     unsigned int max_elements = 2*(INIT_SUBDIV*INIT_SUBDIV)*pow(SUBDIV*SUBDIV,
-            MAX_DEPTH-1)/3;
-    printf("%u\n",max_elements);
+            md-1)/3;
 
     h_nextSize = (unsigned int*)malloc(sizeof(int));
 	h_offsets
@@ -521,7 +528,7 @@ int main(int argc, char **argv) {
 
         ti = omp_get_wtime();
         mandelbrot_pseudo_dynamic_parallelism(d_dwells, h_nextSize, d_nextSize, d_offsets1, d_offsets2, w, h, complex(-1.5, -1), complex(0.5, 1), W / INIT_SUBDIV, 1);
-        (cudaDeviceSynchronize());
+        cucheck(cudaDeviceSynchronize());
         tf = omp_get_wtime();
         t2 += tf - ti;
     }
@@ -533,22 +540,24 @@ int main(int argc, char **argv) {
     bs = dim3(BSX, BSY); 
     grid = dim3(INIT_SUBDIV, INIT_SUBDIV);
 
+    cucheck( cudaPeekAtLastError()  );
     // DYNAMIC PARALLELISM
+    
     for (int i=0; i< REPEATS; i++){
         ti = omp_get_wtime();
         mandelbrot_block_k<<<grid, bs>>>(d_dwells, w, h, complex(-1.5, -1), complex(0.5, 1), 0, 0, W / INIT_SUBDIV, 1);
-        (cudaDeviceSynchronize());
+        cucheck(cudaDeviceSynchronize());
         tf = omp_get_wtime();
         t3 += tf - ti;
     }
+    cucheck(cudaMemcpy(h_dwells3, d_dwells, dwell_sz, cudaMemcpyDeviceToHost));
     t3 /= REPEATS;
 
-	cucheck(cudaMemcpy(h_dwells3, d_dwells, dwell_sz, cudaMemcpyDeviceToHost));
 	
     // save the image to PNG file
-	save_image("res1.png", h_dwells1, w, h);
-	save_image("res2.png", h_dwells2, w, h);
-	save_image("res3.png", h_dwells3, w, h);
+	//save_image("res1.png", h_dwells1, w, h);
+	//save_image("res2.png", h_dwells2, w, h);
+	//save_image("res3.png", h_dwells3, w, h);
 
 	// print performance
     int res1 = 0;
@@ -560,10 +569,6 @@ int main(int argc, char **argv) {
     res2 = checkArray(h_dwells1, h_dwells3, W, H);
     //printf("Check 3:\n");
     res3 = checkArray(h_dwells2, h_dwells3, W, H);
-
-    if (res1 != res2){
-        exit(99);
-    } 
 
     printf("%i, %i, %i, %i, %i, %i, %i, %f, %f, %f\n", BSX, BSY, W, H, MAX_DWELL, MAX_DEPTH,
             SUBDIV, t1, t2, t3);
