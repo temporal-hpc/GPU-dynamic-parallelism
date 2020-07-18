@@ -1,6 +1,6 @@
-for i in {0..64..4}
+for i in {0..64..1}
 do
-    for j in 512
+    for j in 4 16 32 128 256
     do
         for k in "32 32"
         do
@@ -17,7 +17,7 @@ do
                     ep=$3
                     e=$4
                     e2=$5
-                    make -B H=$((1024+1024*$i)) W=$((1024+1024*$i)) MAX_DWELL=$j MAX_DEPTH=$l BSX=$bsx BSY=$bsy SUBDIV=$subdiv SUBDIV_ELEMS=$e SUBDIV_ELEMS2=$e2 SUBDIV_ELEMSP=$ep SUBDIV_ELEMSX=$ex
+                    make -B H=$((1024+1024*$i)) W=$((1024+1024*$i)) MAX_DWELL=512 MIN_SIZE=$j  MAX_DEPTH=$l BSX=$bsx BSY=$bsy SUBDIV=$subdiv SUBDIV_ELEMS=$e SUBDIV_ELEMS2=$e2 SUBDIV_ELEMSP=$ep SUBDIV_ELEMSX=$ex
                     a=$(exec ./mandelbrot)
                     if [ $? -eq 0 ]
                     then
