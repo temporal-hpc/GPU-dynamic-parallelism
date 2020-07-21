@@ -5,8 +5,41 @@
 #include <stdlib.h>
 #include <string.h>
 #include <time.h>
-#include <algorithm>    // std::swap
+#include <algorithm>    // std::swap/
+#include <iostream>
 
+using namespace std;
+void DisplayHeader()
+{
+        const int kb = 1024;
+            const int mb = kb * kb;
+                //wcout << "NBody.GPU" << endl << "=========" << endl << endl;
+
+                  //  wcout << "CUDA version:   v" << CUDART_VERSION << endl;    
+
+                            int devCount;
+                                cudaGetDeviceCount(&devCount);
+                    //                wcout << "CUDA Devices: " << endl << endl;
+
+                                        for(int i = 0; i < devCount; ++i)
+                                        {
+                                                    cudaDeviceProp props;
+                                                            cudaGetDeviceProperties(&props, i);
+                      //                                              wcout << i << ": " << props.name << ": " << props.major << "." << props.minor << endl;
+                        //                                                    wcout << "  Global memory:   " << props.totalGlobalMem / mb << "mb" << endl;
+                          //                                                          wcout << "  Shared memory:   " << props.sharedMemPerBlock / kb << "kb" << endl;
+                            //                                                                wcout << "  Constant memory: " << props.totalConstMem / kb << "kb" << endl;
+                              //                                                                      wcout << "  Block registers: " << props.regsPerBlock << endl << endl;
+
+                                //                                                                            wcout << "  Warp size:         " << props.warpSize << endl;
+                                  //                                                                                  wcout << "  Threads per block: " << props.maxThreadsPerBlock << endl;
+                                    //                                                                                        wcout << "  Max block dimensions: [ " << props.maxThreadsDim[0] << ", " << props.maxThreadsDim[1]  << ", " << props.maxThreadsDim[2] << "  ]" << endl;
+                                      //                                                                                              wcout << "  Max grid dimensions:  [ " << props.maxGridSize[0] << ", " << props.maxGridSize[1]  << ", " << props.maxGridSize[2] << "  ]" << endl;
+                                        //                                                                                                    wcout << endl;
+                                                                                                                                                
+                                        }
+                                        
+}
 
 /** CUDA check macro */
 #define cucheck(call) \
@@ -31,7 +64,7 @@
 
 
 /** a useful function to compute the number of threads */
-__host__ __device__ int divup(int x, int y) { return x / y + (x % y ? 1 : 0); }
+__host__ __device__ int divup(uint64_t x, uint64_t y) { return x / y + (x % y ? 1 : 0); }
 
 /** gets the color, given the dwell */
 void dwell_color(int *r, int *g, int *b, int dwell);
@@ -41,7 +74,7 @@ void dwell_color(int *r, int *g, int *b, int dwell);
 		  (error handling is removed):
 		http://www.labbookpages.co.uk/software/imgProc/libPNG.html
  */
-void save_image(const char *filename, int *dwells, unsigned int w, unsigned int h) {
+void save_image(const char *filename, int *dwells, uint64_t w, uint64_t h) {
 	png_bytep row;
 	
 	FILE *fp = fopen(filename, "wb");
@@ -62,10 +95,11 @@ void save_image(const char *filename, int *dwells, unsigned int w, unsigned int 
 	png_set_text(png_ptr, info_ptr, &title_text, 1);
 	png_write_info(png_ptr, info_ptr);
 
-	// write image data
+	// write image data/
+
 	row = (png_bytep) malloc(3 * w * sizeof(png_byte));
-	for (int y = 0; y < h; y++) {
-		for (int x = 0; x < w; x++) {
+	for (uint64_t y = 0; y < h; y++) {
+		for (uint64_t x = 0; x < w; x++) {
 			int r, g, b;
 			dwell_color(&r, &g, &b, dwells[y * w + x]);
 			row[3 * x + 0] = (png_byte)r;
@@ -85,12 +119,12 @@ void save_image(const char *filename, int *dwells, unsigned int w, unsigned int 
 
 /** a simple complex type */
 struct complex {
-	__host__ __device__ complex(float re, float im = 0) {
+	__host__ __device__ complex(double re, double im = 0) {
 		this->re = re;
 		this->im = im;
 	}
 	/** real and imaginary part */
-	float re, im;
+	double re, im;
 }; // struct complex
 
 // operator overloads for complex numbers
@@ -108,12 +142,12 @@ inline __host__ __device__ complex operator*
 (const complex &a, const complex &b) {
 	return complex(a.re * b.re - a.im * b.im, a.im * b.re + a.re * b.im);
 }
-inline __host__ __device__ float abs2(const complex &a) {
+inline __host__ __device__ double abs2(const complex &a) {
 	return a.re * a.re + a.im * a.im;
 }
 inline __host__ __device__ complex operator/
 (const complex &a, const complex &b) {
-	float invabs2 = 1 / abs2(b);
+	double invabs2 = 1 / abs2(b);
 	return complex((a.re * b.re + a.im * b.im) * invabs2,
 								 (a.im * b.re - b.im * a.re) * invabs2);
 }  // operator/
@@ -162,9 +196,9 @@ inline __host__ __device__ complex operator/
 #define INIT_SUBDIV 8
 
 /** find the dwell for the pixel */
-__device__ int pixel_dwell(int w, int h, complex cmin, complex cmax, unsigned int x, unsigned int y) {
+__device__ int pixel_dwell(unsigned int w, unsigned int h, complex cmin, complex cmax, unsigned int x, unsigned int y) {
 	complex dc = cmax - cmin;
-	float fx = (float)x / w, fy = (float)y / h;
+	double fx = (double)x / w, fy = (double)y / h;
 	complex c = cmin + complex(fx * dc.re, fy * dc.im);
 	int dwell = 0;
 	complex z = c;
@@ -189,7 +223,7 @@ __device__ int same_dwell(int d1, int d2) {
 }  // same_dwell
 
 /** evaluates the common border dwell, if it exists */
-__device__ int border_dwell
+__device__ unsigned int border_dwell
 (int* dwells, int w, int h, complex cmin, complex cmax, int x0, int y0, int d) {
 	// check whether all boundary pixels have the same dwell
 	int tid = threadIdx.y * blockDim.x + threadIdx.x;
@@ -305,7 +339,7 @@ __global__ void border_dwell2
                 if(rx < d && ry < d) {
                     unsigned int rxx = rx+x0, ryy = ry+y0;
                     //if (dwells[ryy * w + rxx] != 666)
-                    dwells[ryy * w + rxx] = comm_dwell;
+                    dwells[ryy * (size_t)w + rxx] = comm_dwell;
                 }
 
             }
@@ -330,7 +364,7 @@ __global__ void border_dwell2
                 if(rx < d && ry < d) {
                     unsigned int rxx = rx+x0, ryy = ry+y0;
                     //if (dwells[ryy * w + rxx] != 666)
-                    dwells[ryy * w + rxx] = pixel_dwell(w, h, cmin, cmax, rxx, ryy);
+                    dwells[ryy * (size_t)w + rxx] = pixel_dwell(w, h, cmin, cmax, rxx, ryy);
                 }
 
             }
@@ -390,7 +424,8 @@ __global__ void mandelbrot_k
 	unsigned int x = threadIdx.x + blockIdx.x * blockDim.x;
 	unsigned int y = threadIdx.y + blockIdx.y * blockDim.y;
 	int dwell = pixel_dwell(w, h, cmin, cmax, x, y);
-	dwells[y * w + x] = dwell;
+	dwells[y*(size_t)w+x] = dwell;
+
 }  // mandelbrot_k
 
 
@@ -442,16 +477,31 @@ int checkArray(int* a, int* b, unsigned int w, unsigned int h){
 #endif
 
 #define IMAGE_PATH "./mandelbrot.png"
-#define REPEATS 10
+#define REPEATS 1
 #include <stdint.h>
 
+size_t getFreeMemory(){
+    int num_gpus;
+    size_t free, total;
+    cudaGetDeviceCount( &num_gpus  );
+    for ( int gpu_id = 0; gpu_id < num_gpus; gpu_id++  ) {
+        cudaSetDevice( gpu_id  );
+        int id;
+        cudaGetDevice( &id  );
+        cudaMemGetInfo( &free, &total  );
+        //wcout << "GPU " << id << " memory: free=" << free << ", total=" << total << endl;
+    }
+    return free;
+}
 int main(int argc, char **argv) {
 	// allocate memory
+    DisplayHeader();
 	unsigned int w = W, h = H;
-	unsigned long long int dwell_sz = w * h * sizeof(int);
+	uint64_t dwell_sz = (size_t)w * h * sizeof(int);
     double ti, tf, t1=0, t2=0, t3=0;
 
-    printf("%llu\n", dwell_sz);
+    printf("%zu\n", dwell_sz);
+    //wcout << dwell_sz << endl;
 	int *h_dwells1;
 	int *h_dwells2;
 	int *h_dwells3;
@@ -464,46 +514,39 @@ int main(int argc, char **argv) {
 	h_dwells3 = (int*)malloc(dwell_sz);
 
     unsigned int *h_nextSize;
-    int *h_offsets;
+    int *h_offsets, *d_offsets1, *d_offsets2;
     unsigned int *d_nextSize;
-    int *d_offsets1;
-    int *d_offsets2;
-
-    int md = 1;
-    int aw = w/INIT_SUBDIV;
-    while (aw>MIN_SIZE){
-        aw = aw/SUBDIV;
-        md++;
-    }
-    unsigned int max_elements = 2*(INIT_SUBDIV*INIT_SUBDIV)*pow(SUBDIV*SUBDIV,
-            md-1)/4;
 
     h_nextSize = (unsigned int*)malloc(sizeof(int));
-	h_offsets = (int*)malloc(sizeof(int)*max_elements);
+
+    *h_nextSize = INIT_SUBDIV*INIT_SUBDIV;
+	cucheck(cudaMalloc((void**)&d_nextSize, sizeof(int)));
+
+    uint64_t max_elements = (getFreeMemory()-1024*1024*10)/(2);
+    //wcout << max_elements << endl;
+
+	h_offsets = (int*)malloc(max_elements);
     for (int i=0; i<INIT_SUBDIV*INIT_SUBDIV*2; i+=2){
         h_offsets[i] = ((i/2)%INIT_SUBDIV)*(W/INIT_SUBDIV);
         h_offsets[i+1] = ((i/2)/INIT_SUBDIV)*(W/INIT_SUBDIV);
 
         //printf("Offsets Iniciales: (%i) - %i, %i\n", i/2, h_offsets[i], h_offsets[i+1]);
     }
-    *h_nextSize = INIT_SUBDIV*INIT_SUBDIV;
-	cucheck(cudaMalloc((void**)&d_nextSize, sizeof(int)));
+	cucheck(cudaMalloc((void**)&d_offsets1, max_elements));
+	cucheck(cudaMalloc((void**)&d_offsets2, max_elements));
 
-	cucheck(cudaMalloc((void**)&d_offsets1, sizeof(int)*max_elements));
-	cucheck(cudaMalloc((void**)&d_offsets2, sizeof(int)*max_elements));
-
-    cucheck(cudaMemcpy(d_offsets1, h_offsets, sizeof(int)*max_elements, cudaMemcpyHostToDevice))
-    cucheck(cudaMemset(d_nextSize, 0, sizeof(int)));
-	// compute the dwells, copy them back
-
+    cucheck(cudaMemcpy(d_offsets1, h_offsets, max_elements, cudaMemcpyHostToDevice))
+    //cucheck(cudaMemset(d_nextSize, 0, sizeof(int)));
+	//compute the dwells, copy them back
 
     dim3 bs(BSX, BSY), grid(divup(w, bs.x), divup(h, bs.y));
+/*
 
+    printf("Blocksize: %ix%i - GRID: %ix%i\n", bs.x, bs.y, grid.x, grid.y);
     // COMMON
     for (int i=0; i< REPEATS; i++){
         ti = omp_get_wtime();
-        mandelbrot_k<<<grid, bs>>>
-            (d_dwells, w, h, complex(-1.5, -1), complex(0.5, 1));
+        mandelbrot_k<<<grid, bs>>>(d_dwells, w, h, complex(-1.5, -1), complex(0.5, 1));
         (cudaDeviceSynchronize());
         tf = omp_get_wtime();
         t1 += tf - ti;
@@ -511,11 +554,12 @@ int main(int argc, char **argv) {
     t1 /= REPEATS;
 
 	cucheck(cudaMemcpy(h_dwells1, d_dwells, dwell_sz, cudaMemcpyDeviceToHost));
-    cudaMemset(d_dwells, 0, dwell_sz);
+  */  cudaMemset(d_dwells, 0, dwell_sz);
     
+	//save_image("res1.png", h_dwells1, w, h);
+    //exit(3);
     // 1 KERNEL
     for (int i=0; i< REPEATS; i++){
-        
         for (int i=0; i<INIT_SUBDIV*INIT_SUBDIV*2; i+=2){
             h_offsets[i] = ((i/2)%INIT_SUBDIV)*(W/INIT_SUBDIV);
             h_offsets[i+1] = ((i/2)/INIT_SUBDIV)*(W/INIT_SUBDIV);
@@ -536,7 +580,9 @@ int main(int argc, char **argv) {
     t2 /= REPEATS;
 
 	cucheck(cudaMemcpy(h_dwells2, d_dwells, dwell_sz, cudaMemcpyDeviceToHost));
+	save_image("res2.png", h_dwells2, w, h);
     cudaMemset(d_dwells, 0, dwell_sz);
+    exit(3);
 	
     bs = dim3(BSX, BSY); 
     grid = dim3(INIT_SUBDIV, INIT_SUBDIV);
@@ -556,9 +602,8 @@ int main(int argc, char **argv) {
 
 	
     // save the image to PNG file
-	//save_image("res1.png", h_dwells1, w, h);
-	//save_image("res2.png", h_dwells2, w, h);
-	//save_image("res3.png", h_dwells3, w, h);
+	save_image("res2.png", h_dwells2, w, h);
+	save_image("res3.png", h_dwells3, w, h);
 
     //printf("ya imprimio!");
 	// print performance
