@@ -567,7 +567,7 @@ int main(int argc, char **argv) {
             //printf("Offsets Iniciales: (%i) - %i, %i\n", i/2, h_offsets[i], h_offsets[i+1]);
         }
         *h_nextSize = 1;
-        cucheck(cudaMemcpy(d_offsets1, h_offsets, sizeof(int)*max_elements, cudaMemcpyHostToDevice))
+        cucheck(cudaMemcpy(d_offsets1, h_offsets, max_elements, cudaMemcpyHostToDevice))
         cucheck(cudaMemset(d_nextSize, 0, sizeof(int)));
 
 
