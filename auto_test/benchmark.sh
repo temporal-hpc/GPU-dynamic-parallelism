@@ -1,13 +1,13 @@
-for i in {0..64..1}
+for i in {0..77..1}
 do
-    for j in 4 16 32 128 256
+    for j in 32
     do
         for k in "32 32"
         do
             set -- $k
             bsx=$1
             bsy=$2
-            for l in 24
+            for l in 5 7
             do
                 for p in "2 1 2 4 8" "4 3 3 16 32" "8 7 4 64 128"
                 do

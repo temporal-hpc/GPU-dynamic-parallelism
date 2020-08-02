@@ -119,12 +119,12 @@ void save_image(const char *filename, int *dwells, uint64_t w, uint64_t h) {
 
 /** a simple complex type */
 struct complex {
-	__host__ __device__ complex(double re, double im = 0) {
+	__host__ __device__ complex(float re, float im = 0) {
 		this->re = re;
 		this->im = im;
 	}
 	/** real and imaginary part */
-	double re, im;
+	float re, im;
 }; // struct complex
 
 // operator overloads for complex numbers
@@ -142,12 +142,12 @@ inline __host__ __device__ complex operator*
 (const complex &a, const complex &b) {
 	return complex(a.re * b.re - a.im * b.im, a.im * b.re + a.re * b.im);
 }
-inline __host__ __device__ double abs2(const complex &a) {
+inline __host__ __device__ float abs2(const complex &a) {
 	return a.re * a.re + a.im * a.im;
 }
 inline __host__ __device__ complex operator/
 (const complex &a, const complex &b) {
-	double invabs2 = 1 / abs2(b);
+	float invabs2 = 1 / abs2(b);
 	return complex((a.re * b.re + a.im * b.im) * invabs2,
 								 (a.im * b.re - b.im * a.re) * invabs2);
 }  // operator/
@@ -198,7 +198,7 @@ inline __host__ __device__ complex operator/
 /** find the dwell for the pixel */
 __device__ int pixel_dwell(unsigned int w, unsigned int h, complex cmin, complex cmax, unsigned int x, unsigned int y) {
 	complex dc = cmax - cmin;
-	double fx = (double)x / w, fy = (double)y / h;
+	float fx = (float)x / w, fy = (float)y / h;
 	complex c = cmin + complex(fx * dc.re, fy * dc.im);
 	int dwell = 0;
 	complex z = c;
@@ -262,7 +262,7 @@ __global__ void dwell_fill_k
 	if(x < d && y < d) {
 		x += x0, y += y0; 
         //if (dwells[y * w + x] != 666)
-		dwells[y * w + x] = dwell;
+		dwells[y *(size_t) w + x] = dwell;
 	}
 }  // dwell_fill_k
 
@@ -275,7 +275,7 @@ __global__ void mandelbrot_pixel_k
 	if(x < d && y < d) {
 		x += x0, y += y0;
         //if (dwells[y * w + x] != 666)
-		dwells[y * w + x] = pixel_dwell(w, h, cmin, cmax, x, y);
+		dwells[y *(size_t) w + x] = pixel_dwell(w, h, cmin, cmax, x, y);
 	}
 }  // mandelbrot_pixel_k
 
@@ -380,11 +380,11 @@ void mandelbrot_pseudo_dynamic_parallelism(int *dwell, unsigned int* h_nextSize,
     //printf("Running kernel with b(%i,%i) and g(%i, %i, %i) and d=%i\n", b.x, b.y, g.x, g.y, g.z, d);
     border_dwell2<<<g, b>>>(d_nextSize, d_offsets1, d_offsets2, dwell, h, w, cmin, cmax, d, depth, INIT_SUBDIV);
     for (int i=depth+1; i< MAX_DEPTH && d/SUBDIV>MIN_SIZE; i++){
-        cucheck(cudaDeviceSynchronize());
         cudaMemcpy(h_nextSize, d_nextSize, sizeof(int), cudaMemcpyDeviceToHost);
         cudaMemset(d_nextSize, 0, sizeof(int));
         std::swap(d_offsets1, d_offsets2);
         d = d/SUBDIV;
+        //(cudaDeviceSynchronize());
         dim3 g(*h_nextSize, SUBDIV, SUBDIV);
         //printf("Running kernel with b(%i,%i) and g(%i, %i, %i) and d=%i\n", b.x, b.y, g.x, g.y, g.z, d);
         border_dwell2<<<g, b>>>(d_nextSize, d_offsets1, d_offsets2, dwell, h, w, cmin, cmax, d, i, SUBDIV);
@@ -431,7 +431,7 @@ __global__ void mandelbrot_k
 
 
 __global__ void mandelbrot_block_k
-(int *dwells, int w, int h, complex cmin, complex cmax, unsigned int x0, unsigned int y0, 
+(int *dwells, unsigned int w, unsigned int h, complex cmin, complex cmax, unsigned int x0, unsigned int y0, 
  int d, int depth) {
 	x0 += d * blockIdx.x, y0 += d * blockIdx.y;
 	unsigned int comm_dwell = border_dwell(dwells, w, h, cmin, cmax, x0, y0, d);
@@ -477,7 +477,7 @@ int checkArray(int* a, int* b, unsigned int w, unsigned int h){
 #endif
 
 #define IMAGE_PATH "./mandelbrot.png"
-#define REPEATS 1
+#define REPEATS 20
 #include <stdint.h>
 
 size_t getFreeMemory(){
@@ -498,9 +498,13 @@ int main(int argc, char **argv) {
     DisplayHeader();
 	unsigned int w = W, h = H;
 	uint64_t dwell_sz = (size_t)w * h * sizeof(int);
-    double ti, tf, t1=0, t2=0, t3=0;
+    float ti, tf, t1=0, t2=0, t3=0;
+	
+    cudaEvent_t start, stop;
+	cudaEventCreate(&start);
+	cudaEventCreate(&stop);
 
-    printf("%zu\n", dwell_sz);
+    //printf("%zu\n", dwell_sz);
     //wcout << dwell_sz << endl;
 	int *h_dwells1;
 	int *h_dwells2;
@@ -522,7 +526,7 @@ int main(int argc, char **argv) {
     *h_nextSize = INIT_SUBDIV*INIT_SUBDIV;
 	cucheck(cudaMalloc((void**)&d_nextSize, sizeof(int)));
 
-    uint64_t max_elements = (getFreeMemory()-1024*1024*10)/(2);
+    uint64_t max_elements = (getFreeMemory()-1024*1024*12)/(2);
     //wcout << max_elements << endl;
 
 	h_offsets = (int*)malloc(max_elements);
@@ -535,54 +539,61 @@ int main(int argc, char **argv) {
 	cucheck(cudaMalloc((void**)&d_offsets1, max_elements));
 	cucheck(cudaMalloc((void**)&d_offsets2, max_elements));
 
-    cucheck(cudaMemcpy(d_offsets1, h_offsets, max_elements, cudaMemcpyHostToDevice))
-    //cucheck(cudaMemset(d_nextSize, 0, sizeof(int)));
+    size_t truesize = INIT_SUBDIV*INIT_SUBDIV*2*sizeof(int);
+    cucheck(cudaMemcpy(d_offsets1, h_offsets, truesize, cudaMemcpyHostToDevice))
+    cucheck(cudaMemset(d_nextSize, 0, sizeof(int)));
 	//compute the dwells, copy them back
 
     dim3 bs(BSX, BSY), grid(divup(w, bs.x), divup(h, bs.y));
-/*
 
-    printf("Blocksize: %ix%i - GRID: %ix%i\n", bs.x, bs.y, grid.x, grid.y);
+
+    //printf("Blocksize: %ix%i - GRID: %ix%i\n", bs.x, bs.y, grid.x, grid.y);
     // COMMON
+    
+    cudaEventRecord(start, 0);	
     for (int i=0; i< REPEATS; i++){
-        ti = omp_get_wtime();
         mandelbrot_k<<<grid, bs>>>(d_dwells, w, h, complex(-1.5, -1), complex(0.5, 1));
         (cudaDeviceSynchronize());
-        tf = omp_get_wtime();
-        t1 += tf - ti;
     }
-    t1 /= REPEATS;
 
-	cucheck(cudaMemcpy(h_dwells1, d_dwells, dwell_sz, cudaMemcpyDeviceToHost));
-  */  cudaMemset(d_dwells, 0, dwell_sz);
-    
+    cudaEventRecord(stop,0);
+    cudaEventSynchronize(stop);
+    cudaEventElapsedTime(&t1, start, stop); // that's our time!
+    t1 /= REPEATS*1000.f;
+	//cucheck(cudaMemcpy(h_dwells1, d_dwells, dwell_sz, cudaMemcpyDeviceToHost));
 	//save_image("res1.png", h_dwells1, w, h);
+    //cout <<t1<<endl;
     //exit(3);
+
+    cudaMemset(d_dwells, 0, dwell_sz);
+    
+    float *t2s = new float[REPEATS];
     // 1 KERNEL
     for (int i=0; i< REPEATS; i++){
-        for (int i=0; i<INIT_SUBDIV*INIT_SUBDIV*2; i+=2){
-            h_offsets[i] = ((i/2)%INIT_SUBDIV)*(W/INIT_SUBDIV);
-            h_offsets[i+1] = ((i/2)/INIT_SUBDIV)*(W/INIT_SUBDIV);
-
-            //printf("Offsets Iniciales: (%i) - %i, %i\n", i/2, h_offsets[i], h_offsets[i+1]);
+        for (int j=0; j<INIT_SUBDIV*INIT_SUBDIV*2; j+=2){
+            h_offsets[j] = ((j/2)%INIT_SUBDIV)*(W/INIT_SUBDIV);
+            h_offsets[j+1] = ((j/2)/INIT_SUBDIV)*(W/INIT_SUBDIV);
         }
         *h_nextSize = 1;
-        cucheck(cudaMemcpy(d_offsets1, h_offsets, max_elements, cudaMemcpyHostToDevice))
+        cucheck(cudaMemcpy(d_offsets1, h_offsets, truesize, cudaMemcpyHostToDevice))
         cucheck(cudaMemset(d_nextSize, 0, sizeof(int)));
 
-
-        ti = omp_get_wtime();
+        cudaEventRecord(start, 0);	
         mandelbrot_pseudo_dynamic_parallelism(d_dwells, h_nextSize, d_nextSize, d_offsets1, d_offsets2, w, h, complex(-1.5, -1), complex(0.5, 1), W / INIT_SUBDIV, 1);
         (cudaDeviceSynchronize());
-        tf = omp_get_wtime();
-        t2 += tf - ti;
+        cudaEventRecord(stop,0);
+        cudaEventSynchronize(stop);
+        cudaEventElapsedTime(&t2, start, stop); // that's our time!
+        t2s[i] = t2;
     }
-    t2 /= REPEATS;
 
-	cucheck(cudaMemcpy(h_dwells2, d_dwells, dwell_sz, cudaMemcpyDeviceToHost));
-	save_image("res2.png", h_dwells2, w, h);
+    t2 = 0.f;
+    for (int i=0; i< REPEATS; i++){
+        t2 += t2s[i];
+    }
+    t2 /= REPEATS*1000.f;
+	//cucheck(cudaMemcpy(h_dwells2, d_dwells, dwell_sz, cudaMemcpyDeviceToHost));
     cudaMemset(d_dwells, 0, dwell_sz);
-    exit(3);
 	
     bs = dim3(BSX, BSY); 
     grid = dim3(INIT_SUBDIV, INIT_SUBDIV);
@@ -590,20 +601,21 @@ int main(int argc, char **argv) {
     cucheck( cudaPeekAtLastError()  );
     // DYNAMIC PARALLELISM
     
+    cudaEventRecord(start, 0);	
     for (int i=0; i< REPEATS; i++){
-        ti = omp_get_wtime();
         mandelbrot_block_k<<<grid, bs>>>(d_dwells, w, h, complex(-1.5, -1), complex(0.5, 1), 0, 0, W / INIT_SUBDIV, 1);
         (cudaDeviceSynchronize());
-        tf = omp_get_wtime();
-        t3 += tf - ti;
     }
-    cucheck(cudaMemcpy(h_dwells3, d_dwells, dwell_sz, cudaMemcpyDeviceToHost));
-    t3 /= REPEATS;
+    cudaEventRecord(stop,0);
+    cudaEventSynchronize(stop);
+    cudaEventElapsedTime(&t3, start, stop); // that's our time!
+    //cucheck(cudaMemcpy(h_dwells3, d_dwells, dwell_sz, cudaMemcpyDeviceToHost));
+    t3 /= REPEATS*1000.f;
 
 	
     // save the image to PNG file
-	save_image("res2.png", h_dwells2, w, h);
-	save_image("res3.png", h_dwells3, w, h);
+    //save_image("res2.png", h_dwells2, w, h);
+	//save_image("res3.png", h_dwells3, w, h);
 
     //printf("ya imprimio!");
 	// print performance
@@ -611,11 +623,11 @@ int main(int argc, char **argv) {
     int res2 = 0;
     int res3 = 0;
     //printf("Check 1:\n");
-    res1 = checkArray(h_dwells1, h_dwells2, W, H);
+    //res1 = checkArray(h_dwells1, h_dwells2, W, H);
     //printf("Check 2:\n");
-    res2 = checkArray(h_dwells1, h_dwells3, W, H);
+    //res2 = checkArray(h_dwells1, h_dwells3, W, H);
     //printf("Check 3:\n");
-    res3 = checkArray(h_dwells2, h_dwells3, W, H);
+    //res3 = checkArray(h_dwells2, h_dwells3, W, H);
 
     printf("%i, %i, %i, %i, %i, %i, %i, %i, %f, %f, %f\n", BSX, BSY, W, H, MAX_DWELL, MAX_DEPTH,
             SUBDIV, MIN_SIZE, t1, t2, t3);
