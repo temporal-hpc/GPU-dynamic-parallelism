@@ -290,7 +290,7 @@ __device__ void check_error(int x0, int y0, int d) {
 }
 
 __global__ void border_dwell2
-(unsigned int* d_ns, int* d_offs1, int* d_offs2, int* dwells, int w, int h, complex cmin, complex cmax, int d, int depth, int subdiv, int* prueba) {
+(unsigned int* d_ns, int* d_offs1, int* d_offs2, int* dwells, int w, int h, complex cmin, complex cmax, int d, int depth, int subdiv) {
 	// check whether all boundary pixels have the same dwell
     unsigned int use = blockIdx.x*SUBDIV_ELEMS2 + (blockIdx.z*gridDim.y+blockIdx.y)*2;
 
@@ -300,12 +300,6 @@ __global__ void border_dwell2
     __shared__ unsigned int off_index;
 
 	int tid = threadIdx.y * blockDim.x + threadIdx.x;
-    if (tid == 0 && blockIdx.x + blockIdx.y + blockIdx.z == 0){
-    	for(int i=0; i<1024; i++){
-		prueba[i] = i;
-		printf("HOLA %i\n", prueba[i]);
-	}
-    }
     //if (threadIdx.x > d || threadIdx.y > d){return;}
     //if (tid == 0){
     //    printf("x0y0 %i, %i\n", x0, y0);
@@ -381,26 +375,20 @@ __global__ void border_dwell2
 }  // border_dwell
 
 void mandelbrot_pseudo_dynamic_parallelism(int *dwell, unsigned int* h_nextSize, unsigned int* d_nextSize, int* d_offsets1, int* d_offsets2, int w, int h, complex cmin, complex cmax, int d, int depth){
-
+    
 	dim3 b(BSX, BSY, 1), g(1, INIT_SUBDIV, INIT_SUBDIV);
-	int* prueba;
-	cudaMalloc(&prueba, 1024*sizeof(int));
-	//printf("Running kernel with b(%i,%i) and g(%i, %i, %i) and d=%i\n", b.x, b.y, g.x, g.y, g.z, d);
-	border_dwell2<<<g, b>>>(d_nextSize, d_offsets1, d_offsets2, dwell, h, w, cmin, cmax, d, depth, INIT_SUBDIV, prueba);
-	for (int i=depth+1; i< MAX_DEPTH && d/SUBDIV>MIN_SIZE; i++){
-		cudaMemcpy(h_nextSize, d_nextSize, sizeof(int), cudaMemcpyDeviceToHost);
-
-		cudaFree(prueba);
-		cudaMalloc(&prueba, 1024*sizeof(int));
-
-		cudaMemset(d_nextSize, 0, sizeof(int));
-		std::swap(d_offsets1, d_offsets2);
-		d = d/SUBDIV;
-		//(cudaDeviceSynchronize());
-		dim3 g(*h_nextSize, SUBDIV, SUBDIV);
-		//printf("Running kernel with b(%i,%i) and g(%i, %i, %i) and d=%i\n", b.x, b.y, g.x, g.y, g.z, d);
-		border_dwell2<<<g, b>>>(d_nextSize, d_offsets1, d_offsets2, dwell, h, w, cmin, cmax, d, i, SUBDIV, prueba);
-	}
+    //printf("Running kernel with b(%i,%i) and g(%i, %i, %i) and d=%i\n", b.x, b.y, g.x, g.y, g.z, d);
+    border_dwell2<<<g, b>>>(d_nextSize, d_offsets1, d_offsets2, dwell, h, w, cmin, cmax, d, depth, INIT_SUBDIV);
+    for (int i=depth+1; i< MAX_DEPTH && d/SUBDIV>MIN_SIZE; i++){
+        cudaMemcpy(h_nextSize, d_nextSize, sizeof(int), cudaMemcpyDeviceToHost);
+        cudaMemset(d_nextSize, 0, sizeof(int));
+        std::swap(d_offsets1, d_offsets2);
+        d = d/SUBDIV;
+        //(cudaDeviceSynchronize());
+        dim3 g(*h_nextSize, SUBDIV, SUBDIV);
+        //printf("Running kernel with b(%i,%i) and g(%i, %i, %i) and d=%i\n", b.x, b.y, g.x, g.y, g.z, d);
+        border_dwell2<<<g, b>>>(d_nextSize, d_offsets1, d_offsets2, dwell, h, w, cmin, cmax, d, i, SUBDIV);
+    }
 
 
 }
@@ -536,7 +524,7 @@ int main(int argc, char **argv) {
     h_nextSize = (unsigned int*)malloc(sizeof(int));
 
     *h_nextSize = INIT_SUBDIV*INIT_SUBDIV;
-	cucheck(cudaMalloc(&d_nextSize, sizeof(int)));
+	cucheck(cudaMalloc((void**)&d_nextSize, sizeof(int)));
 
     uint64_t max_elements = (getFreeMemory()-1024*1024*12)/(2);
     //wcout << max_elements << endl;
@@ -554,6 +542,7 @@ int main(int argc, char **argv) {
     size_t truesize = INIT_SUBDIV*INIT_SUBDIV*2*sizeof(int);
     cucheck(cudaMemcpy(d_offsets1, h_offsets, truesize, cudaMemcpyHostToDevice))
     cucheck(cudaMemset(d_nextSize, 0, sizeof(int)));
+	//compute the dwells, copy them back
 
     dim3 bs(BSX, BSY), grid(divup(w, bs.x), divup(h, bs.y));
 
