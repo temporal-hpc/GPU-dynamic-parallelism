@@ -19,7 +19,7 @@ SUBDIV_ELEMS2=0
 
 build:	$(TGT)
 $(TGT):	$(SRC) Makefile
-	nvcc -O3 -arch=sm_70 -rdc=true -lcudadevrt -Xcompiler -fopenmp -lpng $(SRC) -o $(TGT) -DW=$(W) -DH=$(H) -DBSY=$(BSY) -DBSX=$(BSX) -DMAX_DWELL=$(MAX_DWELL) -DMIN_SIZE=$(MIN_SIZE) -DMAX_DEPTH=$(MAX_DEPTH)  -DSUBDIV=$(SUBDIV) -DSUBDIV_ELEMSX=$(SUBDIV_ELEMSX) -DSUBDIV_ELEMSP=$(SUBDIV_ELEMSP) -DSUBDIV_ELEMS=$(SUBDIV_ELEMS) -DSUBDIV_ELEMS2=$(SUBDIV_ELEMS2)
+	nvcc -O3 -arch=sm_75 -rdc=true -lcudadevrt -Xcompiler -fopenmp -lpng $(SRC) -o $(TGT) -DBSY=$(BSY) -DBSX=$(BSX)
 
 run:	$(TGT)
 	./$(TGT)
