@@ -19,7 +19,7 @@
 using namespace std;
 
 /** gets the color, given the dwell */
-void dwell_color(int *r, int *g, int *b, int dwell);
+void dwell_color(int *r, int *g, int *b, int dwell, unsigned int MAX_DWELL);
 
 float doBruteForce(int *d_dwells, unsigned int w, unsigned int h,
                    complex bottomLeftCorner, complex upperRightCorner,
@@ -44,10 +44,10 @@ float doBruteForce(int *d_dwells, unsigned int w, unsigned int h,
 }
 
 float doAdaptiveSerialKernels(int *d_dwells, unsigned int w, unsigned int h,
-                            complex bottomLeftCorner, complex upperRightCorner, 
-                            unsigned int INIT_SUBDIV, unsigned int SUBDIV,
-                            unsigned int MAX_DWELL, unsigned int MIN_SIZE,
-                            unsigned int MAX_DEPTH) ) {
+                              complex bottomLeftCorner, complex upperRightCorner,
+                              unsigned int INIT_SUBDIV, unsigned int SUBDIV,
+                              unsigned int MAX_DWELL, unsigned int MIN_SIZE,
+                              unsigned int MAX_DEPTH) {
 
     int *h_offsets, *d_offsets1, *d_offsets2; // OLT
     unsigned int *h_OLTSize, *d_OLTSize;      // OLT SIZE
@@ -59,26 +59,28 @@ float doAdaptiveSerialKernels(int *d_dwells, unsigned int w, unsigned int h,
 
     cucheck(cudaMalloc(&d_OLTSize, sizeof(int)));
 
-    size_t initialOLTSize = h_OLTSize * sizeof(int);
+    size_t initialOLTSize = *h_OLTSize * sizeof(int);
 
-    h_offsets = (int *)malloc(h_OLTSize * sizeof(int));
+    h_offsets = (int *)malloc(*h_OLTSize * sizeof(int));
 
     for (int i = 0; i < INIT_SUBDIV * INIT_SUBDIV * 2; i += 2) {
-        h_offsets[i] = ((i / 2) % INIT_SUBDIV) * (W / INIT_SUBDIV);
-        h_offsets[i + 1] = ((i / 2) / INIT_SUBDIV) * (W / INIT_SUBDIV);
+        h_offsets[i] = ((i / 2) % INIT_SUBDIV) * (w / INIT_SUBDIV);
+        h_offsets[i + 1] = ((i / 2) / INIT_SUBDIV) * (w / INIT_SUBDIV);
     }
 
     dim3 blockSize(BSX, BSY), gridSize(divup(w, blockSize.x), divup(h, blockSize.y));
-
+    cudaEvent_t start, stop;
+    cudaEventCreate(&start);
+    cudaEventCreate(&stop);
     // 1 KERNEL
     for (int i = 0; i < REPEATS; i++) {
         for (int j = 0; j < INIT_SUBDIV * INIT_SUBDIV * 2; j += 2) {
-            h_offsets[j] = ((j / 2) % INIT_SUBDIV) * (W / INIT_SUBDIV);
-            h_offsets[j + 1] = ((j / 2) / INIT_SUBDIV) * (W / INIT_SUBDIV);
+            h_offsets[j] = ((j / 2) % INIT_SUBDIV) * (w / INIT_SUBDIV);
+            h_offsets[j + 1] = ((j / 2) / INIT_SUBDIV) * (w / INIT_SUBDIV);
             // printf("Offsets Iniciales: (%i) - %i, %i\n", i/2, h_offsets[i],
             // h_offsets[i+1]);
         }
-        *h_nextSize = 1;
+        *h_OLTSize = 1;
         cucheck(cudaMalloc((void **)&d_offsets1, initialOLTSize));
         cucheck(cudaMalloc((void **)&d_offsets2, initialOLTSize));
 
@@ -89,9 +91,10 @@ float doAdaptiveSerialKernels(int *d_dwells, unsigned int w, unsigned int h,
         float iterationTime = 0;
         cudaEventRecord(start, 0);
 
-        AdaptiveSerialKernels(d_dwells, h_nextSize, d_nextSize, d_offsets1,
-                              d_offsets2, w, h, bottomLeftCorner, upperRightCorner,
-                              w / INIT_SUBDIV, 1, );
+        AdaptiveSerialKernels(d_dwells, h_OLTSize, d_OLTSize, d_offsets1, d_offsets2,
+                              w, h, bottomLeftCorner, upperRightCorner,
+                              w / INIT_SUBDIV, 1, INIT_SUBDIV, SUBDIV, MAX_DWELL,
+                              MIN_SIZE, MAX_DEPTH);
         cucheck(cudaDeviceSynchronize());
         cudaEventRecord(stop, 0);
         cudaEventSynchronize(stop);
@@ -159,7 +162,7 @@ int main(int argc, char **argv) {
         cout << "   SUBDIV ---------------- 4 - Subdivide factor (powers of 2)."
              << endl;
         cout << "   MAX_DEPTH ------------- 5 - Maximum recursion depth." << endl;
-        cout exit(-1);
+        exit(-1);
     }
     char approach = atoi(argv[1]);
     unsigned int WIDTH = stoi(argv[2]);
@@ -169,14 +172,12 @@ int main(int argc, char **argv) {
     float ylim_min = atof(argv[6]);
     float ylim_max = atof(argv[7]);
 
-    float MAX_DWELL = atof(argv[8]);
-    float MIN_SIZE = atof(argv[9]);
-    float INIT_SUBDIV = atof(argv[10]);
-    float SUBDIV = atof(argv[11]);
-    float MAX_DEPTH = atof(argv[12]);
+    int MAX_DWELL = atoi(argv[8]);
+    int MIN_SIZE = atoi(argv[9]);
+    int INIT_SUBDIV = atoi(argv[10]);
+    int SUBDIV = atoi(argv[11]);
+    int MAX_DEPTH = atoi(argv[12]);
     string fileName = argv[13];
-    // allocate memory
-    DisplayHeader();
 
     float elapsedTime;
     int *h_dwells;
@@ -211,9 +212,9 @@ int main(int argc, char **argv) {
     }
 
     cucheck(cudaMemcpy(h_dwells, d_dwells, dwell_sz, cudaMemcpyDeviceToHost));
-    save_image(fileName, h_dwells, WIDTH, HEIGHT);
-    printf("%i, %i, %i, %i, %i, %i, %i, %i, %i, %f, %f, %f\n", approach, BSX, BSY,
-           WIDTH, HEIGHT, MAX_DWELL, MAX_DEPTH, SUBDIV, MIN_SIZE, elapsedTime);
+    save_image(fileName.c_str(), h_dwells, WIDTH, HEIGHT, MAX_DWELL);
+    printf("%i, %i, %i, %i, %i, %i, %i, %i, %i, %f\n", approach, BSX, BSY, WIDTH,
+           HEIGHT, MAX_DWELL, MAX_DEPTH, SUBDIV, MIN_SIZE, elapsedTime);
     exit(0);
 
 } // main

@@ -20,7 +20,7 @@ __device__ int pixel_dwell(unsigned int w, unsigned int h, complex cmin,
                                                                 element, -1 =
    dwells are different */
 #define NEUT_DWELL (MAX_DWELL + 1)
-#define DIFF_DWELL (-1)
+#define DIFF_DWELL (0xffffffff)
 
 __device__ int same_dwell(int d1, int d2, unsigned int MAX_DWELL) {
     if (d1 == d2)
@@ -33,7 +33,7 @@ __device__ int same_dwell(int d1, int d2, unsigned int MAX_DWELL) {
 
 /** gets the color, given the dwell (on host) */
 #define CUT_DWELL (MAX_DWELL / 2)
-void dwell_color(int *r, int *g, int *b, int dwell) {
+void dwell_color(int *r, int *g, int *b, int dwell, unsigned int MAX_DWELL) {
     // black for the Mandelbrot set
     /*if (dwell == 667){
                                     *r = 156;
@@ -72,7 +72,8 @@ void dwell_color(int *r, int *g, int *b, int dwell) {
         to save PNG file taken from here (error handling is removed):
     http://www.labbookpages.co.uk/software/imgProc/libPNG.html
  */
-void save_image(const char *filename, int *dwells, uint64_t w, uint64_t h) {
+void save_image(const char *filename, int *dwells, uint64_t w, uint64_t h,
+                unsigned int MAX_DWELL) {
     png_bytep row;
 
     FILE *fp = fopen(filename, "wb");
@@ -86,9 +87,12 @@ void save_image(const char *filename, int *dwells, uint64_t w, uint64_t h) {
                  PNG_COMPRESSION_TYPE_BASE, PNG_FILTER_TYPE_BASE);
     // set title
     png_text title_text;
+    string title = "Title";
+    string text = "Mandelbrot set, per-pixel";
+
     title_text.compression = PNG_TEXT_COMPRESSION_NONE;
-    title_text.key = "Title";
-    title_text.text = "Mandelbrot set, per-pixel";
+    title_text.key = title.c_str();
+    title_text.text = text.c_str();
     png_set_text(png_ptr, info_ptr, &title_text, 1);
     png_write_info(png_ptr, info_ptr);
 
@@ -98,7 +102,7 @@ void save_image(const char *filename, int *dwells, uint64_t w, uint64_t h) {
     for (uint64_t y = 0; y < h; y++) {
         for (uint64_t x = 0; x < w; x++) {
             int r, g, b;
-            dwell_color(&r, &g, &b, dwells[y * w + x]);
+            dwell_color(&r, &g, &b, dwells[y * w + x], MAX_DWELL);
             row[3 * x + 0] = (png_byte)r;
             row[3 * x + 1] = (png_byte)g;
             row[3 * x + 2] = (png_byte)b;

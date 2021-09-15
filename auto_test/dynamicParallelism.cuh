@@ -55,7 +55,7 @@ __global__ void dwell_fill_k(int *dwells, unsigned int w, unsigned int x0,
  */
 __global__ void mandelbrot_pixel_k(int *dwells, unsigned int w, unsigned int h,
                                    complex cmin, complex cmax, unsigned int x0,
-                                   unsigned int y0, int d, MAX_DWELL) {
+                                   unsigned int y0, int d, unsigned int MAX_DWELL) {
     unsigned int x = threadIdx.x + blockDim.x * blockIdx.x;
     unsigned int y = threadIdx.y + blockDim.y * blockIdx.y;
     if (x < d && y < d) {
@@ -72,7 +72,8 @@ __global__ void mandelbrot_block_k(int *dwells, unsigned int w, unsigned int h,
                                    unsigned int SUBDIV, unsigned int MAX_DWELL,
                                    unsigned int MIN_SIZE, unsigned int MAX_DEPTH) {
     x0 += d * blockIdx.x, y0 += d * blockIdx.y;
-    unsigned int comm_dwell = border_dwell(dwells, w, h, cmin, cmax, x0, y0, d);
+    unsigned int comm_dwell =
+        border_dwell(dwells, w, h, cmin, cmax, x0, y0, d, MAX_DWELL);
     if (threadIdx.x == 0 && threadIdx.y == 0) {
         if (comm_dwell != DIFF_DWELL) {
             // uniform dwell, just fill

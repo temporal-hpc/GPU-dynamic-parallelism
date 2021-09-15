@@ -8,7 +8,7 @@ __global__ void ASK(unsigned int *d_ns, int *d_offs1, int *d_offs2, int *dwells,
                     int w, int h, complex cmin, complex cmax, int d, int depth,
                     unsigned int SUBDIV, unsigned int MAX_DWELL,
                     unsigned int MIN_SIZE, unsigned int MAX_DEPTH,
-                    unsigned int SUBDIV_ELEMS, unsigned int SUBDIV_ELEM2,
+                    unsigned int SUBDIV_ELEMS, unsigned int SUBDIV_ELEMS2,
                     unsigned int SUBDIV_ELEMSP, unsigned int SUBDIV_ELEMSX) {
     // check whether all boundary pixels have the same dwell
     unsigned int use =
@@ -43,7 +43,8 @@ __global__ void ASK(unsigned int *d_ns, int *d_offs1, int *d_offs2, int *dwells,
     __syncthreads();
     for (; nt > 1; nt /= 2) {
         if (tid < nt / 2)
-            ldwells[tid] = same_dwell(ldwells[tid], ldwells[tid + nt / 2]);
+            ldwells[tid] =
+                same_dwell(ldwells[tid], ldwells[tid + nt / 2], MAX_DWELL);
         __syncthreads();
     }
     comm_dwell = ldwells[0];
@@ -101,13 +102,13 @@ void AdaptiveSerialKernels(int *dwell, unsigned int *h_nextSize,
     // b.y, g.x, g.y, g.z, d);
 
     unsigned int SUBDIV_ELEMS = SUBDIV * SUBDIV;
-    unsigned int SUBDIV_ELEM2 = SUBDIV_ELEMS * 2;
+    unsigned int SUBDIV_ELEMS2 = SUBDIV_ELEMS * 2;
     unsigned int SUBDIV_ELEMSP = log2(SUBDIV) + 1;
     unsigned int SUBDIV_ELEMSX = SUBDIV - 1;
 
     ASK<<<g, b>>>(d_nextSize, d_offsets1, d_offsets2, dwell, h, w, cmin, cmax, d,
                   depth, INIT_SUBDIV, MAX_DWELL, MIN_SIZE, MAX_DEPTH, SUBDIV_ELEMS,
-                  SUBDIV_ELEM2, SUBDIV_ELEMSP, SUBDIV_ELEMSX);
+                  SUBDIV_ELEMS2, SUBDIV_ELEMSP, SUBDIV_ELEMSX);
     cucheck(cudaDeviceSynchronize());
     for (int i = depth + 1; i < MAX_DEPTH && d / SUBDIV > MIN_SIZE; i++) {
         cudaMemcpy(h_nextSize, d_nextSize, sizeof(int), cudaMemcpyDeviceToHost);
@@ -122,8 +123,8 @@ void AdaptiveSerialKernels(int *dwell, unsigned int *h_nextSize,
         dim3 g(*h_nextSize, SUBDIV, SUBDIV);
         // printf("Running kernel with b(%i,%i) and g(%i, %i, %i) and d=%i\n",
         // b.x, b.y, g.x, g.y, g.z, d);
-ASK<<<g, b>>>(d_nextSize, d_offsets1, d_offsets2, dwell, h, w, cmin, cmax, d,
-      i, SUBDIV, MAX_DWELL, MIN_SIZE, MAX_DEPTH, SUBDIV_ELEMS, SUBDIV_ELEM2, 
-      SUBDIV_ELEMSP, SUBDIV_ELEMSX;
+        ASK<<<g, b>>>(d_nextSize, d_offsets1, d_offsets2, dwell, h, w, cmin, cmax, d,
+                      i, SUBDIV, MAX_DWELL, MIN_SIZE, MAX_DEPTH, SUBDIV_ELEMS,
+                      SUBDIV_ELEMS2, SUBDIV_ELEMSP, SUBDIV_ELEMSX);
     }
 }
