@@ -52,7 +52,7 @@ float doAdaptiveSerialKernels(int *d_dwells, unsigned int w, unsigned int h,
     int *h_offsets, *d_offsets1, *d_offsets2; // OLT
     unsigned int *h_OLTSize, *d_OLTSize;      // OLT SIZE
 
-    float elapsedTime;
+    float elapsedTime = 0;
 
     h_OLTSize = (unsigned int *)malloc(sizeof(int));
     *h_OLTSize = INIT_SUBDIV * INIT_SUBDIV * SUBDIV * SUBDIV * 2;
@@ -68,7 +68,6 @@ float doAdaptiveSerialKernels(int *d_dwells, unsigned int w, unsigned int h,
         h_offsets[i + 1] = ((i / 2) / INIT_SUBDIV) * (w / INIT_SUBDIV);
     }
 
-    dim3 blockSize(BSX, BSY), gridSize(divup(w, blockSize.x), divup(h, blockSize.y));
     cudaEvent_t start, stop;
     cudaEventCreate(&start);
     cudaEventCreate(&stop);
@@ -101,11 +100,11 @@ float doAdaptiveSerialKernels(int *d_dwells, unsigned int w, unsigned int h,
         cudaEventElapsedTime(&iterationTime, start, stop); // that's our time!
         elapsedTime += iterationTime;
 
-        cucheck(cudaFree(d_offsets1));
-        cucheck(cudaFree(d_offsets2));
+        //cucheck(cudaFree(d_offsets1));
+        //cucheck(cudaFree(d_offsets2));
     }
 
-    elapsedTime /= REPEATS * 1000.f;
+    elapsedTime /= (REPEATS * 1000.f);
     return elapsedTime;
 }
 
@@ -115,7 +114,7 @@ float doDynamicParallelism(int *d_dwells, unsigned int w, unsigned int h,
                            unsigned int MAX_DWELL, unsigned int MIN_SIZE,
                            unsigned int MAX_DEPTH) {
     float elapsedTime;
-    dim3 blockSize(BSX, BSY), gridSize(divup(w, blockSize.x), divup(h, blockSize.y));
+    dim3 blockSize(BSX, BSY), gridSize(INIT_SUBDIV, INIT_SUBDIV);
     cudaEvent_t start, stop;
     cudaEventCreate(&start);
     cudaEventCreate(&stop);
@@ -162,6 +161,7 @@ int main(int argc, char **argv) {
         cout << "   SUBDIV ---------------- 4 - Subdivide factor (powers of 2)."
              << endl;
         cout << "   MAX_DEPTH ------------- 5 - Maximum recursion depth." << endl;
+        cout << "   filename  -------- 'none' - Use 'none' to skip file output." << endl;
         exit(-1);
     }
     char approach = atoi(argv[1]);
@@ -188,6 +188,7 @@ int main(int argc, char **argv) {
 
     size_t dwell_sz = (size_t)WIDTH * HEIGHT * sizeof(int);
     cucheck(cudaMalloc((void **)&d_dwells, dwell_sz));
+    cudaDeviceSynchronize();
 
     h_dwells = (int *)malloc(dwell_sz);
 
@@ -211,8 +212,11 @@ int main(int argc, char **argv) {
         exit(-2);
     }
 
+    cudaDeviceSynchronize();
     cucheck(cudaMemcpy(h_dwells, d_dwells, dwell_sz, cudaMemcpyDeviceToHost));
-    save_image(fileName.c_str(), h_dwells, WIDTH, HEIGHT, MAX_DWELL);
+    if (fileName != "none"){
+        save_image(fileName.c_str(), h_dwells, WIDTH, HEIGHT, MAX_DWELL);
+    }
     printf("%i, %i, %i, %i, %i, %i, %i, %i, %i, %f\n", approach, BSX, BSY, WIDTH,
            HEIGHT, MAX_DWELL, MAX_DEPTH, SUBDIV, MIN_SIZE, elapsedTime);
     exit(0);

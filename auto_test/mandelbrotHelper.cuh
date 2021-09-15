@@ -87,12 +87,12 @@ void save_image(const char *filename, int *dwells, uint64_t w, uint64_t h,
                  PNG_COMPRESSION_TYPE_BASE, PNG_FILTER_TYPE_BASE);
     // set title
     png_text title_text;
-    string title = "Title";
-    string text = "Mandelbrot set, per-pixel";
+    const char* title = "Title";
+    const char* text = "Mandelbrot set, per-pixel";
 
     title_text.compression = PNG_TEXT_COMPRESSION_NONE;
-    title_text.key = title.c_str();
-    title_text.text = text.c_str();
+    title_text.key = (png_charp)title;
+    title_text.text = (png_charp)text;
     png_set_text(png_ptr, info_ptr, &title_text, 1);
     png_write_info(png_ptr, info_ptr);
 

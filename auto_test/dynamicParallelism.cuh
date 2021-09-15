@@ -40,7 +40,7 @@ __device__ unsigned int border_dwell(int *dwells, int w, int h, complex cmin,
 } // border_dwell
 
 /** the kernel to fill the image region with a specific dwell value */
-__global__ void dwell_fill_k(int *dwells, unsigned int w, unsigned int x0,
+__global__ void dwell_fill_k(int *dwells, size_t w, unsigned int x0,
                              unsigned int y0, int d, int dwell) {
     unsigned int x = threadIdx.x + blockIdx.x * blockDim.x;
     unsigned int y = threadIdx.y + blockIdx.y * blockDim.y;
@@ -61,6 +61,7 @@ __global__ void mandelbrot_pixel_k(int *dwells, unsigned int w, unsigned int h,
     if (x < d && y < d) {
         x += x0, y += y0;
         // if (dwells[y * w + x] != 666)
+        //printf("%lu\n", y * (size_t)w + x);
         dwells[y * (size_t)w + x] = pixel_dwell(w, h, cmin, cmax, x, y, MAX_DWELL);
     }
 } // mandelbrot_pixel_k
@@ -74,13 +75,16 @@ __global__ void mandelbrot_block_k(int *dwells, unsigned int w, unsigned int h,
     x0 += d * blockIdx.x, y0 += d * blockIdx.y;
     unsigned int comm_dwell =
         border_dwell(dwells, w, h, cmin, cmax, x0, y0, d, MAX_DWELL);
+        
     if (threadIdx.x == 0 && threadIdx.y == 0) {
+
         if (comm_dwell != DIFF_DWELL) {
             // uniform dwell, just fill
             dim3 bs(BSX, BSY), grid(divup(d, BSX), divup(d, BSY));
             dwell_fill_k<<<grid, bs>>>(dwells, w, x0, y0, d, comm_dwell);
         } else if (depth + 1 < MAX_DEPTH && d / SUBDIV > MIN_SIZE) {
             // subdivide recursively
+
             dim3 bs(blockDim.x, blockDim.y), grid(SUBDIV, SUBDIV);
             mandelbrot_block_k<<<grid, bs>>>(dwells, w, h, cmin, cmax, x0, y0,
                                              d / SUBDIV, depth + 1, SUBDIV,
