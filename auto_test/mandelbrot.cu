@@ -161,10 +161,7 @@ int main(int argc, char **argv) {
         cout << "   SUBDIV ---------------- 4 - Subdivide factor (powers of 2)."
              << endl;
         cout << "   MAX_DEPTH ------------- 5 - Maximum recursion depth." << endl;
-<<<<<<< HEAD
-=======
         cout << "   filename  -------- 'none' - Use 'none' to skip file output." << endl;
->>>>>>> 10d5f2cccece4ee03b3ea6adeed5db09c83db9ea
         exit(-1);
     }
     char approach = atoi(argv[1]);
@@ -217,13 +214,9 @@ int main(int argc, char **argv) {
 
     cudaDeviceSynchronize();
     cucheck(cudaMemcpy(h_dwells, d_dwells, dwell_sz, cudaMemcpyDeviceToHost));
-<<<<<<< HEAD
-    save_image(fileName.c_str(), h_dwells, WIDTH, HEIGHT, MAX_DWELL);
-=======
     if (fileName != "none"){
         save_image(fileName.c_str(), h_dwells, WIDTH, HEIGHT, MAX_DWELL);
     }
->>>>>>> 10d5f2cccece4ee03b3ea6adeed5db09c83db9ea
     printf("%i, %i, %i, %i, %i, %i, %i, %i, %i, %f\n", approach, BSX, BSY, WIDTH,
            HEIGHT, MAX_DWELL, MAX_DEPTH, SUBDIV, MIN_SIZE, elapsedTime);
     exit(0);
