@@ -297,8 +297,8 @@ int main(int argc, char **argv) {
         cudaDeviceSynchronize();
         cucheck(cudaMemcpy(h_dwells, d_dwells, dwell_sz, cudaMemcpyDeviceToHost));
         if (fileName != "none"){
-            string gridFileName = fileName + string(".png");
-            save_image( (string("gridlines-") + gridFileName).c_str(), h_dwells, WIDTH, HEIGHT, MAX_DWELL, SAVE_GRIDLINES);
+            string gridFileName = fileName + string("-gridlines.png");
+            save_image( gridFileName.c_str(), h_dwells, WIDTH, HEIGHT, MAX_DWELL, SAVE_GRIDLINES);
         }
     #endif
     exit(0);
