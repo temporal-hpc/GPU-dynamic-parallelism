@@ -4,7 +4,7 @@
 #include "macros.cuh"
 #include "mandelbrotHelper.cuh"
 
-__global__ void ASK(unsigned int *d_ns, int *d_offs1, int *d_offs2, int *dwells,
+__global__ void kernelGridLines(unsigned int *d_ns, int *d_offs1, int *d_offs2, int *dwells,
                     int w, int h, complex cmin, complex cmax, int d, int depth,
                     unsigned int SUBDIV, unsigned int MAX_DWELL,
                     unsigned int MIN_SIZE, unsigned int MAX_DEPTH,
@@ -33,6 +33,7 @@ __global__ void ASK(unsigned int *d_ns, int *d_offs1, int *d_offs2, int *dwells,
             unsigned int y = b % 2 == 0 ? y0 + r : (b == 1 ? y0 + d - 1 : y0);
             int dwell = pixel_dwell(w, h, cmin, cmax, x, y, MAX_DWELL);
             comm_dwell = same_dwell(comm_dwell, dwell, MAX_DWELL);
+            dwells[y * w + x] = GRID_CODE;
         }
     } // for all boundary pixels
     // reduce across threads in the block
@@ -62,7 +63,9 @@ __global__ void ASK(unsigned int *d_ns, int *d_offs1, int *d_offs2, int *dwells,
             for (unsigned int rx = x; rx < d; rx += blockDim.x) {
                 if (rx < d && ry < d) {
                     unsigned int rxx = rx + x0, ryy = ry + y0;
-                    dwells[ryy * (size_t)w + rxx] = comm_dwell;
+                    if (dwells[ryy * w + rxx] != GRID_CODE){
+                        dwells[ryy * (size_t)w + rxx] = comm_dwell;
+                    }
                 }
             }
         }
@@ -88,14 +91,17 @@ __global__ void ASK(unsigned int *d_ns, int *d_offs1, int *d_offs2, int *dwells,
             for (unsigned int rx = x; rx < d; rx += blockDim.x) {
                 if (rx < d && ry < d) {
                     unsigned int rxx = rx + x0, ryy = ry + y0;
-                    dwells[ryy * (size_t)w + rxx] = pixel_dwell(w, h, cmin, cmax, rxx, ryy, MAX_DWELL);
+                    if (dwells[ryy * w + rxx] != GRID_CODE){
+                        dwells[ryy * (size_t)w + rxx] = pixel_dwell(w, h, cmin, cmax, rxx, ryy, MAX_DWELL);
+                    }
                 }
             }
         }
     }
 }
 
-void AdaptiveSerialKernels(int *dwell, unsigned int *h_nextSize,
+
+void GridLines(int *dwell, unsigned int *h_nextSize,
                            unsigned int *d_nextSize, int *d_offsets1,
                            int *d_offsets2, int w, int h, complex cmin, complex cmax,
                            int d, int depth, unsigned int INIT_SUBDIV,
@@ -112,7 +118,7 @@ void AdaptiveSerialKernels(int *dwell, unsigned int *h_nextSize,
     unsigned int SUBDIV_ELEMSX = SUBDIV - 1;
    //printf("Running kernel with b(%i,%i) and g(%i, %i, %i) and d=%i\n",
     //b.x, b.y, g.x, g.y, g.z, d);
-    ASK<<<g, b>>>(d_nextSize, d_offsets1, d_offsets2, dwell, h, w, cmin, cmax, d,
+    kernelGridLines<<<g, b>>>(d_nextSize, d_offsets1, d_offsets2, dwell, h, w, cmin, cmax, d,
                   depth, SUBDIV, MAX_DWELL, MIN_SIZE, MAX_DEPTH, SUBDIV_ELEMS,
                   SUBDIV_ELEMS2, SUBDIV_ELEMSP, SUBDIV_ELEMSX);
     cucheck(cudaDeviceSynchronize());
@@ -131,7 +137,7 @@ void AdaptiveSerialKernels(int *dwell, unsigned int *h_nextSize,
         g = dim3(*h_nextSize, SUBDIV, SUBDIV);
          //printf("Running kernel with b(%i,%i) and g(%i, %i, %i) and d=%i\n",
          //b.x, b.y, g.x, g.y, g.z, d);
-        ASK<<<g, b>>>(d_nextSize, d_offsets1, d_offsets2, dwell, h, w, cmin, cmax, d,
+        kernelGridLines<<<g, b>>>(d_nextSize, d_offsets1, d_offsets2, dwell, h, w, cmin, cmax, d,
                       i, SUBDIV, MAX_DWELL, MIN_SIZE, MAX_DEPTH, SUBDIV_ELEMS,
                       SUBDIV_ELEMS2, SUBDIV_ELEMSP, SUBDIV_ELEMSX);
     }

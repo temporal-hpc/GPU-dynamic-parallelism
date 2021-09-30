@@ -35,11 +35,6 @@ __device__ int same_dwell(int d1, int d2, unsigned int MAX_DWELL) {
 #define CUT_DWELL (MAX_DWELL / 2)
 void dwell_color(int *r, int *g, int *b, int dwell, unsigned int MAX_DWELL) {
     // black for the Mandelbrot set
-    /*if (dwell == 667){
-                                    *r = 156;
-                                    *g = 39;
-                                    *b = 176;
-    } else*/
     if (dwell >= MAX_DWELL) {
         *r = 253;
         *g = 231;
@@ -72,8 +67,25 @@ void dwell_color(int *r, int *g, int *b, int dwell, unsigned int MAX_DWELL) {
         to save PNG file taken from here (error handling is removed):
     http://www.labbookpages.co.uk/software/imgProc/libPNG.html
  */
+
+// COLOR SUBDIVISION GRID 
+void dwell_subdiv_grid(int *r, int *g, int *b, int dwell, unsigned int MAX_DWELL) {
+    // black for the Mandelbrot set
+    if (dwell == GRID_CODE){
+        *r = 147; *g = 112; *b = 219;
+    }else{
+        *r = 255; *g = 255; *b = 255;
+    }
+}
+
+/** save the dwell into a PNG file
+    @remarks: code
+        to save PNG file taken from here (error handling is removed):
+    http://www.labbookpages.co.uk/software/imgProc/libPNG.html
+ */
+// MODE: 0 Fractal,   1 Subdivision Grid
 void save_image(const char *filename, int *dwells, uint64_t w, uint64_t h,
-                unsigned int MAX_DWELL) {
+                unsigned int MAX_DWELL, int SAVE_FLAG) {
     png_bytep row;
 
     FILE *fp = fopen(filename, "wb");
@@ -101,15 +113,29 @@ void save_image(const char *filename, int *dwells, uint64_t w, uint64_t h,
     // write image data/
 
     row = (png_bytep)malloc(3 * w * sizeof(png_byte));
-    for (uint64_t y = 0; y < h; y++) {
-        for (uint64_t x = 0; x < w; x++) {
-            int r, g, b;
-            dwell_color(&r, &g, &b, dwells[y * w + x], MAX_DWELL);
-            row[3 * x + 0] = (png_byte)r;
-            row[3 * x + 1] = (png_byte)g;
-            row[3 * x + 2] = (png_byte)b;
+    if( SAVE_FLAG == SAVE_FRACTAL ){
+        for (uint64_t y = 0; y < h; y++) {
+            for (uint64_t x = 0; x < w; x++) {
+                int r, g, b;
+                dwell_color(&r, &g, &b, dwells[y * w + x], MAX_DWELL);
+                row[3 * x + 0] = (png_byte)r;
+                row[3 * x + 1] = (png_byte)g;
+                row[3 * x + 2] = (png_byte)b;
+            }
+            png_write_row(png_ptr, row);
         }
-        png_write_row(png_ptr, row);
+    }
+    if( SAVE_FLAG == SAVE_GRIDLINES ){
+        for (uint64_t y = 0; y < h; y++) {
+            for (uint64_t x = 0; x < w; x++) {
+                int r, g, b;
+                dwell_subdiv_grid(&r, &g, &b, dwells[y * w + x], MAX_DWELL);
+                row[3 * x + 0] = (png_byte)r;
+                row[3 * x + 1] = (png_byte)g;
+                row[3 * x + 2] = (png_byte)b;
+            }
+            png_write_row(png_ptr, row);
+        }
     }
     png_write_end(png_ptr, NULL);
 

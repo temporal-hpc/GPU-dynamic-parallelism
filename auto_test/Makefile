@@ -1,4 +1,5 @@
 NAME=mandelbrot
+GRIDLINES=GRIDLINES
 SRC=$(NAME).cu
 TGT=$(NAME)
 TMP=*~ $(TGT)
@@ -7,7 +8,7 @@ BSY=32
 REPEATS=1
 build:	$(TGT)
 $(TGT):	$(SRC) Makefile
-	nvcc -O3 -arch=sm_75 -rdc=true -lcudadevrt -Xcompiler -fopenmp -lpng $(SRC) -o $(TGT) -DBSY=$(BSY) -DBSX=$(BSX) -DREPEATS=$(REPEATS)
+	nvcc -O3 -arch=sm_75 -rdc=true -lcudadevrt -Xcompiler -fopenmp -lpng $(SRC) -o $(TGT) -D${GRIDLINES} -DBSY=$(BSY) -DBSX=$(BSX) -DREPEATS=$(REPEATS)
 
 run:	$(TGT)
 	./$(TGT)
