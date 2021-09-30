@@ -20,7 +20,7 @@ __device__ int pixel_dwell(unsigned int w, unsigned int h, complex cmin,
                                                                 element, -1 =
    dwells are different */
 #define NEUT_DWELL (MAX_DWELL + 1)
-#define DIFF_DWELL (0xffffffff)
+#define DIFF_DWELL (-1)
 
 __device__ int same_dwell(int d1, int d2, unsigned int MAX_DWELL) {
     if (d1 == d2)

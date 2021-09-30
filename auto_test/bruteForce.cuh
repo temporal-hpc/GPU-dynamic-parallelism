@@ -9,6 +9,9 @@ __global__ void mandelbrot_k(int *dwells, unsigned int w, unsigned int h,
     // complex value to start iteration (c)
     unsigned int x = threadIdx.x + blockIdx.x * blockDim.x;
     unsigned int y = threadIdx.y + blockIdx.y * blockDim.y;
+    if (x > w || y > h) {
+        return;
+    }
     int dwell = pixel_dwell(w, h, cmin, cmax, x, y, MAX_DWELL);
     dwells[y * (size_t)w + x] = dwell;
 

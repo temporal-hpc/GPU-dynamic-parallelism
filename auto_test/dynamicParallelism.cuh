@@ -5,7 +5,7 @@
 #include "mandelbrotHelper.cuh"
 
 /** evaluates the common border dwell, if it exists */
-__device__ unsigned int border_dwell(int *dwells, int w, int h, complex cmin,
+__device__ int border_dwell(int *dwells, int w, int h, complex cmin,
                                      complex cmax, int x0, int y0, int d,
                                      unsigned int MAX_DWELL) {
     // check whether all boundary pixels have the same dwell
@@ -73,7 +73,7 @@ __global__ void mandelbrot_block_k(int *dwells, unsigned int w, unsigned int h,
                                    unsigned int SUBDIV, unsigned int MAX_DWELL,
                                    unsigned int MIN_SIZE, unsigned int MAX_DEPTH) {
     x0 += d * blockIdx.x, y0 += d * blockIdx.y;
-    unsigned int comm_dwell =
+    int comm_dwell =
         border_dwell(dwells, w, h, cmin, cmax, x0, y0, d, MAX_DWELL);
     if (threadIdx.x == 0 && threadIdx.y == 0) {
 

@@ -50,6 +50,7 @@ __global__ void ASK(unsigned int *d_ns, int *d_offs1, int *d_offs2, int *dwells,
     comm_dwell = ldwells[0];
 
     __syncthreads();
+    //printf("%i - %i - %i - %i, %i\n", comm_dwell, depth, MAX_DEPTH, d, MIN_SIZE);
     if (comm_dwell != DIFF_DWELL) {
         unsigned int x = threadIdx.x;
         unsigned int y = threadIdx.y;
@@ -57,12 +58,13 @@ __global__ void ASK(unsigned int *d_ns, int *d_offs1, int *d_offs2, int *dwells,
             for (unsigned int rx = x; rx < d; rx += blockDim.x) {
                 if (rx < d && ry < d) {
                     unsigned int rxx = rx + x0, ryy = ry + y0;
-                    // if (dwells[ryy * w + rxx] != 666)
+                    //if (dwells[ryy * w + rxx] != 666)
                     dwells[ryy * (size_t)w + rxx] = comm_dwell;
                 }
             }
         }
     } else if (depth + 1 < MAX_DEPTH && d / SUBDIV > MIN_SIZE) {
+        //printf("asd\n");
         if (tid == 0) {
             off_index = atomicAdd(d_ns, 1);
         }
@@ -105,13 +107,16 @@ void AdaptiveSerialKernels(int *dwell, unsigned int *h_nextSize,
     unsigned int SUBDIV_ELEMS2 = SUBDIV_ELEMS * 2;
     unsigned int SUBDIV_ELEMSP = log2(SUBDIV) + 1;
     unsigned int SUBDIV_ELEMSX = SUBDIV - 1;
-
+   //printf("Running kernel with b(%i,%i) and g(%i, %i, %i) and d=%i\n",
+    //b.x, b.y, g.x, g.y, g.z, d);
     ASK<<<g, b>>>(d_nextSize, d_offsets1, d_offsets2, dwell, h, w, cmin, cmax, d,
-                  depth, INIT_SUBDIV, MAX_DWELL, MIN_SIZE, MAX_DEPTH, SUBDIV_ELEMS,
+                  depth, SUBDIV, MAX_DWELL, MIN_SIZE, MAX_DEPTH, SUBDIV_ELEMS,
                   SUBDIV_ELEMS2, SUBDIV_ELEMSP, SUBDIV_ELEMSX);
     cucheck(cudaDeviceSynchronize());
+    //printf("%i\n", d);
     for (int i = depth + 1; i < MAX_DEPTH && d / SUBDIV > MIN_SIZE; i++) {
         cudaMemcpy(h_nextSize, d_nextSize, sizeof(int), cudaMemcpyDeviceToHost);
+        //printf("%f\n", *h_nextSize/(float)(g.x*g.y*g.z));
         std::swap(d_offsets1, d_offsets2);
 
         cudaFree(d_offsets2);
@@ -120,9 +125,9 @@ void AdaptiveSerialKernels(int *dwell, unsigned int *h_nextSize,
         (cudaMemset(d_nextSize, 0, sizeof(int)));
         d = d / SUBDIV;
         cucheck(cudaDeviceSynchronize());
-        dim3 g(*h_nextSize, SUBDIV, SUBDIV);
-        // printf("Running kernel with b(%i,%i) and g(%i, %i, %i) and d=%i\n",
-        // b.x, b.y, g.x, g.y, g.z, d);
+        g = dim3(*h_nextSize, SUBDIV, SUBDIV);
+         //printf("Running kernel with b(%i,%i) and g(%i, %i, %i) and d=%i\n",
+         //b.x, b.y, g.x, g.y, g.z, d);
         ASK<<<g, b>>>(d_nextSize, d_offsets1, d_offsets2, dwell, h, w, cmin, cmax, d,
                       i, SUBDIV, MAX_DWELL, MIN_SIZE, MAX_DEPTH, SUBDIV_ELEMS,
                       SUBDIV_ELEMS2, SUBDIV_ELEMSP, SUBDIV_ELEMSX);
