@@ -119,7 +119,7 @@ void AdaptiveSerialKernels(int *dwell, unsigned int *h_nextSize,
     //printf("%i\n", d);
     for (int i = depth + 1; i < MAX_DEPTH && d / SUBDIV > MIN_SIZE; i++) {
         cudaMemcpy(h_nextSize, d_nextSize, sizeof(int), cudaMemcpyDeviceToHost);
-        //printf("%f\n", *h_nextSize/(float)(g.x*g.y*g.z));
+        printf("[level %i] P%i = %f\n", i, i, *h_nextSize/(float)(g.x*g.y*g.z));
         std::swap(d_offsets1, d_offsets2);
 
         cudaFree(d_offsets2);

@@ -1,6 +1,6 @@
 NAME=mandelbrot
 GRIDLINES=GRIDLINES
-SRC=$(NAME).cu
+SRC=main.cu
 TGT=$(NAME)
 TMP=*~ $(TGT)
 BSX=32
