@@ -263,7 +263,7 @@ int main(int argc, char **argv) {
 
     h_dwells = (int *)malloc(dwell_sz);
 
-    size_t memsize = sizeof(unsigned int) * WIDTH * HEIGHT:
+    size_t memsize = sizeof(unsigned int) * WIDTH * HEIGHT;
     #ifdef VERBOSE
     printf("Grid %i x %i --> %f GBytes\n", WIDTH, HEIGHT, memsize/1e9);
     #endif
