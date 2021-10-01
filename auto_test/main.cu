@@ -295,8 +295,7 @@ int main(int argc, char **argv) {
         string fractalFileName = fileName + string(".png");
         save_image(fractalFileName.c_str(), h_dwells, WIDTH, HEIGHT, MAX_DWELL, SAVE_FRACTAL);
     }
-    printf("%i, %i, %i, %i, %i, %i, %i, %i, %i, %f\n", approach, BSX, BSY, WIDTH,
-           HEIGHT, MAX_DWELL, MAX_DEPTH, SUBDIV, MIN_SIZE, elapsedTime);
+    printf("%i, %i, %i, %i, %i, %i, %i, %i, %i, %f\n", approach, BSX, BSY, WIDTH, HEIGHT, MAX_DWELL, MAX_DEPTH, SUBDIV, MIN_SIZE, elapsedTime);
 
     #ifdef GRIDLINES
         elapsedTime = doGridLines( d_dwells, WIDTH, HEIGHT, bottomLeftCorner, upperRightCorner, INIT_SUBDIV, SUBDIV, MAX_DWELL, MIN_SIZE, MAX_DEPTH);
