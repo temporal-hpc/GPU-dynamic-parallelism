@@ -254,6 +254,11 @@ int main(int argc, char **argv) {
     int *h_dwells;
     int *d_dwells;
 
+    size_t memsize = sizeof(unsigned int) * WIDTH * HEIGHT;
+    #ifdef VERBOSE
+    printf("Grid %i x %i --> %.2f GiB\n", WIDTH, HEIGHT, (float)memsize/(1024*1024*1024));
+    #endif
+
     complex bottomLeftCorner = complex(xlim_min, ylim_min);
     complex upperRightCorner = complex(xlim_max, ylim_max);
 
@@ -263,10 +268,6 @@ int main(int argc, char **argv) {
 
     h_dwells = (int *)malloc(dwell_sz);
 
-    size_t memsize = sizeof(unsigned int) * WIDTH * HEIGHT;
-    #ifdef VERBOSE
-    printf("Grid %i x %i --> %f GBytes\n", WIDTH, HEIGHT, memsize/1e9);
-    #endif
 
     switch (approach) {
     case 0:
