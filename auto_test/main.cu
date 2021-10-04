@@ -209,7 +209,7 @@ int main(int argc, char **argv) {
     if (argc != 14) {
         cout << "Error. Execute as ./mandelbrot <Approach> <WIDTH> <HEIGHT> "
                 "<xlim_min> <xlim_max> <ylim_min> <ylim_max> <MAX_DWELL> <MIN_SIZE> "
-                "<INIT_SUBDIV> <SUBDIV> <MAX_DEPTH> <filename>.png"
+                "<INIT_SUBDIV> <SUBDIV> <MAX_DEPTH> <filename>"
              << endl;
         cout << "Apporach:  0 - Brute Force" << endl;
         cout << "           1 - Dynamic Parallelism" << endl;
@@ -295,7 +295,8 @@ int main(int argc, char **argv) {
         string fractalFileName = fileName + string(".png");
         save_image(fractalFileName.c_str(), h_dwells, WIDTH, HEIGHT, MAX_DWELL, SAVE_FRACTAL);
     }
-    printf("%i, %i, %i, %i, %i, %i, %i, %i, %i, %f\n", approach, BSX, BSY, WIDTH, HEIGHT, MAX_DWELL, MAX_DEPTH, SUBDIV, MIN_SIZE, elapsedTime);
+    printf("%i, %i, %i, %i, %i, %i, %i, %i, %i, %f\n", approach, BSX, BSY, WIDTH,
+           HEIGHT, MAX_DWELL, MAX_DEPTH, SUBDIV, MIN_SIZE, elapsedTime);
 
     #ifdef GRIDLINES
         elapsedTime = doGridLines( d_dwells, WIDTH, HEIGHT, bottomLeftCorner, upperRightCorner, INIT_SUBDIV, SUBDIV, MAX_DWELL, MIN_SIZE, MAX_DEPTH);
