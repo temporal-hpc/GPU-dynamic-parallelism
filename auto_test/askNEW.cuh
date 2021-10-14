@@ -98,8 +98,17 @@ __global__ void ASKNEW(unsigned int *d_ns, unsigned int *d_nbf, int *d_offs1, in
 /** the kernel to fill the image region with a specific dwell value */
 __global__ void doT(int *dwells, size_t w, int d, int *OLT, int OLTSize) {
 
-    unsigned int x0 = OLT[OLTSize - blockIdx.x*2 - 1];
-    unsigned int y0 = OLT[OLTSize - (blockIdx.x*2 + 1) - 1];
+    // offset = OLTSize - numRegionesDerecha
+    // acceso -> offset + blockIdx.*2
+    // [ [Ix1 Iy1 Ix2 Iy2..  ]  ....  [Dx Dy] [Dx Dy] ]
+    //                              numRegionesDerecha
+    // gridDim.x
+    // unsigned int x0 = OLT[(OLTSize - gridDim.x*2) + blockIdx.x*2];
+
+    //unsigned int x0 = OLT[OLTSize - (blockIdx.x*2) - 1];
+    //unsigned int y0 = OLT[OLTSize - (blockIdx.x*2 + 1) - 1];
+    unsigned int x0 = OLT[(OLTSize - gridDim.x*2) + blockIdx.x*2 + 1];
+    unsigned int y0 = OLT[(OLTSize - gridDim.x*2) + (blockIdx.x*2)];
 
     unsigned int x = threadIdx.x + blockIdx.y * blockDim.x;
     unsigned int y = threadIdx.y + blockIdx.z * blockDim.y;
@@ -120,9 +129,11 @@ __global__ void doT(int *dwells, size_t w, int d, int *OLT, int OLTSize) {
 __global__ void doBruteForce(int *dwells, unsigned int w, unsigned int h,
                                    complex cmin, complex cmax,
                                    int d, unsigned int MAX_DWELL, int *OLT, int OLTSize) {
-    unsigned int x0 = OLT[OLTSize - (blockIdx.x*2) - 1];
-    unsigned int y0 = OLT[OLTSize - (blockIdx.x*2 + 1) - 1];
 
+    //unsigned int x0 = OLT[OLTSize - (blockIdx.x*2) - 1];
+    //unsigned int y0 = OLT[OLTSize - (blockIdx.x*2 + 1) - 1];
+    unsigned int x0 = OLT[(OLTSize - gridDim.x*2) + blockIdx.x*2 + 1];
+    unsigned int y0 = OLT[(OLTSize - gridDim.x*2) + (blockIdx.x*2)];
 
     unsigned int x = threadIdx.x + blockIdx.y * blockDim.x;
     unsigned int y = threadIdx.y + blockIdx.z * blockDim.y;
@@ -157,7 +168,7 @@ void AdaptiveSerialKernelsNEW(int *dwells, unsigned int *h_nextSize,
     //b.x, b.y, g.x, g.y, g.z, d);
     #ifdef VERBOSE
         float time;
-        int lastDepth = 0;
+        int lastDepth = depth;
         cudaEvent_t start, stop;
         cudaEventCreate(&start);
         cudaEventCreate(&stop);
@@ -169,6 +180,9 @@ void AdaptiveSerialKernelsNEW(int *dwells, unsigned int *h_nextSize,
                   SUBDIV_ELEMS2, SUBDIV_ELEMSP, SUBDIV_ELEMSX, OLTSize);
     cucheck(cudaDeviceSynchronize());
     cudaMemcpy(h_nextSize, d_nextSize, sizeof(int), cudaMemcpyDeviceToHost);
+    #ifdef VERBOSE
+        dim3 gold = g;
+    #endif
     if (*h_nextSize < g.x*g.y*g.z){
         g = dim3((g.x*g.y*g.z)-*h_nextSize, (d + b.x - 1)/b.x, (d + b.y - 1)/b.y);
         if (2 < MAX_DEPTH && d/SUBDIV > MIN_SIZE){
@@ -177,6 +191,14 @@ void AdaptiveSerialKernelsNEW(int *dwells, unsigned int *h_nextSize,
             doBruteForce<<<g, b>>>(dwells, w, h, cmin, cmax, d, MAX_DWELL, d_offsets2, OLTSize);
         }
     }
+    #ifdef VERBOSE
+        cudaEventRecord(stop, 0);
+        cudaEventSynchronize(stop);
+        cudaEventElapsedTime(&time, start, stop); // that's our time!
+        //printf("[level %2i] h_nextSize  %i \n", 1, *h_nextSize); 
+        printf("[level %2i] %f secs -->  P_{%2i} = %f  r = %i x %i (grid %8i x %i x %i = %8i --> %i subdivided)\n", 0, time/1000.0f, 0, *h_nextSize/(float)(gold.x*INIT_SUBDIV*INIT_SUBDIV), d, d, gold.x, INIT_SUBDIV, INIT_SUBDIV, gold.x*INIT_SUBDIV*INIT_SUBDIV, *h_nextSize);
+        cudaEventRecord(start, 0);
+    #endif
     for (int i = depth + 1; i < MAX_DEPTH && d / SUBDIV > MIN_SIZE; i++) {
         cucheck(cudaDeviceSynchronize());
 
@@ -190,22 +212,16 @@ void AdaptiveSerialKernelsNEW(int *dwells, unsigned int *h_nextSize,
         d = d / SUBDIV;
         cucheck(cudaDeviceSynchronize());
 
-        #ifdef VERBOSE
-            cudaEventRecord(stop, 0);
-            cudaEventSynchronize(stop);
-            cudaEventElapsedTime(&time, start, stop); // that's our time!
-            printf("[level %2i] %f secs -->  P_{%2i} = %f   (grid %8i x %i x %i = %8i --> %i subdivided)\n", i-1, time/1000.0f, i-1, *h_nextSize/(float)(g.x*g.y*g.z), g.x, g.y, g.z, g.x*g.y*g.z, *h_nextSize);
-            cudaEventRecord(start, 0);
-            lastDepth=i;
-        #endif
         g = dim3(*h_nextSize, SUBDIV, SUBDIV);
-         //printf("Running kernel with b(%i,%i) and g(%i, %i, %i) and d=%i\n",
-         //b.x, b.y, g.x, g.y, g.z, d);
+         //printf("Running kernel with b(%i,%i) and g(%i, %i, %i) and d=%i\n", b.x, b.y, g.x, g.y, g.z, d);
         ASKNEW<<<g, b>>>(d_nextSize, d_nbf, d_offsets1, d_offsets2, dwells, h, w, cmin, cmax, d,
                       i, SUBDIV, MAX_DWELL, MIN_SIZE, MAX_DEPTH, SUBDIV_ELEMS,
                       SUBDIV_ELEMS2, SUBDIV_ELEMSP, SUBDIV_ELEMSX, OLTSize);
         cucheck(cudaDeviceSynchronize());
         cudaMemcpy(h_nextSize, d_nextSize, sizeof(int), cudaMemcpyDeviceToHost);
+        #ifdef VERBOSE
+            dim3 gold = g;
+        #endif
         if (*h_nextSize < g.x*g.y*g.z){
             g = dim3((g.x*g.y*g.z)-*h_nextSize, (d + b.x - 1)/b.x, (d + b.y - 1)/b.y);
             if (i+1 < MAX_DEPTH && d/SUBDIV > MIN_SIZE){
@@ -214,13 +230,15 @@ void AdaptiveSerialKernelsNEW(int *dwells, unsigned int *h_nextSize,
                 doBruteForce<<<g, b>>>(dwells, w, h, cmin, cmax, d, MAX_DWELL, d_offsets2, OLTSize);
             }
         }
+        #ifdef VERBOSE
+            cudaEventRecord(stop, 0);
+            cudaEventSynchronize(stop);
+            cudaEventElapsedTime(&time, start, stop); // that's our time!
+            //printf("[level %2i] h_nextSize  %i \n", i-1, *h_nextSize); 
+            printf("[level %2i] %f secs -->  P_{%2i} = %f  r = %i x %i (grid %8i x %i x %i = %8i --> %i subdivided)\n", i-1, time/1000.0f, i-1, *h_nextSize/(float)(gold.x*SUBDIV*SUBDIV), d, d, gold.x, SUBDIV, SUBDIV, gold.x*SUBDIV*SUBDIV, *h_nextSize);
+            cudaEventRecord(start, 0);
+            lastDepth=i;
+        #endif
 
     }
-    #ifdef VERBOSE
-        cudaMemcpy(h_nextSize, d_nextSize, sizeof(int), cudaMemcpyDeviceToHost);
-        cudaEventRecord(stop, 0);
-        cudaEventSynchronize(stop);
-        cudaEventElapsedTime(&time, start, stop); // that's our time!
-        printf("<level %2i> %f secs -->  P_{%2i} = %f   (grid %8i x %i x %i = %8i --> %i subdivided)\n", lastDepth, time/1000.0f, lastDepth, *h_nextSize/(float)(g.x*g.y*g.z), g.x, g.y, g.z, g.x*g.y*g.z, *h_nextSize);
-    #endif
 }
