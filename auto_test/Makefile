@@ -1,5 +1,5 @@
 NAME=mandelbrot
-GRIDLINES=GRIDLINES
+GRIDLINES=no
 VERBOSE=no
 SRC=main.cu
 TGT=$(NAME)
