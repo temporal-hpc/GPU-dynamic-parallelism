@@ -208,7 +208,7 @@ void AdaptiveSerialKernelsNEW(int *dwells, unsigned int *h_nextSize,
 
         cudaFree(d_offsets2);
         OLTSize = *h_nextSize*SUBDIV*SUBDIV*SUBDIV*SUBDIV*2;
-        printf("OLTSize = %i    --> %f GiBytes\n", OLTSize, 1.0*OLTSize*sizeof(int)/(1024*1024*1024.0));
+        printf("OLTSize = %lu    --> %f GiBytes\n", OLTSize, 1.0*OLTSize*sizeof(int)/(1024*1024*1024.0));
         (cudaMalloc((void **)&d_offsets2,  sizeof(int) * OLTSize));
         (cudaMemset(d_nextSize, 0, sizeof(int)));
         (cudaMemset(d_nbf, 0, sizeof(int)));
