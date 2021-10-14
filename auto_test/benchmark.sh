@@ -1,15 +1,15 @@
-for approach in 0 1 2
+for approach in 2
 do
-    for size in {0..48..1}
+    for size in {0..96..1}
     do
-        for MIN_SIZE in 32
+        for MIN_SIZE in 1 2 4 8 16 32
         do
             for blockSize in "32 16"
             do
                 set -- $k
                 bsx=$1
                 bsy=$2
-                for MAX_DEPTH in 5 7
+                for MAX_DEPTH in 5 7 1000
                 do
                     for SUBDIV in 2 4 8
                     do
