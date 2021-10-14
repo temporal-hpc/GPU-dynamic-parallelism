@@ -106,6 +106,10 @@ void AdaptiveSerialKernels(int *dwell, unsigned int *h_nextSize,
     // printf("Running kernel with b(%i,%i) and g(%i, %i, %i) and d=%i\n", b.x,
     // b.y, g.x, g.y, g.z, d);
 
+    // INDICAR AL VISUALIZAR QUE PUNTERO --> dwell
+    // mapear - conectar el puntero memoria GPU con el de VULKAN/OPENGL
+    // abrir ventana
+
     unsigned int SUBDIV_ELEMS = SUBDIV * SUBDIV;
     unsigned int SUBDIV_ELEMS2 = SUBDIV_ELEMS * 2;
     unsigned int SUBDIV_ELEMSP = log2(SUBDIV) + 1;
@@ -136,5 +140,7 @@ void AdaptiveSerialKernels(int *dwell, unsigned int *h_nextSize,
         ASK<<<g, b>>>(d_nextSize, d_offsets1, d_offsets2, dwell, h, w, cmin, cmax, d,
                       i, SUBDIV, MAX_DWELL, MIN_SIZE, MAX_DEPTH, SUBDIV_ELEMS,
                       SUBDIV_ELEMS2, SUBDIV_ELEMSP, SUBDIV_ELEMSX);
+        // DIBUJAR LO QUE ESTA EN EL PUNTERO DE MEMORIA 
+
     }
 }
