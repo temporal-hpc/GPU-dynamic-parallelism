@@ -38,19 +38,16 @@ Execute as ./bin/gpuDP <Approach> <W> <H> <rmin> <rmax> <cmin> <cmax> <CA_MAXDWE
 ```
 Example:
 ```
-➜  GPU-dynamic-parallelism git:(master) ✗ ./bin/gpuDP 2 $((2**13)) $((2**13)) -1.5 0.5 -1.0 1.0 512    1 2 2   1000 none
-Grid 8192 x 8192 --> 0.25 GiB
-[level  1] 0.000670 secs -->  P_{ 1} = 1.000000   (grid        1 x 2 x 2 =        4 --> 4 subdivided)
-[level  2] 0.001377 secs -->  P_{ 2} = 0.875000   (grid        4 x 2 x 2 =       16 --> 14 subdivided)
-[level  3] 0.000541 secs -->  P_{ 3} = 0.892857   (grid       14 x 2 x 2 =       56 --> 50 subdivided)
-[level  4] 0.000522 secs -->  P_{ 4} = 0.850000   (grid       50 x 2 x 2 =      200 --> 170 subdivided)
-[level  5] 0.000844 secs -->  P_{ 5} = 0.814706   (grid      170 x 2 x 2 =      680 --> 554 subdivided)
-[level  6] 0.001960 secs -->  P_{ 6} = 0.783394   (grid      554 x 2 x 2 =     2216 --> 1736 subdivided)
-[level  7] 0.005089 secs -->  P_{ 7} = 0.747264   (grid     1736 x 2 x 2 =     6944 --> 5189 subdivided)
-[level  8] 0.015636 secs -->  P_{ 8} = 0.742243   (grid     5189 x 2 x 2 =    20756 --> 15406 subdivided)
-[level  9] 0.040155 secs -->  P_{ 9} = 0.741497   (grid    15406 x 2 x 2 =    61624 --> 45694 subdivided)
-[level 10] 0.081200 secs -->  P_{10} = 0.739359   (grid    45694 x 2 x 2 =   182776 --> 135137 subdivided)
-[level 11] 0.167651 secs -->  P_{11} = 0.728631   (grid   135137 x 2 x 2 =   540548 --> 393860 subdivided)
-<level 12> 0.403871 secs -->  P_{12} = 0.000000   (grid   393860 x 2 x 2 =  1575440 --> 0 subdivided)
-2, 32, 32, 8192, 8192, 512, 1000, 2, 1, 0.719721
+➜  GPU-dynamic-parallelism git:(master) ✗ ./bin/gpuDP 2 $((2**10)) $((2**10)) -1.5 0.5 -1.0 1.0 512    1 2 2  1000 example
+Grid 1024 x 1024 --> 0.00 GiB
+[level  1] 0.000190 secs -->  P_{ 1} = 1.000000   (grid        1 x 2 x 2 =        4 --> 4 subdivided)
+[level  2] 0.000200 secs -->  P_{ 2} = 0.875000   (grid        4 x 2 x 2 =       16 --> 14 subdivided)
+[level  3] 0.000186 secs -->  P_{ 3} = 0.892857   (grid       14 x 2 x 2 =       56 --> 50 subdivided)
+[level  4] 0.000360 secs -->  P_{ 4} = 0.850000   (grid       50 x 2 x 2 =      200 --> 170 subdivided)
+[level  5] 0.000837 secs -->  P_{ 5} = 0.795588   (grid      170 x 2 x 2 =      680 --> 541 subdivided)
+[level  6] 0.001945 secs -->  P_{ 6} = 0.776802   (grid      541 x 2 x 2 =     2164 --> 1681 subdivided)
+[level  7] 0.004726 secs -->  P_{ 7} = 0.724569   (grid     1681 x 2 x 2 =     6724 --> 4872 subdivided)
+[level  8] 0.013105 secs -->  P_{ 8} = 0.704023   (grid     4872 x 2 x 2 =    19488 --> 13720 subdivided)
+<level  9> 0.036247 secs -->  P_{ 9} = 0.000000   (grid    13720 x 2 x 2 =    54880 --> 0 subdivided)
+2, 32, 32, 1024, 1024, 512, 1000, 2, 1, 0.057932
 ```
