@@ -8,7 +8,8 @@ void check_args_info(int argc){
         cout << "   Approach:" << endl;
         cout << "               0 - Exhaustive (classic one-pass approach)" << endl;
         cout << "               1 - Dynamic Parallelism (from Nvidia)" << endl;
-        cout << "               2 - Adaptive Serial Kernels (alternative approach)" << endl;
+        cout << "               2 - Adaptive Serial Kernels (one thread-block per region)" << endl;
+        cout << "               3 - Adaptive Serial Kernels (multiple thread-blocks per region)" << endl;
         cout << "   -----------------------------------------------------------------------------------------------" << endl;
         cout << "   Parameters                  Example         Info" << endl;
         cout << "   -----------------------------------------------------------------------------------------------" << endl;

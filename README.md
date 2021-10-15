@@ -21,7 +21,8 @@ Execute as ./bin/gpuDP <Approach> <W> <H> <rmin> <rmax> <cmin> <cmax> <CA_MAXDWE
    Approach:
                0 - Exhaustive (classic one-pass approach)
                1 - Dynamic Parallelism (from Nvidia)
-               2 - Adaptive Serial Kernels (alternative approach)
+               2 - Adaptive Serial Kernels (one thread-block per region)
+               3 - Adaptive Serial Kernels (multiple thread-blocks per region)
    -----------------------------------------------------------------------------------------------
    Parameters                  Example         Info
    -----------------------------------------------------------------------------------------------
