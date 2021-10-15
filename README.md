@@ -13,9 +13,9 @@ nvcc -O3 -arch=sm_75 -rdc=true -lcudadevrt -Xcompiler -fopenmp -lpng src/main.cu
 ```
 See the `Makefile` for additional options such as printing progress info (`VERBOSE`) or exporting the subdivision grid image (`GRIDLINES`).
 
-## run
+## Run
 ```
-➜  GPU-dynamic-parallelism git:(master) ✗ bin/mandelbrot
+➜  GPU-dynamic-parallelism git:(master) ✗ bin/gpuDP
 
 Execute as ./bin/gpuDP <Approach> <W> <H> <rmin> <rmax> <cmin> <cmax> <CA_MAXDWELL> <B> <g> <r> <MAX_DEPTH> <filename>
    Approach:
