@@ -168,7 +168,6 @@ void AdaptiveSerialKernelsNEW(int *dwells, unsigned int *h_nextSize,
     //b.x, b.y, g.x, g.y, g.z, d);
     #ifdef VERBOSE
         float time;
-        int lastDepth = depth;
         cudaEvent_t start, stop;
         cudaEventCreate(&start);
         cudaEventCreate(&stop);
@@ -240,8 +239,6 @@ void AdaptiveSerialKernelsNEW(int *dwells, unsigned int *h_nextSize,
             //printf("[level %2i] h_nextSize  %i \n", i-1, *h_nextSize); 
             printf("[level %2i] %f secs -->  P_{%2i} = %f  r = %i x %i (grid %8i x %i x %i = %8i --> %i subdivided)\n", i-1, time/1000.0f, i-1, *h_nextSize/(float)(gold.x*SUBDIV*SUBDIV), d, d, gold.x, SUBDIV, SUBDIV, gold.x*SUBDIV*SUBDIV, *h_nextSize);
             cudaEventRecord(start, 0);
-            lastDepth=i;
         #endif
-
     }
 }
