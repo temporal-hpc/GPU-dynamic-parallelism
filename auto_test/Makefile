@@ -1,8 +1,8 @@
 NAME=mandelbrot
 GRIDLINES=no
 VERBOSE=no
-SRC=main.cu
-TGT=$(NAME)
+SRC=src/main.cu
+TGT=bin/$(NAME)
 TMP=*~ $(TGT)
 BSX=32
 BSY=32
