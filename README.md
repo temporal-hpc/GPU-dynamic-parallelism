@@ -1,5 +1,5 @@
 # GPU Dynamic Parallelism
-![](images/example.png) ![](images/example-gridlines.png)
+![](images/example.png =400x) ![](images/example-gridlines.png =400x)
 
 This program serves as an experimental tool for comparing the efficiency of the GPU under heterogeneous parallel workloads. It uses the 
 Mandelbrot Set as case study, offering three GPU-based approaches:
