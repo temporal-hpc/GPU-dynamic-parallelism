@@ -1,4 +1,4 @@
-NAME=mandelbrot
+NAME=gpuDP
 GRIDLINES=no
 VERBOSE=no
 SRC=src/main.cu

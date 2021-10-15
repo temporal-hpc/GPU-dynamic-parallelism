@@ -17,13 +17,13 @@ See the `Makefile` for additional options such as printing progress info (`VERBO
 ```
 ➜  GPU-dynamic-parallelism git:(master) ✗ bin/mandelbrot
 
-Execute as ./mandelbrot <Approach> <W> <H> <rmin> <rmax> <cmin> <cmax> <CA_MAXDWELL> <B> <g> <r> <MAX_DEPTH> <filename>
+Execute as ./bin/gpuDP <Approach> <W> <H> <rmin> <rmax> <cmin> <cmax> <CA_MAXDWELL> <B> <g> <r> <MAX_DEPTH> <filename>
    Approach:
                0 - Exhaustive (classic one-pass approach)
                1 - Dynamic Parallelism (from Nvidia)
                2 - Adaptive Serial Kernels (alternative approach)
    -----------------------------------------------------------------------------------------------
-   Parameters                  Default         Info
+   Parameters                  Example         Info
    -----------------------------------------------------------------------------------------------
    W ------------------------- 1024            Width in pixels.
    H ------------------------- 1024            Height in pixels.
@@ -38,7 +38,7 @@ Execute as ./mandelbrot <Approach> <W> <H> <rmin> <rmax> <cmin> <cmax> <CA_MAXDW
 ```
 Example:
 ```
-➜  GPU-dynamic-parallelism git:(master) ✗ ./bin/mandelbrot 2 $((2**13)) $((2**13)) -1.5 0.5 -1.0 1.0 512    1 2 2   1000 none
+➜  GPU-dynamic-parallelism git:(master) ✗ ./bin/gpuDP 2 $((2**13)) $((2**13)) -1.5 0.5 -1.0 1.0 512    1 2 2   1000 none
 Grid 8192 x 8192 --> 0.25 GiB
 [level  1] 0.000670 secs -->  P_{ 1} = 1.000000   (grid        1 x 2 x 2 =        4 --> 4 subdivided)
 [level  2] 0.001377 secs -->  P_{ 2} = 0.875000   (grid        4 x 2 x 2 =       16 --> 14 subdivided)

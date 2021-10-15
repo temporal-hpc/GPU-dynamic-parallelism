@@ -4,13 +4,13 @@ using namespace std;
 
 void check_args_info(int argc){
     if (argc != 14) {
-        cout << "\nExecute as ./mandelbrot <Approach> <W> <H> <rmin> <rmax> <cmin> <cmax> <CA_MAXDWELL> <B> <g> <r> <MAX_DEPTH> <filename>" << endl;
+        cout << "\nExecute as ./bin/gpuDP <Approach> <W> <H> <rmin> <rmax> <cmin> <cmax> <CA_MAXDWELL> <B> <g> <r> <MAX_DEPTH> <filename>" << endl;
         cout << "   Approach:" << endl;
         cout << "               0 - Exhaustive (classic one-pass approach)" << endl;
         cout << "               1 - Dynamic Parallelism (from Nvidia)" << endl;
         cout << "               2 - Adaptive Serial Kernels (alternative approach)" << endl;
         cout << "   -----------------------------------------------------------------------------------------------" << endl;
-        cout << "   Parameters                  Default         Info" << endl;
+        cout << "   Parameters                  Example         Info" << endl;
         cout << "   -----------------------------------------------------------------------------------------------" << endl;
         cout << "   W ------------------------- 1024            Width in pixels." << endl;
         cout << "   H ------------------------- 1024            Height in pixels." << endl;
