@@ -294,9 +294,8 @@ int main(int argc, char **argv) {
     int *h_dwells;
     int *d_dwells;
 
-    size_t memsize = sizeof(unsigned int) * W * H;
     #ifdef VERBOSE
-    printf("Grid %i x %i --> %.2f GiB\n", W, H, (float)memsize/(1024*1024*1024));
+    printf("Grid %i x %i --> %.2f GiB\n", W, H, (float)(sizeof(unsigned int) * W * H)/(1024*1024*1024));
     #endif
 
     complex bottomLeftCorner = complex(rmin, cmin);
