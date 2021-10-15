@@ -3,9 +3,9 @@
 
 This program serves as an experimental tool for comparing the efficiency of the GPU under heterogeneous parallel workloads. It uses the 
 Mandelbrot Set as case study, offering three GPU-based approaches:
-- Exhaustive approach:      The classic flat-kernel parallel 
+- Exhaustive approach:      The classic flat-kernel parallel pass
 - CUDA Dynamic Parallelism: Nvidia's recursive kernel approach
-- Adaptive Serial Kernels:  An alternative iterative-kernel approach (proposed) 
+- Adaptive Serial Kernels:  An alternative iterative-kernel approach (two variants proposed) 
 
 ## Compile
 ```
