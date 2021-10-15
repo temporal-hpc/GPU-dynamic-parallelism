@@ -1,5 +1,5 @@
 # GPU Dynamic Parallelism
-<img src="https://github.com/temporal-hpc/GPU-dynamic-parallelism/raw/master/images/example.png" width=50% height=50%> <img src="https://github.com/temporal-hpc/GPU-dynamic-parallelism/raw/master/images/example-gridlines.png" width=50% height=50%>
+<img src="https://github.com/temporal-hpc/GPU-dynamic-parallelism/raw/master/images/example.png" width=45% height=45%> <img src="https://github.com/temporal-hpc/GPU-dynamic-parallelism/raw/master/images/example-gridlines.png" width=45% height=45%>
 
 This program serves as an experimental tool for comparing the efficiency of the GPU under heterogeneous parallel workloads. It uses the 
 Mandelbrot Set as case study, offering three GPU-based approaches:
