@@ -1,3 +1,4 @@
+GPUPROG=./bin/gpuDP
 for approach in 2
 do
     for size in {0..96..1}
@@ -14,7 +15,7 @@ do
                     for SUBDIV in 2 4 8
                     do
                         make -B
-                        a=$(exec ./mandelbrot $approach $((1024+1024*$size)) $((1024+1024*$size)) -1.5 0.5 -1 1 512 $MIN_SIZE 8 $SUBDIV $MAX_DEPTH none)
+                        a=$(exec ${GPUPROG} $approach $((1024+1024*$size)) $((1024+1024*$size)) -1.5 0.5 -1 1 512 $MIN_SIZE 8 $SUBDIV $MAX_DEPTH none)
                         if [ $? -eq 0 ]
                         then
                             echo $a >> data/output-rtx.dat
