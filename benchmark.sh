@@ -1,3 +1,4 @@
+#!/bin/bash
 GPUPROG=./bin/gpuDP
 for approach in 0 1 2 3
 do
@@ -20,11 +21,11 @@ do
                             a=$(exec ${GPUPROG} $approach $((2**${size})) $((2**${size})) -1.5 0.5 -1 1 512 $B $g0 $SUBDIV $MAX_DEPTH none)
                             if [ $? -eq 0 ]
                             then
-                                echo $a >> data/output-rtx.dat
+                                echo $a >> data/output.dat
                                 echo $a
                             elif [ $? -eq 22 ]
                             then
-                                echo "0,0,0,0,0,0,0,0,0,0" >> data/output-rtx.dat
+                                echo "0,0,0,0,0,0,0,0,0,0" >> data/output.dat
                                 echo "algo malo"
                             else
                                 echo $?
