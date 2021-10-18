@@ -116,19 +116,18 @@ void AdaptiveSerialKernels(int *dwell, unsigned int *h_nextSize,
     unsigned int SUBDIV_ELEMSX = SUBDIV - 1;
     //printf("Running kernel with b(%i,%i) and g(%i, %i, %i) and d=%i\n",
     //b.x, b.y, g.x, g.y, g.z, d);
-    #ifdef VERBOSE
+    #ifdef DEBUG
         float time;
-        int lastDepth = 0;
         cudaEvent_t start, stop;
         cudaEventCreate(&start);
         cudaEventCreate(&stop);
         cudaEventRecord(start, 0);
+        printf("\n[level %2i].....", 1); fflush(stdout); 
     #endif
     ASK<<<g, b>>>(d_nextSize, d_offsets1, d_offsets2, dwell, h, w, cmin, cmax, d,
                   depth, SUBDIV, MAX_DWELL, MIN_SIZE, MAX_DEPTH, SUBDIV_ELEMS,
                   SUBDIV_ELEMS2, SUBDIV_ELEMSP, SUBDIV_ELEMSX);
     cucheck(cudaDeviceSynchronize());
-    //printf("%i\n", d);
     for (int i = depth + 1; i < MAX_DEPTH && d / SUBDIV > MIN_SIZE; i++) {
         cudaMemcpy(h_nextSize, d_nextSize, sizeof(int), cudaMemcpyDeviceToHost);
         std::swap(d_offsets1, d_offsets2);
@@ -139,13 +138,13 @@ void AdaptiveSerialKernels(int *dwell, unsigned int *h_nextSize,
         d = d / SUBDIV;
         cucheck(cudaDeviceSynchronize());
 
-        #ifdef VERBOSE
+        #ifdef DEBUG
             cudaEventRecord(stop, 0);
             cudaEventSynchronize(stop);
             cudaEventElapsedTime(&time, start, stop); // that's our time!
-            printf("[level %2i] %f secs -->  P_{%2i} = %f   (grid %8i x %i x %i = %8i --> %i subdivided)\n", i-1, time/1000.0f, i-1, *h_nextSize/(float)(g.x*g.y*g.z), g.x, g.y, g.z, g.x*g.y*g.z, *h_nextSize);
+            printf("done %f secs --> P=%f (grid %8i x %i x %i = %8i --> %i subdivided)\n", time/1000.0f, *h_nextSize/(float)(g.x*g.y*g.z), g.x, g.y, g.z, g.x*g.y*g.z, *h_nextSize);
+            printf("[level %2i]......", i); fflush(stdout);
             cudaEventRecord(start, 0);
-            lastDepth=i;
         #endif
         g = dim3(*h_nextSize, SUBDIV, SUBDIV);
          //printf("Running kernel with b(%i,%i) and g(%i, %i, %i) and d=%i\n",
@@ -156,11 +155,11 @@ void AdaptiveSerialKernels(int *dwell, unsigned int *h_nextSize,
         // DIBUJAR LO QUE ESTA EN EL PUNTERO DE MEMORIA 
 
     }
-    #ifdef VERBOSE
+    #ifdef DEBUG
         cudaMemcpy(h_nextSize, d_nextSize, sizeof(int), cudaMemcpyDeviceToHost);
         cudaEventRecord(stop, 0);
         cudaEventSynchronize(stop);
         cudaEventElapsedTime(&time, start, stop); // that's our time!
-        printf("<level %2i> %f secs -->  P_{%2i} = %f   (grid %8i x %i x %i = %8i --> %i subdivided)\n", lastDepth, time/1000.0f, lastDepth, *h_nextSize/(float)(g.x*g.y*g.z), g.x, g.y, g.z, g.x*g.y*g.z, *h_nextSize);
+        printf("done %f secs --> P=%f (grid %8i x %i x %i = %8i --> %i subdivided)\n", time/1000.0f, *h_nextSize/(float)(g.x*g.y*g.z), g.x, g.y, g.z, g.x*g.y*g.z, *h_nextSize);
     #endif
 }
