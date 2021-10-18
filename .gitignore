@@ -1,1 +1,3 @@
+*.err
+*.out
 launch.slurm

@@ -17,7 +17,7 @@ do
                     do
                         for SUBDIV in 2 4 8
                         do
-                            make -B
+                            make -B -DREPEATS=10
                             a=$(exec ${GPUPROG} $approach $((2**${size})) $((2**${size})) -1.5 0.5 -1 1 512 $B $g0 $SUBDIV $MAX_DEPTH none)
                             if [ $? -eq 0 ]
                             then
