@@ -71,7 +71,7 @@ float doAdaptiveSerialKernels(int *d_dwells, unsigned int w, unsigned int h, com
                               unsigned int CA_MAXDWELL, unsigned int B,
                               unsigned int MAX_DEPTH) {
 
-    int *h_offsets, *d_offsets1, *d_offsets2, *d1, *d2; // OLT
+    int *h_offsets, *d_offsets1, *d_offsets2; // OLT
     unsigned int *h_OLTSize, *d_OLTSize;      // OLT SIZE
 
     float elapsedTime = 0;
@@ -101,11 +101,9 @@ float doAdaptiveSerialKernels(int *d_dwells, unsigned int w, unsigned int h, com
             // h_offsets[i+1]);
         }
         *h_OLTSize = 1;
-        int count=0;
-        cucheck(cudaMalloc((void **)&d1, initialOLTSize));
-        cucheck(cudaMalloc((void **)&d2, initialOLTSize));
-        d_offsets1 = d1;
-        d_offsets2 = d2;
+        // these two pointers get a cudaFree inside the function for which they are arguments
+        cucheck(cudaMalloc((void **)&d_offsets1, initialOLTSize));
+        cucheck(cudaMalloc((void **)&d_offsets2, initialOLTSize));
 
         cucheck(cudaMemcpy(d_offsets1, h_offsets, initialOLTSize, cudaMemcpyHostToDevice));
         cucheck(cudaMemset(d_OLTSize, 0, sizeof(int)));
@@ -113,9 +111,7 @@ float doAdaptiveSerialKernels(int *d_dwells, unsigned int w, unsigned int h, com
         float iterationTime = 0;
         cudaEventRecord(start, 0);
 
-        //AdaptiveSerialKernels(&count, d_dwells, h_OLTSize, d_OLTSize, d_offsets1, d_offsets2, w, h, bottomLeftCorner, upperRightCorner, w / g0, 1, g0, r, CA_MAXDWELL, B, MAX_DEPTH);
-        printf("DUMMY");
-        dummy(&count, d_dwells, h_OLTSize, d_OLTSize, d_offsets1, d_offsets2, w, h, bottomLeftCorner, upperRightCorner, w / g0, 1, g0, r, CA_MAXDWELL, B, MAX_DEPTH);
+        AdaptiveSerialKernels(d_dwells, h_OLTSize, d_OLTSize, d_offsets1, d_offsets2, w, h, bottomLeftCorner, upperRightCorner, w / g0, 1, g0, r, CA_MAXDWELL, B, MAX_DEPTH);
 
         cucheck(cudaDeviceSynchronize());
         cudaEventRecord(stop, 0);
@@ -123,21 +119,6 @@ float doAdaptiveSerialKernels(int *d_dwells, unsigned int w, unsigned int h, com
         cudaEventElapsedTime(&iterationTime, start, stop); // that's our time!
         elapsedTime += iterationTime;
 
-        if(count == 1){
-            printf("\nASK-v1: count = %i  free both\n", count);
-            cucheck(cudaFree(d1));
-            cucheck(cudaFree(d2));
-        }
-        else if(count % 2 == 0){
-            printf("\nASK-v1: count = %i  even \n", count);
-            //cucheck(cudaFree(d1));
-            //cucheck(cudaFree(d2));
-        }
-        else{
-            printf("\nASK-v1: count = %i  odd \n", count);
-            //cucheck(cudaFree(d1));
-            //cucheck(cudaFree(d2));
-        }
     }
 
     // free memory for this realization
@@ -185,7 +166,6 @@ float doAdaptiveSerialKernelsNEW(int *d_dwells, unsigned int w, unsigned int h,
             // h_offsets[i+1]);
         }
         *h_OLTSize = 1;
-        int count=0;
         cucheck(cudaMalloc((void **)&d1, initialOLTSize));
         cucheck(cudaMalloc((void **)&d2, initialOLTSize));
         d_offsets1 = d1;
@@ -197,7 +177,7 @@ float doAdaptiveSerialKernelsNEW(int *d_dwells, unsigned int w, unsigned int h,
         float iterationTime = 0;
         cudaEventRecord(start, 0);
 
-        AdaptiveSerialKernelsNEW(&count, d_dwells, h_OLTSize, d_OLTSize, d_offsets1, d_offsets2,
+        AdaptiveSerialKernelsNEW(d_dwells, h_OLTSize, d_OLTSize, d_offsets1, d_offsets2,
                               w, h, bottomLeftCorner, upperRightCorner,
                               w / g0, 1, g0, r, CA_MAXDWELL,
                               B, MAX_DEPTH);
@@ -207,23 +187,6 @@ float doAdaptiveSerialKernelsNEW(int *d_dwells, unsigned int w, unsigned int h,
         cudaEventElapsedTime(&iterationTime, start, stop); // that's our time!
         elapsedTime += iterationTime;
 
-        //cucheck(cudaFree(d_offsets1));
-        //cucheck(cudaFree(d_offsets2));
-        if(count == 1){
-            printf("\nASK-v2: count = %i  free both\n", count);
-            cucheck(cudaFree(d1));
-            cucheck(cudaFree(d2));
-        }
-        else if(count % 2 == 0){
-            printf("\nASK-v2: count = %i  even \n", count);
-            //cucheck(cudaFree(d1));
-            //cucheck(cudaFree(d2));
-        }
-        else{
-            printf("\nASK-v2: count = %i  odd \n", count);
-            //cucheck(cudaFree(d1));
-            //cucheck(cudaFree(d2));
-        }
     }
 
     // free memory for this realization

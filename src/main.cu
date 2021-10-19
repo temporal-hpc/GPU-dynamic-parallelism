@@ -125,7 +125,7 @@ int main(int argc, char **argv) {
         // compute gridlines
         // ------------------
         #ifdef VERBOSE
-            printf("GridLines................................."); fflush(stdout);
+            printf("GridLines........................................."); fflush(stdout);
         #endif
         float gridTime = doGridLines( d_dwells, W, H, bottomLeftCorner, upperRightCorner, g0, r, CA_MAXDWELL, B, MAX_DEPTH);
         cudaDeviceSynchronize();
@@ -139,7 +139,7 @@ int main(int argc, char **argv) {
         // copy gridlines back to host
         // ----------------------------
         #ifdef VERBOSE
-            printf("cudaMemcpy: Host <-- Dev (%5.2f GiB)......", domainGBytes); fflush(stdout);
+            printf("cudaMemcpy: Host <-- Dev (%5.2f GiB)..............", domainGBytes); fflush(stdout);
         #endif
         cucheck(cudaMemcpy(h_dwells, d_dwells, dwell_sz, cudaMemcpyDeviceToHost));
         #ifdef VERBOSE

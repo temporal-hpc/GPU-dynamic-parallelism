@@ -6,7 +6,7 @@
         cudaError_t res = (call);                                                   \
         if (res != cudaSuccess) {                                                   \
             const char *err_str = cudaGetErrorString(res);                          \
-            fprintf(stderr, "%s (%d): %s in %s", __FILE__, __LINE__, err_str,       \
+            fprintf(stderr, "%s (%d): %s in %s\n", __FILE__, __LINE__, err_str,     \
                     #call);                                                         \
             exit(22);                                                               \
         }                                                                           \

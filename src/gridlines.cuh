@@ -141,4 +141,6 @@ void GridLines(int *dwell, unsigned int *h_nextSize,
                       i, SUBDIV, MAX_DWELL, MIN_SIZE, MAX_DEPTH, SUBDIV_ELEMS,
                       SUBDIV_ELEMS2, SUBDIV_ELEMSP, SUBDIV_ELEMSX);
     }
+    cudaFree(d_offsets1);
+    cudaFree(d_offsets2);
 }

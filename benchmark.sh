@@ -1,4 +1,11 @@
 #!/bin/bash
+if [ "$#" -ne 2 ]; then
+    echo "run as ./benchmark.sh <REALIZATIONS> <REPEATS>"
+    exit
+fi
+REAL=$1
+REPE=$2
+echo "REALIZATIONS=${REAL}  REPEATS=${REPE}"
 GPUPROG=./bin/gpuDP
 for approach in 0 1 2 3
 do
@@ -17,7 +24,7 @@ do
                     do
                         for SUBDIV in 2 4 8
                         do
-                            make -B -DREPEATS=20
+                            make -B REALIZATIONS=${REAL}  REPEATS=${REPE}
                             a=$(exec ${GPUPROG} $approach $((2**${size})) $((2**${size})) -1.5 0.5 -1 1 512 $B $g0 $SUBDIV $MAX_DEPTH none)
                             if [ $? -eq 0 ]
                             then
