@@ -13,6 +13,7 @@
 #define SAVE_FRACTAL 0
 #define SAVE_GRIDLINES 1
 
+#include "stats.cuh"
 #include "gridlines.cuh"
 #include "ask.cuh"
 #include "askNEW.cuh"
@@ -26,6 +27,7 @@
 
 
 using namespace std;
+const char* approachStr[4] = {"Ex", "DP", "ASK-v1", "ASK-v2"};
 
 /** gets the color, given the dwell */
 void dwell_color(int *r, int *g, int *b, int dwell, unsigned int CA_MAXDWELL);
@@ -44,12 +46,11 @@ int main(int argc, char **argv) {
 
     int CA_MAXDWELL = atoi(argv[8]);
     int B = atoi(argv[9]);
-    int G0 = atoi(argv[10]);
+    int g0 = atoi(argv[10]);
     int r = atoi(argv[11]);
     int MAX_DEPTH = atoi(argv[12]);
     string fileName = argv[13];
 
-    float elapsedTime;
     int *h_dwells;
     int *d_dwells;
 
@@ -59,7 +60,7 @@ int main(int argc, char **argv) {
     size_t dwell_sz = (size_t)W * H * sizeof(int);
     #ifdef VERBOSE
         float domainGBytes = (float)(sizeof(unsigned int) * W * H)/(1024*1024*1024);
-        printf("Grid......................................%i x %i (%.2f GiB)\n", W, H, domainGBytes);
+        printf("\nGrid..............................................%i x %i (%.2f GiB)\n", W, H, domainGBytes);
     #endif
 
 
@@ -76,38 +77,13 @@ int main(int argc, char **argv) {
     // ---------------------
     // 2) GPU Compute
     // ---------------------
-    switch (approach) {
-    case 0:
-        #ifdef VERBOSE
-            printf("Ex (REPEATS=%3i)..........................", REPEATS); fflush(stdout);
-        #endif
-        elapsedTime = doExhaustive(d_dwells, W, H, bottomLeftCorner, upperRightCorner, CA_MAXDWELL);
-        break;
-    case 1:
-        #ifdef VERBOSE
-            printf("DP (REPEATS=%3i)..........................", REPEATS); fflush(stdout);
-        #endif
-        elapsedTime = doDynamicParallelism(d_dwells, W, H, bottomLeftCorner, upperRightCorner, G0, r, CA_MAXDWELL, B, MAX_DEPTH);
-        break;
-    case 2:
-        #ifdef VERBOSE
-            printf("ASK-v1 (REPEATS=%3i)......................", REPEATS); fflush(stdout);
-        #endif
-        elapsedTime = doAdaptiveSerialKernels( d_dwells, W, H, bottomLeftCorner, upperRightCorner, G0, r, CA_MAXDWELL, B, MAX_DEPTH);
-        break;
-    case 3:
-        #ifdef VERBOSE
-            printf("ASK-v2 (REPEATS=%3i)......................", REPEATS); fflush(stdout);
-        #endif
-        elapsedTime = doAdaptiveSerialKernelsNEW( d_dwells, W, H, bottomLeftCorner, upperRightCorner, G0, r, CA_MAXDWELL, B, MAX_DEPTH);
-        break;
-    default:
-        cout << approach << " is not a valid approach." << endl;
-        exit(-2);
-    }
+    #ifdef VERBOSE
+        printf("%s (REPEATS=%3i, REALIZATIONS=%3i)............", approachStr[approach], REPEATS, REALIZATIONS); fflush(stdout);
+    #endif
+    statistics stat = doTest(approach, d_dwells, W, H, bottomLeftCorner, upperRightCorner, g0, r, CA_MAXDWELL, B, MAX_DEPTH);
     cudaDeviceSynchronize();
     #ifdef VERBOSE
-        printf("done: %f secs\n", elapsedTime); fflush(stdout);
+        printf("done: %f secs (stErr %f%%)\n", stat.mean, 100.0*stat.sterr/stat.mean); fflush(stdout);
     #endif
 
 
@@ -117,7 +93,7 @@ int main(int argc, char **argv) {
     // 3) copy domain back to Host
     // ----------------------------
     #ifdef VERBOSE
-        printf("cudaMemcpy: Host <- Dev (%5.2f GiB).......", domainGBytes); fflush(stdout);
+        printf("cudaMemcpy: Host <-- Dev (%5.2f GiB)..............", domainGBytes); fflush(stdout);
     #endif
     cucheck(cudaMemcpy(h_dwells, d_dwells, dwell_sz, cudaMemcpyDeviceToHost));
     #ifdef VERBOSE
@@ -129,8 +105,6 @@ int main(int argc, char **argv) {
     // -------------------
     // 4) Export Fractal Image
     // -------------------
-
-    // fractal image
     if (fileName != "none"){
         string fractalFileName = fileName + string(".png");
         #ifdef VERBOSE
@@ -144,7 +118,7 @@ int main(int argc, char **argv) {
 
 
     // -----------------------
-    // Export gridlines image
+    // Export gridlines image (does computation)
     // -----------------------
     #ifdef GRIDLINES
         // ------------------
@@ -153,7 +127,7 @@ int main(int argc, char **argv) {
         #ifdef VERBOSE
             printf("GridLines................................."); fflush(stdout);
         #endif
-        float gridTime = doGridLines( d_dwells, W, H, bottomLeftCorner, upperRightCorner, G0, r, CA_MAXDWELL, B, MAX_DEPTH);
+        float gridTime = doGridLines( d_dwells, W, H, bottomLeftCorner, upperRightCorner, g0, r, CA_MAXDWELL, B, MAX_DEPTH);
         cudaDeviceSynchronize();
         #ifdef VERBOSE
             printf("done: %f secs\n", gridTime); fflush(stdout);
@@ -188,7 +162,11 @@ int main(int argc, char **argv) {
             #endif
         }
     #endif
-    printf("%i, %i, %i, %i, %i, %i, %i, %i, %i, %f\n", approach, BSX, BSY, W, H, CA_MAXDWELL, MAX_DEPTH, r, B, elapsedTime);
-    exit(EXIT_SUCCESS);
+    #ifdef VERBOSE
+        printf("\n");
+    #endif
 
+    printf("%i,%s   %i, %i,   %i, %i,   %i, %i,   %i, %i, %i,   %f, %f, %f, %f\n", approach, approachStr[approach], BSX, BSY, W, H, CA_MAXDWELL, MAX_DEPTH, g0, r, B, 
+            stat.mean, stat.stdev, stat.sterr, 100.0*stat.sterr/stat.mean);
+    exit(EXIT_SUCCESS);
 }

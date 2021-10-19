@@ -95,7 +95,37 @@ __global__ void ASK(unsigned int *d_ns, int *d_offs1, int *d_offs2, int *dwells,
     }
 }
 
-void AdaptiveSerialKernels(int *dwell, unsigned int *h_nextSize,
+void dummy(int *count, int *dwell, unsigned int *h_nextSize,
+                           unsigned int *d_nextSize, int *d_offsets1,
+                           int *d_offsets2, int w, int h, complex cmin, complex cmax,
+                           int d, int depth, unsigned int INIT_SUBDIV,
+                           unsigned int SUBDIV, unsigned int MAX_DWELL,
+                           unsigned int B, unsigned int MAX_DEPTH) {
+
+
+    int values[15] = {100, 200, 300, 400, 500, 600, 700, 800, 900, 1000, 1100, 1200, 1300, 1400, 1500};
+    int index=0;
+    int lcount=0;
+    printf("\n[i=%i] B=%i d/SUVDIV = %i  -->    choose next size\n", 1, B, d/SUBDIV);
+    lcount++;
+    for(int i = depth + 1; i < MAX_DEPTH && d / SUBDIV > B; i++) {
+        printf("\n[i=%i] B=%i d/SUVDIV = %i  -->    choose next size\n", i, B, d/SUBDIV);
+        *h_nextSize = values[index++];
+        printf("new h_nextsize = %i\n", *h_nextSize);
+
+        std::swap(d_offsets1, d_offsets2);
+
+        cudaFree(d_offsets2);
+        (cudaMalloc((void **)&d_offsets2, *h_nextSize * SUBDIV * SUBDIV * SUBDIV * SUBDIV * sizeof(int) * 2));
+        d = d / SUBDIV;
+
+        lcount++;
+
+    }
+    *count = lcount;
+}
+
+void AdaptiveSerialKernels(int *count, int *dwell, unsigned int *h_nextSize,
                            unsigned int *d_nextSize, int *d_offsets1,
                            int *d_offsets2, int w, int h, complex cmin, complex cmax,
                            int d, int depth, unsigned int INIT_SUBDIV,
@@ -103,6 +133,7 @@ void AdaptiveSerialKernels(int *dwell, unsigned int *h_nextSize,
                            unsigned int MIN_SIZE, unsigned int MAX_DEPTH) {
 
     dim3 b(BSX, BSY, 1), g(1, INIT_SUBDIV, INIT_SUBDIV);
+    int lcount=0;
     // printf("Running kernel with b(%i,%i) and g(%i, %i, %i) and d=%i\n", b.x,
     // b.y, g.x, g.y, g.z, d);
 
@@ -128,6 +159,7 @@ void AdaptiveSerialKernels(int *dwell, unsigned int *h_nextSize,
                   depth, SUBDIV, MAX_DWELL, MIN_SIZE, MAX_DEPTH, SUBDIV_ELEMS,
                   SUBDIV_ELEMS2, SUBDIV_ELEMSP, SUBDIV_ELEMSX);
     cucheck(cudaDeviceSynchronize());
+    lcount++;
     for (int i = depth + 1; i < MAX_DEPTH && d / SUBDIV > MIN_SIZE; i++) {
         cudaMemcpy(h_nextSize, d_nextSize, sizeof(int), cudaMemcpyDeviceToHost);
         std::swap(d_offsets1, d_offsets2);
@@ -136,7 +168,6 @@ void AdaptiveSerialKernels(int *dwell, unsigned int *h_nextSize,
         (cudaMalloc((void **)&d_offsets2, *h_nextSize * SUBDIV * SUBDIV * SUBDIV * SUBDIV * sizeof(int) * 2));
         (cudaMemset(d_nextSize, 0, sizeof(int)));
         d = d / SUBDIV;
-        cucheck(cudaDeviceSynchronize());
 
         #ifdef DEBUG
             cudaEventRecord(stop, 0);
@@ -152,9 +183,11 @@ void AdaptiveSerialKernels(int *dwell, unsigned int *h_nextSize,
         ASK<<<g, b>>>(d_nextSize, d_offsets1, d_offsets2, dwell, h, w, cmin, cmax, d,
                       i, SUBDIV, MAX_DWELL, MIN_SIZE, MAX_DEPTH, SUBDIV_ELEMS,
                       SUBDIV_ELEMS2, SUBDIV_ELEMSP, SUBDIV_ELEMSX);
-        // DIBUJAR LO QUE ESTA EN EL PUNTERO DE MEMORIA 
+        cucheck(cudaDeviceSynchronize());
+        lcount++;
 
     }
+    *count = lcount;
     #ifdef DEBUG
         cudaMemcpy(h_nextSize, d_nextSize, sizeof(int), cudaMemcpyDeviceToHost);
         cudaEventRecord(stop, 0);

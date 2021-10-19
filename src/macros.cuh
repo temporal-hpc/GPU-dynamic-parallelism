@@ -30,3 +30,7 @@
 #ifndef BSY
 #define BSY 16
 #endif
+
+#ifndef REALIZATIONS
+#define REALIZATIONS 10
+#endif

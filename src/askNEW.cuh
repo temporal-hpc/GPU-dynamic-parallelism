@@ -11,8 +11,7 @@ __global__ void ASKNEW(unsigned int *d_ns, unsigned int *d_nbf, int *d_offs1, in
                     unsigned int SUBDIV_ELEMS, unsigned int SUBDIV_ELEMS2,
                     unsigned int SUBDIV_ELEMSP, unsigned int SUBDIV_ELEMSX, int OLTSize) {
     // check whether all boundary pixels have the same dwell
-    unsigned int use =
-        blockIdx.x * SUBDIV_ELEMS2 + (blockIdx.z * gridDim.y + blockIdx.y) * 2;
+    unsigned int use = blockIdx.x * SUBDIV_ELEMS2 + (blockIdx.z * gridDim.y + blockIdx.y) * 2;
 
     const unsigned int x0 = d_offs1[use];
     const unsigned int y0 = d_offs1[use + 1];
@@ -144,7 +143,7 @@ __global__ void doBruteForce(int *dwells, unsigned int w, unsigned int h,
     }
 }
 
-void AdaptiveSerialKernelsNEW(int *dwells, unsigned int *h_nextSize,
+void AdaptiveSerialKernelsNEW(int *count, int *dwells, unsigned int *h_nextSize,
                            unsigned int *d_nextSize, int *d_offsets1,
                            int *d_offsets2, int w, int h, complex cmin, complex cmax,
                            int d, int depth, unsigned int INIT_SUBDIV,
@@ -152,6 +151,7 @@ void AdaptiveSerialKernelsNEW(int *dwells, unsigned int *h_nextSize,
                            unsigned int MIN_SIZE, unsigned int MAX_DEPTH) {
 
     dim3 b(BSX, BSY, 1), g(1, INIT_SUBDIV, INIT_SUBDIV);
+    int lcount = 0;
     // printf("Running kernel with b(%i,%i) and g(%i, %i, %i) and d=%i\n", b.x,
     // b.y, g.x, g.y, g.z, d);
 
@@ -191,6 +191,7 @@ void AdaptiveSerialKernelsNEW(int *dwells, unsigned int *h_nextSize,
             doBruteForce<<<g, b>>>(dwells, w, h, cmin, cmax, d, MAX_DWELL, d_offsets2, OLTSize);
         }
     }
+    lcount++;
     #ifdef DEBUG
         cudaEventRecord(stop, 0);
         cudaEventSynchronize(stop);
@@ -236,6 +237,7 @@ void AdaptiveSerialKernelsNEW(int *dwells, unsigned int *h_nextSize,
                 doBruteForce<<<g, b>>>(dwells, w, h, cmin, cmax, d, MAX_DWELL, d_offsets2, OLTSize);
             }
         }
+        lcount++;
         #ifdef DEBUG
             cudaEventRecord(stop, 0);
             cudaEventSynchronize(stop);
@@ -245,4 +247,5 @@ void AdaptiveSerialKernelsNEW(int *dwells, unsigned int *h_nextSize,
             cudaEventRecord(start, 0);
         #endif
     }
+    *count = lcount; 
 }
