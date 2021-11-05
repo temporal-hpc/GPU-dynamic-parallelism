@@ -12,24 +12,39 @@ CA_MAXDWELL=512
 MAX_DEPTH=1000
 DATE=$(exec date +"%T-%m-%d-%Y (%:z %Z)")
 echo "DATE = ${DATE}"
-OUTPUT=data/benchmark-REA${REAL}-REP${REPE}-BS${BS}.dat
+OUTPUT=data/benchmark-REA${REAL}-REP${REPE}-BS${BS}-MAXDWELL${CA_MAXDWELL}-MAXDEPTH${MAX_DEPTH}.dat
 
 # COMPILE
 make -B REALIZATIONS=${REAL}  REPEATS=${REPE} BSX=${BS} BSY=${BS}
-echo "#N,MAXDWELL,MAXDEPTH,   g0,r,B,            perfAP0          perfA1       perfA2       perfA3    (${DATE})">> ${OUTPUT}
+echo "NEW BENCHMARK ${DATE}">> ${OUTPUT}
+echo "#N, g0,r,B,                   perfAP0                             perfA1                            perfA2                               perfA3" >> ${OUTPUT}
+
+maxEXP=10
+NexpMAX=16
 
 # RUN
-for g0 in 2 4 8 16 32 64 128 256 512 1024
+for ((size=0; size <= ${NexpMAX}; size++));
 do
-    for r in 2 4 8 16 32 64 128 256 512 1024
+    N=$((2**${size}))
+    #for g0exp in 2 4 8 16 32 64 128 256 512 1024
+    lim=$((${size}<${maxEXP} ? ${size} : ${maxEXP}))
+    for ((g0exp=1; g0exp <= ${lim}; g0exp++));
     do
-        for B in 1 2 4 8 16 32 64 128 256 512 1024
+        g0=$((2**${g0exp}))
+        aux=$((${size}-${g0exp}))
+        divlimit=$((${aux}<${maxEXP} ? ${aux} : ${maxEXP}))
+        #for r in 2 4 8 16 32 64 128 256 512 1024
+        #for rexp in {1..${divlimit}..1}
+        for ((rexp=1; rexp <= ${divlimit}; rexp++));
         do
-            for size in {5..16..1}
+            r=$((2**${rexp}))
+            #for B in 1 2 4 8 16 32 64 128 256 512 1024
+            #for Bexp in {0..${divlimit}..1}
+            for ((Bexp=0; Bexp <= ${divlimit}; Bexp++));
             do
-                N=$((2**${size}))
-                a="${N},    ${CA_MAXDWELL},${MAX_DEPTH},   ${g0},${r},${B}"
-                echo "BENCHMARK g0=${g0},r=${r},B=${B},CA_MAXDWELL=${CA_MAXDWELL},MAX_DEPTH=${MAX_DEPTH},    N=${N}"
+                B=$((2**${Bexp}))
+                a="${N},    ${g0},${r},${B}"
+                echo "BENCHMARK g0=${g0},r=${r},B=${B},    N=${N}"
                 for approach in 0 1 2 3
                 do
                     echo -n -e "\tA${approach}......"

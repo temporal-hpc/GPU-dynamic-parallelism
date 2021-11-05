@@ -169,6 +169,6 @@ int main(int argc, char **argv) {
     //printf("%i,%s,   %i, %i,   %i, %i,   %i, %i,   %i, %i, %i,   %f, %f, %f, %f\n", 
     //        approach, approachStr[approach], BSX, BSY, W, H, CA_MAXDWELL, MAX_DEPTH, g0, r, B, 
     //        stat.mean, stat.stdev, stat.sterr, 100.0*stat.sterr/stat.mean);
-    printf("%10s,%f,%f,%f,%f", approachStr[approach], stat.mean, stat.stdev, stat.sterr, 100.0*stat.sterr/stat.mean);
+    printf("%i,%f,%f,%f,%f", approach, stat.mean, stat.stdev, stat.sterr, 100.0*stat.sterr/stat.mean);
     exit(EXIT_SUCCESS);
 }
