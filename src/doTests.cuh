@@ -184,8 +184,8 @@ float doAdaptiveSerialKernelsNEW(int *d_dwells, unsigned int w, unsigned int h,
         cudaEventSynchronize(stop);
         cudaEventElapsedTime(&iterationTime, start, stop); // that's our time!
         elapsedTime += iterationTime;
-        //cucheck(cudaFree(d_offsets1));
-        //cucheck(cudaFree(d_offsets2));
+        cucheck(cudaFree(d_offsets1));
+        cucheck(cudaFree(d_offsets2));
 
     }
 
