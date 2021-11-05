@@ -136,7 +136,8 @@ float doAdaptiveSerialKernelsNEW(int *d_dwells, unsigned int w, unsigned int h,
                               unsigned int CA_MAXDWELL, unsigned int B,
                               unsigned int MAX_DEPTH) {
 
-    int *h_offsets, *d_offsets1, *d_offsets2; // OLT
+    int *h_offsets; // OLT
+    int *d_offsets1, *d_offsets2; // OLT
     unsigned int *h_OLTSize, *d_OLTSize;      // OLT SIZE
 
     float elapsedTime = 0;
@@ -193,6 +194,7 @@ float doAdaptiveSerialKernelsNEW(int *d_dwells, unsigned int w, unsigned int h,
     cucheck(cudaFree(d_OLTSize));
     free(h_OLTSize);
     free(h_offsets);
+    cucheck(cudaDeviceSynchronize());
 
     elapsedTime /= (REPEATS * 1000.f);
     return elapsedTime;

@@ -239,4 +239,5 @@ void AdaptiveSerialKernelsNEW(int *dwells, unsigned int *h_nextSize,
             cudaEventRecord(start, 0);
         #endif
     }
+    cucheck(cudaFree(d_nbf))
 }
