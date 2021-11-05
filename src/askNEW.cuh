@@ -144,8 +144,8 @@ __global__ void doBruteForce(int *dwells, unsigned int w, unsigned int h,
 }
 
 void AdaptiveSerialKernelsNEW(int *dwells, unsigned int *h_nextSize,
-                           unsigned int *d_nextSize, int *d_offsets1,
-                           int *d_offsets2, int w, int h, complex cmin, complex cmax,
+                           unsigned int *d_nextSize, int **d_offsets1,
+                           int **d_offsets2, int w, int h, complex cmin, complex cmax,
                            int d, int depth, unsigned int INIT_SUBDIV,
                            unsigned int SUBDIV, unsigned int MAX_DWELL,
                            unsigned int MIN_SIZE, unsigned int MAX_DEPTH) {
@@ -169,7 +169,7 @@ void AdaptiveSerialKernelsNEW(int *dwells, unsigned int *h_nextSize,
         printf("\n[level %2i].....", 1); fflush(stdout);
     #endif
 
-    ASKNEW<<<g, b>>>(d_nextSize, d_nbf, d_offsets1, d_offsets2, dwells, h, w, cmin, cmax, d,
+    ASKNEW<<<g, b>>>(d_nextSize, d_nbf, *d_offsets1, *d_offsets2, dwells, h, w, cmin, cmax, d,
                   depth, SUBDIV, MAX_DWELL, MIN_SIZE, MAX_DEPTH, SUBDIV_ELEMS,
                   SUBDIV_ELEMS2, SUBDIV_ELEMSP, SUBDIV_ELEMSX, OLTSize);
     cucheck(cudaDeviceSynchronize());
@@ -180,9 +180,9 @@ void AdaptiveSerialKernelsNEW(int *dwells, unsigned int *h_nextSize,
     if (*h_nextSize < g.x*g.y*g.z){
         g = dim3((g.x*g.y*g.z)-*h_nextSize, (d + b.x - 1)/b.x, (d + b.y - 1)/b.y);
         if (2 < MAX_DEPTH && d/SUBDIV > MIN_SIZE){
-            doT<<<g, b>>>(dwells, w, d, d_offsets2, OLTSize);
+            doT<<<g, b>>>(dwells, w, d, *d_offsets2, OLTSize);
         } else {
-            doBruteForce<<<g, b>>>(dwells, w, h, cmin, cmax, d, MAX_DWELL, d_offsets2, OLTSize);
+            doBruteForce<<<g, b>>>(dwells, w, h, cmin, cmax, d, MAX_DWELL, *d_offsets2, OLTSize);
         }
     }
     #ifdef DEBUG
@@ -198,12 +198,12 @@ void AdaptiveSerialKernelsNEW(int *dwells, unsigned int *h_nextSize,
     for (int i = depth + 1; i < MAX_DEPTH && d / SUBDIV > MIN_SIZE; i++) {
         cucheck(cudaDeviceSynchronize());
 
-        std::swap(d_offsets1, d_offsets2);
+        std::swap(*d_offsets1, *d_offsets2);
 
-        cudaFree(d_offsets2);
+        cudaFree(*d_offsets2);
         OLTSize = *h_nextSize*SUBDIV*SUBDIV*SUBDIV*SUBDIV*2;
         //printf("OLTSize = %lu    --> %f GiBytes\n", OLTSize, 1.0*OLTSize*sizeof(int)/(1024*1024*1024.0));
-        (cudaMalloc((void **)&d_offsets2,  sizeof(int) * OLTSize));
+        (cudaMalloc((void **)d_offsets2,  sizeof(int) * OLTSize));
         (cudaMemset(d_nextSize, 0, sizeof(int)));
         (cudaMemset(d_nbf, 0, sizeof(int)));
         d = d / SUBDIV;
@@ -214,7 +214,7 @@ void AdaptiveSerialKernelsNEW(int *dwells, unsigned int *h_nextSize,
         #ifdef DEBUG
             printf("[level %2i].....", i); fflush(stdout);
         #endif
-        ASKNEW<<<g, b>>>(d_nextSize, d_nbf, d_offsets1, d_offsets2, dwells, h, w, cmin, cmax, d,
+        ASKNEW<<<g, b>>>(d_nextSize, d_nbf, *d_offsets1,  *d_offsets2, dwells, h, w, cmin, cmax, d,
                       i, SUBDIV, MAX_DWELL, MIN_SIZE, MAX_DEPTH, SUBDIV_ELEMS,
                       SUBDIV_ELEMS2, SUBDIV_ELEMSP, SUBDIV_ELEMSX, OLTSize);
         cucheck(cudaDeviceSynchronize());
@@ -225,9 +225,9 @@ void AdaptiveSerialKernelsNEW(int *dwells, unsigned int *h_nextSize,
         if (*h_nextSize < g.x*g.y*g.z){
             g = dim3((g.x*g.y*g.z)-*h_nextSize, (d + b.x - 1)/b.x, (d + b.y - 1)/b.y);
             if (i+1 < MAX_DEPTH && d/SUBDIV > MIN_SIZE){
-                doT<<<g, b>>>(dwells, w, d, d_offsets2, OLTSize);
+                doT<<<g, b>>>(dwells, w, d,  *d_offsets2, OLTSize);
             } else {
-                doBruteForce<<<g, b>>>(dwells, w, h, cmin, cmax, d, MAX_DWELL, d_offsets2, OLTSize);
+                doBruteForce<<<g, b>>>(dwells, w, h, cmin, cmax, d, MAX_DWELL,  *d_offsets2, OLTSize);
             }
         }
         #ifdef DEBUG
@@ -239,6 +239,4 @@ void AdaptiveSerialKernelsNEW(int *dwells, unsigned int *h_nextSize,
             cudaEventRecord(start, 0);
         #endif
     }
-    cudaFree(d_offsets1);
-    cudaFree(d_offsets2);
 }

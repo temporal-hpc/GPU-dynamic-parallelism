@@ -136,7 +136,7 @@ float doAdaptiveSerialKernelsNEW(int *d_dwells, unsigned int w, unsigned int h,
                               unsigned int CA_MAXDWELL, unsigned int B,
                               unsigned int MAX_DEPTH) {
 
-    int *h_offsets, *d_offsets1, *d_offsets2, *d1, *d2; // OLT
+    int *h_offsets, *d_offsets1, *d_offsets2; // OLT
     unsigned int *h_OLTSize, *d_OLTSize;      // OLT SIZE
 
     float elapsedTime = 0;
@@ -166,10 +166,8 @@ float doAdaptiveSerialKernelsNEW(int *d_dwells, unsigned int w, unsigned int h,
             // h_offsets[i+1]);
         }
         *h_OLTSize = 1;
-        cucheck(cudaMalloc((void **)&d1, initialOLTSize));
-        cucheck(cudaMalloc((void **)&d2, initialOLTSize));
-        d_offsets1 = d1;
-        d_offsets2 = d2;
+        cucheck(cudaMalloc((void **)&d_offsets1, initialOLTSize));
+        cucheck(cudaMalloc((void **)&d_offsets2, initialOLTSize));
 
         cucheck(cudaMemcpy(d_offsets1, h_offsets, initialOLTSize, cudaMemcpyHostToDevice));
         cucheck(cudaMemset(d_OLTSize, 0, sizeof(int)));
@@ -177,7 +175,7 @@ float doAdaptiveSerialKernelsNEW(int *d_dwells, unsigned int w, unsigned int h,
         float iterationTime = 0;
         cudaEventRecord(start, 0);
 
-        AdaptiveSerialKernelsNEW(d_dwells, h_OLTSize, d_OLTSize, d_offsets1, d_offsets2,
+        AdaptiveSerialKernelsNEW(d_dwells, h_OLTSize, d_OLTSize, &d_offsets1, &d_offsets2,
                               w, h, bottomLeftCorner, upperRightCorner,
                               w / g0, 1, g0, r, CA_MAXDWELL,
                               B, MAX_DEPTH);
@@ -186,6 +184,8 @@ float doAdaptiveSerialKernelsNEW(int *d_dwells, unsigned int w, unsigned int h,
         cudaEventSynchronize(stop);
         cudaEventElapsedTime(&iterationTime, start, stop); // that's our time!
         elapsedTime += iterationTime;
+        //cucheck(cudaFree(d_offsets1));
+        //cucheck(cudaFree(d_offsets2));
 
     }
 
