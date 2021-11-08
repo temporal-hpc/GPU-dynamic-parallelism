@@ -5,7 +5,7 @@ if [ "$#" -ne 3 ]; then
 fi
 REAL=$1
 REPE=$2
-BS=${3}
+BS=$3
 echo "REALIZATIONS=${REAL}  REPEATS=${REPE}"
 GPUPROG=./bin/gpuDP
 CA_MAXDWELL=512
@@ -16,7 +16,7 @@ OUTPUT=data/benchmark-REA${REAL}-REP${REPE}-BS${BS}-MAXDWELL${CA_MAXDWELL}-MAXDE
 
 # COMPILE
 make -B REALIZATIONS=${REAL}  REPEATS=${REPE} BSX=${BS} BSY=${BS}
-echo "NEW BENCHMARK ${DATE}">> ${OUTPUT}
+echo "#NEW BENCHMARK ${DATE}">> ${OUTPUT}
 echo "#N, g0,r,B,                   perfAP0                             perfA1                            perfA2                               perfA3" >> ${OUTPUT}
 
 maxEXP=10
