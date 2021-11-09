@@ -177,6 +177,9 @@ void AdaptiveSerialKernelsNEW(int *dwells, unsigned int *h_nextSize,
     #ifdef DEBUG
         dim3 gold = g;
     #endif
+        printf("MAX_DEPTH = %i      d = %i    SUBDIV=%i    d/SUBDIV = %i      MIN_SIZE=%i",
+                MAX_DEPTH, d, SUBDIV, d/SUBDIV, MIN_SIZE);
+        getchar();
     if (*h_nextSize < g.x*g.y*g.z){
         g = dim3((g.x*g.y*g.z)-*h_nextSize, (d + b.x - 1)/b.x, (d + b.y - 1)/b.y);
         if (2 < MAX_DEPTH && d/SUBDIV > MIN_SIZE){
