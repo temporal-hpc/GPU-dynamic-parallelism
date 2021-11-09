@@ -125,9 +125,23 @@ void AdaptiveSerialKernels(int *dwell, unsigned int *h_nextSize,
         std::swap(d_offsets1, d_offsets2);
 
         cudaFree(d_offsets2);
-        (cudaMalloc((void **)&d_offsets2, *h_nextSize * SUBDIV * SUBDIV * SUBDIV * SUBDIV * sizeof(int) * 2));
-        (cudaMemset(d_nextSize, 0, sizeof(int)));
         d = d / SUBDIV;
+        unsigned long OLTSize;
+        if( d/SUBDIV <= MIN_SIZE ){
+            printf("AQIO\n");
+            getchar();
+            OLTSize = 0;
+            g = dim3(*h_nextSize, 1, 1);
+
+            //OLTSize = *h_nextSize * SUBDIV*SUBDIV*SUBDIV*SUBDIV*2;
+        }
+        else{
+            OLTSize = *h_nextSize * SUBDIV*SUBDIV*SUBDIV*SUBDIV*2;
+            g = dim3(*h_nextSize, SUBDIV, SUBDIV);
+        }
+        cucheck(cudaMalloc((void **)&d_offsets2, OLTSize));
+        cucheck(cudaMemset(d_nextSize, 0, sizeof(int)));
+        printf("OLTSize = %lu    --> %f GiBytes\n", OLTSize, 1.0*OLTSize*sizeof(int)/(1024*1024*1024.0));
 
         #ifdef DEBUG
             cudaEventRecord(stop, 0);
@@ -137,7 +151,6 @@ void AdaptiveSerialKernels(int *dwell, unsigned int *h_nextSize,
             printf("[level %2i]......", i); fflush(stdout);
             cudaEventRecord(start, 0);
         #endif
-        g = dim3(*h_nextSize, SUBDIV, SUBDIV);
         ASK<<<g, b>>>(d_nextSize, d_offsets1, d_offsets2, dwell, h, w, cmin, cmax, d,
                       i, SUBDIV, MAX_DWELL, MIN_SIZE, MAX_DEPTH, SUBDIV_ELEMS,
                       SUBDIV_ELEMS2, SUBDIV_ELEMSP, SUBDIV_ELEMSX);

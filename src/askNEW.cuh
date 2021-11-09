@@ -56,7 +56,9 @@ __global__ void ASKNEW(unsigned int *d_ns, unsigned int *d_nbf, int *d_offs1, in
     //printf("%i - %i - %i - %i, %i\n", comm_dwell, depth, MAX_DEPTH, d, MIN_SIZE);
     if (comm_dwell != DIFF_DWELL) {
         // LLENAR DE ATRAS PA ADELANTE
+        //printf("[tid %i  Kernel llenar T\n", tid);
         if (tid==0){
+            //printf("ANTES [tid %i] OLTSize = %lu     off_index_work %i   tid %i    x0=%i   y0=%i   index=%i\n", tid, (unsigned long) OLTSize, off_index_work, tid, x0, y0, OLTSize - ((off_index_work * 2) + tid) - 1);
             dwells[y0*(size_t)w + x0] = comm_dwell;
             off_index_work = atomicAdd(d_nbf, 1);
         }
@@ -64,9 +66,11 @@ __global__ void ASKNEW(unsigned int *d_ns, unsigned int *d_nbf, int *d_offs1, in
         if (tid < 2) {
             // cada region (bloque) escribe su par (x0,y0) en la OLT de atras hacia adelante - no es necesaria
             // sincronizacion por bloque pues cada bloque tiene resevado su espacio (por blockIdx)
+            //printf("[tid %i] OLTSize = %lu     off_index_work %i   tid %i    x0=%i   y0=%i   index=%i\n", tid, (unsigned long) OLTSize, off_index_work, tid, x0, y0, OLTSize - ((off_index_work * 2) + tid) - 1);
             d_offs2[OLTSize - ((off_index_work * 2) + tid) - 1] = x0 * ((tid + 1) & 1) + y0 * (tid & 1);
         }
     } else if (depth + 1 < MAX_DEPTH && d / SUBDIV > MIN_SIZE) {
+        //printf("KERNEL SUBDIVIDIR\n");
         // SUBDIVIDIR
         //printf("asd\n");
         if (tid == 0) {
@@ -81,6 +85,7 @@ __global__ void ASKNEW(unsigned int *d_ns, unsigned int *d_nbf, int *d_offs1, in
                 (y0 + (tid >> SUBDIV_ELEMSP) * (d / SUBDIV)) * (tid & 1);
         }
     } else {
+        //printf("EXHAUSTIVO\n");
         //BF
         // LLENAR DE ATRAS PA ADELANTE
         if (tid==0){
@@ -159,7 +164,7 @@ void AdaptiveSerialKernelsNEW(int *dwells, unsigned int *h_nextSize,
     unsigned int SUBDIV_ELEMS2 = SUBDIV_ELEMS * 2;
     unsigned int SUBDIV_ELEMSP = log2(SUBDIV) + 1;
     unsigned int SUBDIV_ELEMSX = SUBDIV - 1;
-    size_t OLTSize = INIT_SUBDIV*INIT_SUBDIV*SUBDIV*SUBDIV*2;
+    size_t OLTSize = (unsigned long)INIT_SUBDIV*INIT_SUBDIV*SUBDIV*SUBDIV*2;
     #ifdef DEBUG
         float time;
         cudaEvent_t start, stop;
@@ -177,9 +182,8 @@ void AdaptiveSerialKernelsNEW(int *dwells, unsigned int *h_nextSize,
     #ifdef DEBUG
         dim3 gold = g;
     #endif
-        printf("MAX_DEPTH = %i      d = %i    SUBDIV=%i    d/SUBDIV = %i      MIN_SIZE=%i",
-                MAX_DEPTH, d, SUBDIV, d/SUBDIV, MIN_SIZE);
-        getchar();
+    printf("MAX_DEPTH = %i      d = %i    SUBDIV=%i    d/SUBDIV = %i      MIN_SIZE=%i", MAX_DEPTH, d, SUBDIV, d/SUBDIV, MIN_SIZE);
+    printf("     *h_nextsize %lu     g.x*g.y*g.z %lu     \n", (unsigned long) *h_nextSize, (unsigned long) g.x * g.y * g.z);
     if (*h_nextSize < g.x*g.y*g.z){
         g = dim3((g.x*g.y*g.z)-*h_nextSize, (d + b.x - 1)/b.x, (d + b.y - 1)/b.y);
         if (2 < MAX_DEPTH && d/SUBDIV > MIN_SIZE){
@@ -204,12 +208,18 @@ void AdaptiveSerialKernelsNEW(int *dwells, unsigned int *h_nextSize,
         std::swap(*d_offsets1, *d_offsets2);
 
         cudaFree(*d_offsets2);
-        OLTSize = *h_nextSize*SUBDIV*SUBDIV*SUBDIV*SUBDIV*2;
-        //printf("OLTSize = %lu    --> %f GiBytes\n", OLTSize, 1.0*OLTSize*sizeof(int)/(1024*1024*1024.0));
-        (cudaMalloc((void **)d_offsets2,  sizeof(int) * OLTSize));
-        (cudaMemset(d_nextSize, 0, sizeof(int)));
-        (cudaMemset(d_nbf, 0, sizeof(int)));
         d = d / SUBDIV;
+        if( d/SUBDIV <= MIN_SIZE ){
+            OLTSize = *h_nextSize * (unsigned long)SUBDIV * SUBDIV * 2;
+        }
+        else{
+            OLTSize = *h_nextSize * (unsigned long)SUBDIV*SUBDIV*SUBDIV*SUBDIV*2;
+        }
+
+        printf("OLTSize = %lu    --> %f GiBytes\n", OLTSize, 1.0*OLTSize*sizeof(int)/(1024*1024*1024.0));
+        cucheck(cudaMalloc((void **)d_offsets2,  sizeof(int) * OLTSize));
+        cucheck(cudaMemset(d_nextSize, 0, sizeof(int)));
+        cucheck(cudaMemset(d_nbf, 0, sizeof(int)));
         cucheck(cudaDeviceSynchronize());
 
         g = dim3(*h_nextSize, SUBDIV, SUBDIV);
@@ -217,10 +227,12 @@ void AdaptiveSerialKernelsNEW(int *dwells, unsigned int *h_nextSize,
         #ifdef DEBUG
             printf("[level %2i].....", i); fflush(stdout);
         #endif
+        //printf("ANTES DE KERNEL MAX_DEPTH = %i      d = %i    SUBDIV=%i    d/SUBDIV = %i      MIN_SIZE=%i", MAX_DEPTH, d, SUBDIV, d/SUBDIV, MIN_SIZE);
         ASKNEW<<<g, b>>>(d_nextSize, d_nbf, *d_offsets1,  *d_offsets2, dwells, h, w, cmin, cmax, d,
                       i, SUBDIV, MAX_DWELL, MIN_SIZE, MAX_DEPTH, SUBDIV_ELEMS,
                       SUBDIV_ELEMS2, SUBDIV_ELEMSP, SUBDIV_ELEMSX, OLTSize);
         cucheck(cudaDeviceSynchronize());
+        //printf(" *h_nextsize %lu     g.x*g.y*g.z %lu     \n", (long unsigned) *h_nextSize, (long unsigned) g.x * g.y * g.z);
         cudaMemcpy(h_nextSize, d_nextSize, sizeof(int), cudaMemcpyDeviceToHost);
         #ifdef DEBUG
             dim3 gold = g;
