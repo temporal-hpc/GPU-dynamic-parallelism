@@ -12,11 +12,11 @@ CA_MAXDWELL=512
 MAX_DEPTH=1000
 DATE=$(exec date +"%T-%m-%d-%Y (%:z %Z)")
 echo "DATE = ${DATE}"
-OUTPUT=data/REA${REAL}-REP${REPE}-BS${BS}-MAXDWELL${CA_MAXDWELL}-MAXDEPTH${MAX_DEPTH}.dat
+OUTPUT=data/REA${REAL}-REP${REPE}-BS${BS}.dat
 
 # COMPILE
 make -B REALIZATIONS=${REAL}  REPEATS=${REPE} BSX=${BS} BSY=${BS} BENCHMARK=BENCHMARK
-echo "#NEW BENCHMARK ${DATE}">> ${OUTPUT}
+echo "#NEW BENCHMARK ${DATE}        MAXDWELL=${CA_MAXDWELL}  MAX_DEPTH=${MAX_DEPTH}">> ${OUTPUT}
 echo "#N, g0,r,B,                   perfAP0                             perfA1                            perfA2                               perfA3" >> ${OUTPUT}
 
 maxEXP=10
