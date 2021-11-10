@@ -125,19 +125,18 @@ void AdaptiveSerialKernels(int *dwell, unsigned int *h_nextSize,
         std::swap(d_offsets1, d_offsets2);
 
         cudaFree(d_offsets2);
-        d = d / SUBDIV;
         unsigned long OLTSize;
-        if( d/SUBDIV <= MIN_SIZE ){
-            printf("AQIO\n");
-            getchar();
+        if( d/SUBDIV/SUBDIV <= MIN_SIZE ){
             OLTSize = 0;
             g = dim3(*h_nextSize, 1, 1);
+			MIN_SIZE += d;
+	    	//printf("%i\n",*h_nextSize) ;
+            //OLTSize = *h_nextSize * (size_t)SUBDIV*SUBDIV*SUBDIV*SUBDIV*2;
 
-            //OLTSize = *h_nextSize * SUBDIV*SUBDIV*SUBDIV*SUBDIV*2;
-        }
-        else{
-            OLTSize = *h_nextSize * SUBDIV*SUBDIV*SUBDIV*SUBDIV*2;
+        } else {
+            OLTSize = *h_nextSize * (size_t)SUBDIV*SUBDIV*SUBDIV*SUBDIV*2;
             g = dim3(*h_nextSize, SUBDIV, SUBDIV);
+        	d = d / SUBDIV;
         }
         cucheck(cudaMalloc((void **)&d_offsets2, OLTSize));
         cucheck(cudaMemset(d_nextSize, 0, sizeof(int)));

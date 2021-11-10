@@ -207,22 +207,23 @@ void AdaptiveSerialKernelsNEW(int *dwells, unsigned int *h_nextSize,
 
         std::swap(*d_offsets1, *d_offsets2);
 
-        cudaFree(*d_offsets2);
-        d = d / SUBDIV;
-        if( d/SUBDIV <= MIN_SIZE ){
-            OLTSize = *h_nextSize * (unsigned long)SUBDIV * SUBDIV * 2;
-        }
-        else{
+        if( d/SUBDIV/SUBDIV <= MIN_SIZE ){
+            //OLTSize = *h_nextSize * (unsigned long)SUBDIV * SUBDIV * 2;
+            g = dim3(*h_nextSize, 1, 1);
+			MIN_SIZE += d;
+        } else {
+        	g = dim3(*h_nextSize, SUBDIV, SUBDIV);
+        	cudaFree(*d_offsets2);
             OLTSize = *h_nextSize * (unsigned long)SUBDIV*SUBDIV*SUBDIV*SUBDIV*2;
+        	cucheck(cudaMalloc((void **)d_offsets2,  sizeof(int) * OLTSize));
+        	d = d / SUBDIV;
         }
 
         printf("OLTSize = %lu    --> %f GiBytes\n", OLTSize, 1.0*OLTSize*sizeof(int)/(1024*1024*1024.0));
-        cucheck(cudaMalloc((void **)d_offsets2,  sizeof(int) * OLTSize));
         cucheck(cudaMemset(d_nextSize, 0, sizeof(int)));
         cucheck(cudaMemset(d_nbf, 0, sizeof(int)));
         cucheck(cudaDeviceSynchronize());
 
-        g = dim3(*h_nextSize, SUBDIV, SUBDIV);
          //printf("Running kernel with b(%i,%i) and g(%i, %i, %i) and d=%i\n", b.x, b.y, g.x, g.y, g.z, d);
         #ifdef DEBUG
             printf("[level %2i].....", i); fflush(stdout);
