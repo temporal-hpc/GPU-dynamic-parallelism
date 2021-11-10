@@ -15,7 +15,7 @@ echo "DATE = ${DATE}"
 OUTPUT=data/benchmark-REA${REAL}-REP${REPE}-BS${BS}-MAXDWELL${CA_MAXDWELL}-MAXDEPTH${MAX_DEPTH}.dat
 
 # COMPILE
-make -B REALIZATIONS=${REAL}  REPEATS=${REPE} BSX=${BS} BSY=${BS}
+make -B REALIZATIONS=${REAL}  REPEATS=${REPE} BSX=${BS} BSY=${BS} BENCHMARK=BENCHMARK
 echo "#NEW BENCHMARK ${DATE}">> ${OUTPUT}
 echo "#N, g0,r,B,                   perfAP0                             perfA1                            perfA2                               perfA3" >> ${OUTPUT}
 

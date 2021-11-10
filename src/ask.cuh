@@ -121,10 +121,10 @@ void AdaptiveSerialKernels(int *dwell, unsigned int *h_nextSize,
                   SUBDIV_ELEMS2, SUBDIV_ELEMSP, SUBDIV_ELEMSX);
     cucheck(cudaDeviceSynchronize());
     for(int i = depth + 1; i < MAX_DEPTH && d / SUBDIV > MIN_SIZE; i++) {
-        cudaMemcpy(h_nextSize, d_nextSize, sizeof(int), cudaMemcpyDeviceToHost);
+        cucheck(cudaMemcpy(h_nextSize, d_nextSize, sizeof(int), cudaMemcpyDeviceToHost));
         std::swap(d_offsets1, d_offsets2);
 
-        cudaFree(d_offsets2);
+        cucheck(cudaFree(d_offsets2));
         unsigned long OLTSize;
         if( d/SUBDIV/SUBDIV <= MIN_SIZE ){
             OLTSize = 0;
@@ -140,7 +140,7 @@ void AdaptiveSerialKernels(int *dwell, unsigned int *h_nextSize,
         }
         cucheck(cudaMalloc((void **)&d_offsets2, OLTSize));
         cucheck(cudaMemset(d_nextSize, 0, sizeof(int)));
-        printf("OLTSize = %lu    --> %f GiBytes\n", OLTSize, 1.0*OLTSize*sizeof(int)/(1024*1024*1024.0));
+        //printf("OLTSize = %lu    --> %f GiBytes\n", OLTSize, 1.0*OLTSize*sizeof(int)/(1024*1024*1024.0));
 
         #ifdef DEBUG
             cudaEventRecord(stop, 0);
@@ -156,10 +156,10 @@ void AdaptiveSerialKernels(int *dwell, unsigned int *h_nextSize,
         cucheck(cudaDeviceSynchronize());
 
     }
-    cudaFree(d_offsets1);
-    cudaFree(d_offsets2);
+    cucheck(cudaFree(d_offsets1));
+    cucheck(cudaFree(d_offsets2));
     #ifdef DEBUG
-        cudaMemcpy(h_nextSize, d_nextSize, sizeof(int), cudaMemcpyDeviceToHost);
+        cucheck(cudaMemcpy(h_nextSize, d_nextSize, sizeof(int), cudaMemcpyDeviceToHost));
         cudaEventRecord(stop, 0);
         cudaEventSynchronize(stop);
         cudaEventElapsedTime(&time, start, stop); // that's our time!
