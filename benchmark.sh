@@ -1,22 +1,25 @@
 #!/bin/bash
-if [ "$#" -ne 3 ]; then
-    echo "run as ./benchmark.sh <REALIZATIONS> <REPEATS> <BS>"
+if [ "$#" -ne 5 ]; then
+    echo "run as ./benchmark.sh <STRING> <ARCH> <REALIZATIONS> <REPEATS> <BS>"
+    echo "Example: ./benchmark.sh A100 sm_80 4 8 32"
     exit
 fi
-REAL=$1
-REPE=$2
-BS=$3
+STRING=$1
+ARCH=$2
+REAL=$3
+REPE=$4
+BS=$5
 echo "REALIZATIONS=${REAL}  REPEATS=${REPE}"
 GPUPROG=./bin/gpuDP
 CA_MAXDWELL=512
 MAX_DEPTH=1000
 DATE=$(exec date +"%T-%m-%d-%Y (%:z %Z)")
 echo "DATE = ${DATE}"
-OUTPUT=data/REA${REAL}-REP${REPE}-BS${BS}.dat
+OUTPUT=data/${STRING}-ARCH${ARCH}-REA${REAL}-REP${REPE}-BS${BS}.dat
 
 # COMPILE
-make -B REALIZATIONS=${REAL}  REPEATS=${REPE} BSX=${BS} BSY=${BS} BENCHMARK=BENCHMARK
-echo "#NEW BENCHMARK ${DATE}        MAXDWELL=${CA_MAXDWELL}  MAX_DEPTH=${MAX_DEPTH}">> ${OUTPUT}
+make -B ARCH=${ARCH} REALIZATIONS=${REAL}  REPEATS=${REPE} BSX=${BS} BSY=${BS} BENCHMARK=BENCHMARK
+echo "#NEW BENCHMARK ${STRING} ${ARCH}  ${DATE}        MAXDWELL=${CA_MAXDWELL}  MAX_DEPTH=${MAX_DEPTH}">> ${OUTPUT}
 echo "#N, g0,r,B,                   perfAP0                             perfA1                            perfA2                               perfA3" >> ${OUTPUT}
 
 maxEXP=10
