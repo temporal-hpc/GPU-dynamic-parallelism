@@ -61,6 +61,7 @@ int main(int argc, char **argv) {
     #ifdef VERBOSE
         float domainGBytes = (float)(sizeof(unsigned int) * W * H)/(1024*1024*1024);
         printf("\nGrid..............................................%i x %i (%.2f GiB)\n", W, H, domainGBytes);
+        printf("g=%i r=%i B=%i\n", g, r, B);
     #endif
 
 
