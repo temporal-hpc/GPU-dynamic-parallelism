@@ -45,9 +45,9 @@ int main(int argc, char **argv) {
     float cmax = atof(argv[7]);
 
     int CA_MAXDWELL = atoi(argv[8]);
-    int B = atoi(argv[9]);
-    int g0 = atoi(argv[10]);
-    int r = atoi(argv[11]);
+    int g = atoi(argv[9]);
+    int r = atoi(argv[10]);
+    int B = atoi(argv[11]);
     int MAX_DEPTH = atoi(argv[12]);
     string fileName = argv[13];
 
@@ -61,6 +61,7 @@ int main(int argc, char **argv) {
     #ifdef VERBOSE
         float domainGBytes = (float)(sizeof(unsigned int) * W * H)/(1024*1024*1024);
         printf("\nGrid..............................................%i x %i (%.2f GiB)\n", W, H, domainGBytes);
+        printf("g=%i r=%i B=%i\n", g, r, B);
     #endif
 
 
@@ -80,7 +81,7 @@ int main(int argc, char **argv) {
     #ifdef VERBOSE
         printf("%s (REPEATS=%3i, REALIZATIONS=%3i)............", approachStr[approach], REPEATS, REALIZATIONS); fflush(stdout);
     #endif
-    statistics stat = doTest(approach, d_dwells, W, H, bottomLeftCorner, upperRightCorner, g0, r, CA_MAXDWELL, B, MAX_DEPTH);
+    statistics stat = doTest(approach, d_dwells, W, H, bottomLeftCorner, upperRightCorner, g, r, CA_MAXDWELL, B, MAX_DEPTH);
     cudaDeviceSynchronize();
     #ifdef VERBOSE
         printf("done: %f secs (stErr %f%%)\n", stat.mean, 100.0*stat.sterr/stat.mean); fflush(stdout);
@@ -127,7 +128,7 @@ int main(int argc, char **argv) {
         #ifdef VERBOSE
             printf("GridLines........................................."); fflush(stdout);
         #endif
-        float gridTime = doGridLines( d_dwells, W, H, bottomLeftCorner, upperRightCorner, g0, r, CA_MAXDWELL, B, MAX_DEPTH);
+        float gridTime = doGridLines( d_dwells, W, H, bottomLeftCorner, upperRightCorner, g, r, CA_MAXDWELL, B, MAX_DEPTH);
         cudaDeviceSynchronize();
         #ifdef VERBOSE
             printf("done: %f secs\n", gridTime); fflush(stdout);
@@ -167,7 +168,7 @@ int main(int argc, char **argv) {
     #endif
 
     //printf("%i,%s,   %i, %i,   %i, %i,   %i, %i,   %i, %i, %i,   %f, %f, %f, %f\n", 
-    //        approach, approachStr[approach], BSX, BSY, W, H, CA_MAXDWELL, MAX_DEPTH, g0, r, B, 
+    //        approach, approachStr[approach], BSX, BSY, W, H, CA_MAXDWELL, MAX_DEPTH, g, r, B, 
     //        stat.mean, stat.stdev, stat.sterr, 100.0*stat.sterr/stat.mean);
     printf("%i,%f,%f,%f,%f", approach, stat.mean, stat.stdev, stat.sterr, 100.0*stat.sterr/stat.mean);
     exit(EXIT_SUCCESS);

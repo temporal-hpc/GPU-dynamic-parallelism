@@ -1,6 +1,10 @@
 #pragma once
 
 /** CUDA check macro */
+#ifdef BENCHMARK
+#define cucheck(call) {(call);}
+#define cucheck_dev(call) {(call);}
+#else
 #define cucheck(call)                                                               \
     {                                                                               \
         cudaError_t res = (call);                                                   \
@@ -21,6 +25,7 @@
             assert(0);                                                              \
         }                                                                           \
     }
+#endif
 
 /** block size along */
 #ifndef BSX

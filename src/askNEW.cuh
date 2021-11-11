@@ -158,7 +158,7 @@ void AdaptiveSerialKernelsNEW(int *dwells, unsigned int *h_nextSize,
     dim3 b(BSX, BSY, 1), g(1, INIT_SUBDIV, INIT_SUBDIV);
     unsigned int *d_nbf;
     cucheck(cudaMalloc(&d_nbf, sizeof(int)));
-    (cudaMemset(d_nbf, 0, sizeof(int)));
+    cucheck(cudaMemset(d_nbf, 0, sizeof(int)));
 
     unsigned int SUBDIV_ELEMS = SUBDIV * SUBDIV;
     unsigned int SUBDIV_ELEMS2 = SUBDIV_ELEMS * 2;
@@ -178,12 +178,12 @@ void AdaptiveSerialKernelsNEW(int *dwells, unsigned int *h_nextSize,
                   depth, SUBDIV, MAX_DWELL, MIN_SIZE, MAX_DEPTH, SUBDIV_ELEMS,
                   SUBDIV_ELEMS2, SUBDIV_ELEMSP, SUBDIV_ELEMSX, OLTSize);
     cucheck(cudaDeviceSynchronize());
-    cudaMemcpy(h_nextSize, d_nextSize, sizeof(int), cudaMemcpyDeviceToHost);
+    cucheck(cudaMemcpy(h_nextSize, d_nextSize, sizeof(int), cudaMemcpyDeviceToHost));
     #ifdef DEBUG
         dim3 gold = g;
     #endif
-    printf("MAX_DEPTH = %i      d = %i    SUBDIV=%i    d/SUBDIV = %i      MIN_SIZE=%i", MAX_DEPTH, d, SUBDIV, d/SUBDIV, MIN_SIZE);
-    printf("     *h_nextsize %lu     g.x*g.y*g.z %lu     \n", (unsigned long) *h_nextSize, (unsigned long) g.x * g.y * g.z);
+    //printf("MAX_DEPTH = %i      d = %i    SUBDIV=%i    d/SUBDIV = %i      MIN_SIZE=%i", MAX_DEPTH, d, SUBDIV, d/SUBDIV, MIN_SIZE);
+    //printf("     *h_nextsize %lu     g.x*g.y*g.z %lu     \n", (unsigned long) *h_nextSize, (unsigned long) g.x * g.y * g.z);
     if (*h_nextSize < g.x*g.y*g.z){
         g = dim3((g.x*g.y*g.z)-*h_nextSize, (d + b.x - 1)/b.x, (d + b.y - 1)/b.y);
         if (2 < MAX_DEPTH && d/SUBDIV > MIN_SIZE){
@@ -213,13 +213,13 @@ void AdaptiveSerialKernelsNEW(int *dwells, unsigned int *h_nextSize,
 			MIN_SIZE += d;
         } else {
         	g = dim3(*h_nextSize, SUBDIV, SUBDIV);
-        	cudaFree(*d_offsets2);
+        	cucheck(cudaFree(*d_offsets2));
             OLTSize = *h_nextSize * (unsigned long)SUBDIV*SUBDIV*SUBDIV*SUBDIV*2;
         	cucheck(cudaMalloc((void **)d_offsets2,  sizeof(int) * OLTSize));
         	d = d / SUBDIV;
         }
 
-        printf("OLTSize = %lu    --> %f GiBytes\n", OLTSize, 1.0*OLTSize*sizeof(int)/(1024*1024*1024.0));
+        //printf("OLTSize = %lu    --> %f GiBytes\n", OLTSize, 1.0*OLTSize*sizeof(int)/(1024*1024*1024.0));
         cucheck(cudaMemset(d_nextSize, 0, sizeof(int)));
         cucheck(cudaMemset(d_nbf, 0, sizeof(int)));
         cucheck(cudaDeviceSynchronize());
@@ -234,7 +234,7 @@ void AdaptiveSerialKernelsNEW(int *dwells, unsigned int *h_nextSize,
                       SUBDIV_ELEMS2, SUBDIV_ELEMSP, SUBDIV_ELEMSX, OLTSize);
         cucheck(cudaDeviceSynchronize());
         //printf(" *h_nextsize %lu     g.x*g.y*g.z %lu     \n", (long unsigned) *h_nextSize, (long unsigned) g.x * g.y * g.z);
-        cudaMemcpy(h_nextSize, d_nextSize, sizeof(int), cudaMemcpyDeviceToHost);
+        cucheck(cudaMemcpy(h_nextSize, d_nextSize, sizeof(int), cudaMemcpyDeviceToHost));
         #ifdef DEBUG
             dim3 gold = g;
         #endif

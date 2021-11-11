@@ -162,10 +162,10 @@ void AdaptiveSerialKernels(int *dwell, unsigned int *h_nextSize,
         //getchar();
 
     }
-    cudaFree(d_offsets1);
-    cudaFree(d_offsets2);
+    cucheck(cudaFree(d_offsets1));
+    cucheck(cudaFree(d_offsets2));
     #ifdef DEBUG
-        cudaMemcpy(h_nextSize, d_nextSize, sizeof(int), cudaMemcpyDeviceToHost);
+        cucheck(cudaMemcpy(h_nextSize, d_nextSize, sizeof(int), cudaMemcpyDeviceToHost));
         cudaEventRecord(stop, 0);
         cudaEventSynchronize(stop);
         cudaEventElapsedTime(&time, start, stop); // that's our time!
