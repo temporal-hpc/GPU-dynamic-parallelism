@@ -133,20 +133,11 @@ void AdaptiveSerialKernels(int *dwell, unsigned int *h_nextSize,
 
         cudaFree(d_offsets2);
         size_t OLTSize;
-        if( d/SUBDIV/SUBDIV <= MIN_SIZE && false){
-            //OLTSize = *h_nextSize * (size_t)SUBDIV*SUBDIV*SUBDIV*SUBDIV*2;
-            OLTSize = *h_nextSize * (size_t)SUBDIV*SUBDIV*2;;
-            g = dim3(*h_nextSize, 1, 1);
-			MIN_SIZE += d;
-            //d = d / SUBDIV;
-	    	printf("Entro %i\n",*h_nextSize) ;
-            //OLTSize = *h_nextSize * (size_t)SUBDIV*SUBDIV*SUBDIV*SUBDIV*2;
-
-        } else { 
-            OLTSize = *h_nextSize * (size_t)SUBDIV*SUBDIV*2;
-            g = dim3(*h_nextSize, SUBDIV, SUBDIV);
-       		d = d / SUBDIV;
-        }
+        
+        OLTSize = *h_nextSize * (size_t)SUBDIV*SUBDIV*2;
+        g = dim3(*h_nextSize, SUBDIV, SUBDIV);
+       	d = d / SUBDIV;
+        
         cucheck(cudaMalloc((void **)&d_offsets2, OLTSize*sizeof(int)));
 		cudaDeviceSynchronize();
         cucheck(cudaMemset(d_nextSize, 0, sizeof(int)));

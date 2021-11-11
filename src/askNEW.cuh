@@ -7,14 +7,11 @@
 __global__ void ASKNEW(unsigned int *d_ns, unsigned int *d_nbf, int *d_offs1, int *d_offs2, int *dwells,
                     int w, int h, complex cmin, complex cmax, int d, int depth,
                     unsigned int SUBDIV, unsigned int MAX_DWELL,
-                    unsigned int MIN_SIZE, unsigned int MAX_DEPTH,
-                    unsigned int SUBDIV_ELEMS, unsigned int SUBDIV_ELEMS2,
-                    unsigned int SUBDIV_ELEMSP, unsigned int SUBDIV_ELEMSX, int OLTSize) {
+                    unsigned int MIN_SIZE, unsigned int MAX_DEPTH, int OLTSize) {
     // check whether all boundary pixels have the same dwell
-    unsigned int use = blockIdx.x * SUBDIV_ELEMS2 + (blockIdx.z * gridDim.y + blockIdx.y) * 2;
-
-    const unsigned int x0 = d_offs1[use];
-    const unsigned int y0 = d_offs1[use + 1];
+    unsigned int use = blockIdx.x * 2;
+    const unsigned int x0 = d_offs1[use] + blockIdx.y*d;
+    const unsigned int y0 = d_offs1[use + 1]+ blockIdx.z*d;
 
     __shared__ unsigned int off_index;
     __shared__ unsigned int off_index_work;
@@ -61,28 +58,19 @@ __global__ void ASKNEW(unsigned int *d_ns, unsigned int *d_nbf, int *d_offs1, in
             //printf("ANTES [tid %i] OLTSize = %lu     off_index_work %i   tid %i    x0=%i   y0=%i   index=%i\n", tid, (unsigned long) OLTSize, off_index_work, tid, x0, y0, OLTSize - ((off_index_work * 2) + tid) - 1);
             dwells[y0*(size_t)w + x0] = comm_dwell;
             off_index_work = atomicAdd(d_nbf, 1);
-        }
-        __syncthreads();
-        if (tid < 2) {
-            // cada region (bloque) escribe su par (x0,y0) en la OLT de atras hacia adelante - no es necesaria
-            // sincronizacion por bloque pues cada bloque tiene resevado su espacio (por blockIdx)
-            //printf("[tid %i] OLTSize = %lu     off_index_work %i   tid %i    x0=%i   y0=%i   index=%i\n", tid, (unsigned long) OLTSize, off_index_work, tid, x0, y0, OLTSize - ((off_index_work * 2) + tid) - 1);
-            d_offs2[OLTSize - ((off_index_work * 2) + tid) - 1] = x0 * ((tid + 1) & 1) + y0 * (tid & 1);
+            d_offs2[OLTSize - ((off_index_work * 2)) - 1] = x0;
+            d_offs2[OLTSize - ((off_index_work * 2) + 1) - 1] = y0 ;
         }
     } else if (depth + 1 < MAX_DEPTH && d / SUBDIV > MIN_SIZE) {
         //printf("KERNEL SUBDIVIDIR\n");
         // SUBDIVIDIR
         //printf("asd\n");
         if (tid == 0) {
-        //printf("Block (%i, %i, %i) doing SUBDIV\n", blockIdx.x, blockIdx.y, blockIdx.z);
             off_index = atomicAdd(d_ns, 1);
-        }
-        __syncthreads();
-        if (tid < SUBDIV_ELEMS2) {
-            d_offs2[(off_index * SUBDIV_ELEMS2) + tid] =
-                (x0 + ((tid >> 1) & SUBDIV_ELEMSX) * (d / SUBDIV)) *
-                    ((tid + 1) & 1) +
-                (y0 + (tid >> SUBDIV_ELEMSP) * (d / SUBDIV)) * (tid & 1);
+            d_offs2[(off_index * 2)] = (x0);
+            d_offs2[(off_index * 2) + 1] = (y0);
+            //printf("offindex = %i, index = %i, blockx=%i, blocky=%i, blockz=%i\n", off_index, (off_index * 2), (blockIdx.x), (blockIdx.y), blockIdx.z);
+            //printf("level %i --- x0 = %i, y0 = %i\n", depth, x0, y0);
         }
     } else {
         //printf("EXHAUSTIVO\n");
@@ -90,11 +78,9 @@ __global__ void ASKNEW(unsigned int *d_ns, unsigned int *d_nbf, int *d_offs1, in
         // LLENAR DE ATRAS PA ADELANTE
         if (tid==0){
             off_index_work = atomicAdd(d_nbf, 1);
-        }
-        __syncthreads();
-        if (tid < 2) {
-            // cada region escribe su par (x,y)
-            d_offs2[OLTSize - ((off_index_work * 2) + tid) - 1] = x0 * ((tid + 1) & 1) + y0 * (tid & 1);
+            d_offs2[OLTSize - ((off_index_work * 2)) - 1] = x0;
+            d_offs2[OLTSize - ((off_index_work * 2) + 1) - 1] = y0 ;
+
         }
     }
 }
@@ -160,23 +146,18 @@ void AdaptiveSerialKernelsNEW(int *dwells, unsigned int *h_nextSize,
     cucheck(cudaMalloc(&d_nbf, sizeof(int)));
     cucheck(cudaMemset(d_nbf, 0, sizeof(int)));
 
-    unsigned int SUBDIV_ELEMS = SUBDIV * SUBDIV;
-    unsigned int SUBDIV_ELEMS2 = SUBDIV_ELEMS * 2;
-    unsigned int SUBDIV_ELEMSP = log2(SUBDIV) + 1;
-    unsigned int SUBDIV_ELEMSX = SUBDIV - 1;
-    size_t OLTSize = (unsigned long)INIT_SUBDIV*INIT_SUBDIV*SUBDIV*SUBDIV*2;
+    size_t OLTSize = (unsigned long)INIT_SUBDIV*INIT_SUBDIV*2;
     #ifdef DEBUG
         float time;
         cudaEvent_t start, stop;
         cudaEventCreate(&start);
         cudaEventCreate(&stop);
         cudaEventRecord(start, 0);
-        printf("\n[level %2i].....", 1); fflush(stdout);
+        printf("\n[level %2i]..... OLTSIZE = %llu --- ", 1, OLTSize); fflush(stdout);
     #endif
 
     ASKNEW<<<g, b>>>(d_nextSize, d_nbf, *d_offsets1, *d_offsets2, dwells, h, w, cmin, cmax, d,
-                  depth, SUBDIV, MAX_DWELL, MIN_SIZE, MAX_DEPTH, SUBDIV_ELEMS,
-                  SUBDIV_ELEMS2, SUBDIV_ELEMSP, SUBDIV_ELEMSX, OLTSize);
+                  depth, SUBDIV, MAX_DWELL, MIN_SIZE, MAX_DEPTH, OLTSize);
     cucheck(cudaDeviceSynchronize());
     cucheck(cudaMemcpy(h_nextSize, d_nextSize, sizeof(int), cudaMemcpyDeviceToHost));
     #ifdef DEBUG
@@ -207,17 +188,13 @@ void AdaptiveSerialKernelsNEW(int *dwells, unsigned int *h_nextSize,
 
         std::swap(*d_offsets1, *d_offsets2);
 
-        if( d/SUBDIV/SUBDIV <= MIN_SIZE ){
-            //OLTSize = *h_nextSize * (unsigned long)SUBDIV * SUBDIV * 2;
-            g = dim3(*h_nextSize, 1, 1);
-			MIN_SIZE += d;
-        } else {
-        	g = dim3(*h_nextSize, SUBDIV, SUBDIV);
-        	cucheck(cudaFree(*d_offsets2));
-            OLTSize = *h_nextSize * (unsigned long)SUBDIV*SUBDIV*SUBDIV*SUBDIV*2;
-        	cucheck(cudaMalloc((void **)d_offsets2,  sizeof(int) * OLTSize));
-        	d = d / SUBDIV;
-        }
+        
+        g = dim3(*h_nextSize, SUBDIV, SUBDIV);
+        cucheck(cudaFree(*d_offsets2));
+        OLTSize = *h_nextSize * (unsigned long)SUBDIV*SUBDIV*2;
+        cucheck(cudaMalloc((void **)d_offsets2,  sizeof(int) * OLTSize));
+        d = d / SUBDIV;
+        
 
         //printf("OLTSize = %lu    --> %f GiBytes\n", OLTSize, 1.0*OLTSize*sizeof(int)/(1024*1024*1024.0));
         cucheck(cudaMemset(d_nextSize, 0, sizeof(int)));
@@ -226,12 +203,11 @@ void AdaptiveSerialKernelsNEW(int *dwells, unsigned int *h_nextSize,
 
          //printf("Running kernel with b(%i,%i) and g(%i, %i, %i) and d=%i\n", b.x, b.y, g.x, g.y, g.z, d);
         #ifdef DEBUG
-            printf("[level %2i].....", i); fflush(stdout);
+            printf("[level %2i]..... OLTSIZE = %llu --- ", i, OLTSize); fflush(stdout);
         #endif
         //printf("ANTES DE KERNEL MAX_DEPTH = %i      d = %i    SUBDIV=%i    d/SUBDIV = %i      MIN_SIZE=%i", MAX_DEPTH, d, SUBDIV, d/SUBDIV, MIN_SIZE);
         ASKNEW<<<g, b>>>(d_nextSize, d_nbf, *d_offsets1,  *d_offsets2, dwells, h, w, cmin, cmax, d,
-                      i, SUBDIV, MAX_DWELL, MIN_SIZE, MAX_DEPTH, SUBDIV_ELEMS,
-                      SUBDIV_ELEMS2, SUBDIV_ELEMSP, SUBDIV_ELEMSX, OLTSize);
+                      i, SUBDIV, MAX_DWELL, MIN_SIZE, MAX_DEPTH, OLTSize);
         cucheck(cudaDeviceSynchronize());
         //printf(" *h_nextsize %lu     g.x*g.y*g.z %lu     \n", (long unsigned) *h_nextSize, (long unsigned) g.x * g.y * g.z);
         cucheck(cudaMemcpy(h_nextSize, d_nextSize, sizeof(int), cudaMemcpyDeviceToHost));
