@@ -7,15 +7,13 @@
 __global__ void ASK(unsigned int *d_ns, int *d_offs1, int *d_offs2, int *dwells,
                     int w, int h, complex cmin, complex cmax, int d, int depth,
                     unsigned int SUBDIV, unsigned int MAX_DWELL,
-                    unsigned int MIN_SIZE, unsigned int MAX_DEPTH,
-                    unsigned int SUBDIV_ELEMS, unsigned int SUBDIV_ELEMS2,
-                    unsigned int SUBDIV_ELEMSP, unsigned int SUBDIV_ELEMSX) {
+                    unsigned int MIN_SIZE, unsigned int MAX_DEPTH) {
     // check whether all boundary pixels have the same dwell
-    unsigned int use =
-        blockIdx.x * SUBDIV_ELEMS2 + (blockIdx.z * gridDim.y + blockIdx.y) * 2;
-
-    const unsigned int x0 = d_offs1[use];
-    const unsigned int y0 = d_offs1[use + 1];
+    //unsigned int use =
+    //    blockIdx.x * SUBDIV_ELEMS2 + (blockIdx.z * SUBDIV + blockIdx.y) * 2;
+    unsigned int use = blockIdx.x * 2;
+    const unsigned int x0 = d_offs1[use] + blockIdx.y*d;
+    const unsigned int y0 = d_offs1[use + 1]+ blockIdx.z*d;
 
     __shared__ unsigned int off_index;
 
@@ -54,8 +52,10 @@ __global__ void ASK(unsigned int *d_ns, int *d_offs1, int *d_offs2, int *dwells,
     // SUBDIVISION
     // ----------------------
     //printf("%i - %i - %i - %i, %i\n", comm_dwell, depth, MAX_DEPTH, d, MIN_SIZE);
+ 
     if (comm_dwell != DIFF_DWELL) {
         // RELLENAR (T)
+        //printf("x0 = %i, y0 = %i\n", x0, y0);
         unsigned int x = threadIdx.x;
         unsigned int y = threadIdx.y;
         for (unsigned int ry = y; ry < d; ry += blockDim.y) {
@@ -69,19 +69,23 @@ __global__ void ASK(unsigned int *d_ns, int *d_offs1, int *d_offs2, int *dwells,
     } else if (depth + 1 < MAX_DEPTH && d / SUBDIV > MIN_SIZE) {
         // SUBDIVIDIR
         //printf("asd\n");
+
         if (tid == 0) {
             off_index = atomicAdd(d_ns, 1);
+            d_offs2[(off_index * 2)] = (x0);
+            d_offs2[(off_index * 2) + 1] = (y0);
+            //printf("offindex = %i, index = %i, blockx=%i, blocky=%i, blockz=%i\n", off_index, (off_index * 2), (blockIdx.x), (blockIdx.y), blockIdx.z);
+            //printf("level %i --- x0 = %i, y0 = %i\n", depth, x0, y0);
         }
-        __syncthreads();
-        if (tid < SUBDIV_ELEMS2) {
-            d_offs2[(off_index * SUBDIV_ELEMS2) + tid] =
-                (x0 + ((tid >> 1) & SUBDIV_ELEMSX) * (d / SUBDIV)) *
-                    ((tid + 1) & 1) +
-                (y0 + (tid >> SUBDIV_ELEMSP) * (d / SUBDIV)) * (tid & 1);
-        }
+        /*__syncthreads();
+        if (tid < 2) {
+            d_offs2[(off_index * 2) + tid] = (x0)*((tid + 1) & 1) + (y0)*(tid & 1);
+        }*/
     } else {
         // FUERZA BRUTA
         // return;
+        //printf("x0 = %i, y0 = %i\n", x0, y0);
+
         unsigned int x = threadIdx.x;
         unsigned int y = threadIdx.y;
         for (unsigned int ry = y; ry < d; ry += blockDim.y) {
@@ -104,56 +108,58 @@ void AdaptiveSerialKernels(int *dwell, unsigned int *h_nextSize,
 
     dim3 b(BSX, BSY, 1), g(1, INIT_SUBDIV, INIT_SUBDIV);
 
-    unsigned int SUBDIV_ELEMS = SUBDIV * SUBDIV;
-    unsigned int SUBDIV_ELEMS2 = SUBDIV_ELEMS * 2;
-    unsigned int SUBDIV_ELEMSP = log2(SUBDIV) + 1;
-    unsigned int SUBDIV_ELEMSX = SUBDIV - 1;
     #ifdef DEBUG
         float time;
         cudaEvent_t start, stop;
         cudaEventCreate(&start);
         cudaEventCreate(&stop);
         cudaEventRecord(start, 0);
-        printf("\n[level %2i].....", 1); fflush(stdout); 
+        printf("\n[level %2i]...... d = %i ..... ", 1, d); fflush(stdout); 
     #endif
     ASK<<<g, b>>>(d_nextSize, d_offsets1, d_offsets2, dwell, h, w, cmin, cmax, d,
-                  depth, SUBDIV, MAX_DWELL, MIN_SIZE, MAX_DEPTH, SUBDIV_ELEMS,
-                  SUBDIV_ELEMS2, SUBDIV_ELEMSP, SUBDIV_ELEMSX);
+                  depth, SUBDIV, MAX_DWELL, MIN_SIZE, MAX_DEPTH);
     cucheck(cudaDeviceSynchronize());
     for(int i = depth + 1; i < MAX_DEPTH && d / SUBDIV > MIN_SIZE; i++) {
         cudaMemcpy(h_nextSize, d_nextSize, sizeof(int), cudaMemcpyDeviceToHost);
-        std::swap(d_offsets1, d_offsets2);
-
-        cudaFree(d_offsets2);
-        unsigned long OLTSize;
-        if( d/SUBDIV/SUBDIV <= MIN_SIZE ){
-            OLTSize = 0;
-            g = dim3(*h_nextSize, 1, 1);
-			MIN_SIZE += d;
-	    	//printf("%i\n",*h_nextSize) ;
-            //OLTSize = *h_nextSize * (size_t)SUBDIV*SUBDIV*SUBDIV*SUBDIV*2;
-
-        } else {
-            OLTSize = *h_nextSize * (size_t)SUBDIV*SUBDIV*SUBDIV*SUBDIV*2;
-            g = dim3(*h_nextSize, SUBDIV, SUBDIV);
-        	d = d / SUBDIV;
-        }
-        cucheck(cudaMalloc((void **)&d_offsets2, OLTSize));
-        cucheck(cudaMemset(d_nextSize, 0, sizeof(int)));
-        printf("OLTSize = %lu    --> %f GiBytes\n", OLTSize, 1.0*OLTSize*sizeof(int)/(1024*1024*1024.0));
 
         #ifdef DEBUG
             cudaEventRecord(stop, 0);
             cudaEventSynchronize(stop);
             cudaEventElapsedTime(&time, start, stop); // that's our time!
             printf("done %f secs --> P=%f (grid %8i x %i x %i = %8i --> %i subdivided)\n", time/1000.0f, *h_nextSize/(float)(g.x*g.y*g.z), g.x, g.y, g.z, g.x*g.y*g.z, *h_nextSize);
-            printf("[level %2i]......", i); fflush(stdout);
+        #endif
+
+        std::swap(d_offsets1, d_offsets2);
+
+        cudaFree(d_offsets2);
+        size_t OLTSize;
+        if( d/SUBDIV/SUBDIV <= MIN_SIZE && false){
+            //OLTSize = *h_nextSize * (size_t)SUBDIV*SUBDIV*SUBDIV*SUBDIV*2;
+            OLTSize = *h_nextSize * (size_t)SUBDIV*SUBDIV*2;;
+            g = dim3(*h_nextSize, 1, 1);
+			MIN_SIZE += d;
+            //d = d / SUBDIV;
+	    	printf("Entro %i\n",*h_nextSize) ;
+            //OLTSize = *h_nextSize * (size_t)SUBDIV*SUBDIV*SUBDIV*SUBDIV*2;
+
+        } else { 
+            OLTSize = *h_nextSize * (size_t)SUBDIV*SUBDIV*2;
+            g = dim3(*h_nextSize, SUBDIV, SUBDIV);
+       		d = d / SUBDIV;
+        }
+        cucheck(cudaMalloc((void **)&d_offsets2, OLTSize*sizeof(int)));
+		cudaDeviceSynchronize();
+        cucheck(cudaMemset(d_nextSize, 0, sizeof(int)));
+
+        #ifdef DEBUG
+        	printf("OLTSize = %llu    --> %f GiBytes\n", OLTSize, 1.0*OLTSize*sizeof(int)/(1024*1024*1024.0));
+            printf("[level %2i]...... d = %i, MIN_SIZE = %i ---- ", i, d, MIN_SIZE); fflush(stdout);
             cudaEventRecord(start, 0);
         #endif
         ASK<<<g, b>>>(d_nextSize, d_offsets1, d_offsets2, dwell, h, w, cmin, cmax, d,
-                      i, SUBDIV, MAX_DWELL, MIN_SIZE, MAX_DEPTH, SUBDIV_ELEMS,
-                      SUBDIV_ELEMS2, SUBDIV_ELEMSP, SUBDIV_ELEMSX);
+                      i, SUBDIV, MAX_DWELL, MIN_SIZE, MAX_DEPTH);
         cucheck(cudaDeviceSynchronize());
+        //getchar();
 
     }
     cudaFree(d_offsets1);
@@ -166,3 +172,4 @@ void AdaptiveSerialKernels(int *dwell, unsigned int *h_nextSize,
         printf("done %f secs --> P=%f (grid %8i x %i x %i = %8i --> %i subdivided)\n", time/1000.0f, *h_nextSize/(float)(g.x*g.y*g.z), g.x, g.y, g.z, g.x*g.y*g.z, *h_nextSize);
     #endif
 }
+

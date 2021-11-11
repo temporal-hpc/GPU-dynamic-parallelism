@@ -77,7 +77,7 @@ float doAdaptiveSerialKernels(int *d_dwells, unsigned int w, unsigned int h, com
     float elapsedTime = 0;
 
     h_OLTSize = (unsigned int *)malloc(sizeof(int));
-    *h_OLTSize = g0 * g0 * r * r * 2;
+    *h_OLTSize = g0 * g0 * 2;
 
     cucheck(cudaMalloc(&d_OLTSize, sizeof(int)));
 
@@ -85,21 +85,13 @@ float doAdaptiveSerialKernels(int *d_dwells, unsigned int w, unsigned int h, com
 
     h_offsets = (int *)malloc(*h_OLTSize * sizeof(int));
 
-    for (int i = 0; i < g0 * g0 * 2; i += 2) {
-        h_offsets[i] = ((i / 2) % g0) * (w / g0);
-        h_offsets[i + 1] = ((i / 2) / g0) * (w / g0);
-    }
 
     cudaEvent_t start, stop;
     cudaEventCreate(&start);
     cudaEventCreate(&stop);
     for (int i = 0; i < REPEATS; i++) {
-        for (int j = 0; j < g0 * g0 * 2; j += 2) {
-            h_offsets[j] = ((j / 2) % g0) * (w / g0);
-            h_offsets[j + 1] = ((j / 2) / g0) * (w / g0);
-            // printf("Offsets Iniciales: (%i) - %i, %i\n", i/2, h_offsets[i],
-            // h_offsets[i+1]);
-        }
+        h_offsets[0] = 0;
+        h_offsets[1] = 0;
         *h_OLTSize = 1;
         // these two pointers get a cudaFree inside the function for which they are arguments
         cucheck(cudaMalloc((void **)&d_offsets1, initialOLTSize));
@@ -107,7 +99,7 @@ float doAdaptiveSerialKernels(int *d_dwells, unsigned int w, unsigned int h, com
 
         cucheck(cudaMemcpy(d_offsets1, h_offsets, initialOLTSize, cudaMemcpyHostToDevice));
         cucheck(cudaMemset(d_OLTSize, 0, sizeof(int)));
-
+        //printf("INITIAL=%i\n", initialOLTSize);
         float iterationTime = 0;
         cudaEventRecord(start, 0);
 
