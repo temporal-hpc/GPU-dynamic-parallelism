@@ -242,10 +242,8 @@ void AdaptiveSerialKernelsNEW(int *dwells, unsigned int *h_nextSize,
             g = dim3((g.x*g.y*g.z)-*h_nextSize, (d + b.x - 1)/b.x, (d + b.y - 1)/b.y);
             if (i+1 < MAX_DEPTH && d/SUBDIV > MIN_SIZE){
                 doT<<<g, b>>>(dwells, w, d,  *d_offsets2, OLTSize);
-                cucheck(cudaDeviceSynchronize());
             } else {
                 doBruteForce<<<g, b>>>(dwells, w, h, cmin, cmax, d, MAX_DWELL,  *d_offsets2, OLTSize);
-                cucheck(cudaDeviceSynchronize());
             }
         }
         #ifdef DEBUG
