@@ -143,7 +143,7 @@ void AdaptiveSerialKernels(int *dwell, unsigned int *h_nextSize,
         cucheck(cudaMemset(d_nextSize, 0, sizeof(int)));
 
         #ifdef DEBUG
-        	printf("OLTSize = %llu    --> %f GiBytes\n", OLTSize, 1.0*OLTSize*sizeof(int)/(1024*1024*1024.0));
+        	printf("OLTSize = %lu    --> %f GiBytes\n", OLTSize, 1.0*OLTSize*sizeof(int)/(1024*1024*1024.0));
             printf("[level %2i]...... d = %i, MIN_SIZE = %i ---- ", i, d, MIN_SIZE); fflush(stdout);
             cudaEventRecord(start, 0);
         #endif

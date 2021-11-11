@@ -153,7 +153,7 @@ void AdaptiveSerialKernelsNEW(int *dwells, unsigned int *h_nextSize,
         cudaEventCreate(&start);
         cudaEventCreate(&stop);
         cudaEventRecord(start, 0);
-        printf("\n[level %2i]..... OLTSIZE = %llu --- ", 1, OLTSize); fflush(stdout);
+        printf("\n[level %2i]..... OLTSIZE = %lu --- ", 1, OLTSize); fflush(stdout);
     #endif
 
     ASKNEW<<<g, b>>>(d_nextSize, d_nbf, *d_offsets1, *d_offsets2, dwells, h, w, cmin, cmax, d,
@@ -203,7 +203,7 @@ void AdaptiveSerialKernelsNEW(int *dwells, unsigned int *h_nextSize,
 
          //printf("Running kernel with b(%i,%i) and g(%i, %i, %i) and d=%i\n", b.x, b.y, g.x, g.y, g.z, d);
         #ifdef DEBUG
-            printf("[level %2i]..... OLTSIZE = %llu --- ", i, OLTSize); fflush(stdout);
+            printf("[level %2i]..... OLTSIZE = %lu --- ", i, OLTSize); fflush(stdout);
         #endif
         //printf("ANTES DE KERNEL MAX_DEPTH = %i      d = %i    SUBDIV=%i    d/SUBDIV = %i      MIN_SIZE=%i", MAX_DEPTH, d, SUBDIV, d/SUBDIV, MIN_SIZE);
         ASKNEW<<<g, b>>>(d_nextSize, d_nbf, *d_offsets1,  *d_offsets2, dwells, h, w, cmin, cmax, d,
