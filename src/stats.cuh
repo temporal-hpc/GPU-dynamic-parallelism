@@ -15,7 +15,6 @@ class RunningStat{
      }
      void Push(double x){
          m_n++;
- 
          // See Knuth TAOCP vol 2, 3rd edition, page 232
          if (m_n == 1)
          {

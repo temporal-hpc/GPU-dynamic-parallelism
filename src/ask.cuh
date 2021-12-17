@@ -60,6 +60,7 @@ __global__ void ASK(unsigned int *d_ns, int *d_offs1, int *d_offs2, int *dwells,
         unsigned int y = threadIdx.y;
         for (unsigned int ry = y; ry < d; ry += blockDim.y) {
             for (unsigned int rx = x; rx < d; rx += blockDim.x) {
+                // CRISTOBAL TODO (comentar el if ya que se pregunta en los for)
                 if (rx < d && ry < d) {
                     unsigned int rxx = rx + x0, ryy = ry + y0;
                     dwells[ryy * (size_t)w + rxx] = comm_dwell;
@@ -90,6 +91,7 @@ __global__ void ASK(unsigned int *d_ns, int *d_offs1, int *d_offs2, int *dwells,
         unsigned int y = threadIdx.y;
         for (unsigned int ry = y; ry < d; ry += blockDim.y) {
             for (unsigned int rx = x; rx < d; rx += blockDim.x) {
+                // CRISTOBAL TODO (comentar el if ya que se pregunta en los for)
                 if (rx < d && ry < d) {
                     unsigned int rxx = rx + x0, ryy = ry + y0;
                     dwells[ryy * (size_t)w + rxx] = pixel_dwell(w, h, cmin, cmax, rxx, ryy, MAX_DWELL);

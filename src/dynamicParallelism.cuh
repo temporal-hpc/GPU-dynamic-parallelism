@@ -39,6 +39,7 @@ __device__ int border_dwell(int *dwells, int w, int h, complex cmin,
     return ldwells[0];
 } // border_dwell
 
+// CRISTOBAL SBR 
 /** the kernel to fill the image region with a specific dwell value */
 __global__ void dwell_fill_k(int *dwells, size_t w, unsigned int x0,
                              unsigned int y0, int d, int dwell) {
@@ -51,6 +52,7 @@ __global__ void dwell_fill_k(int *dwells, size_t w, unsigned int x0,
     }
 } // dwell_fill_k
 
+// CRISTOBAL SBR 
 /** the kernel to fill in per-pixel values of the portion of the Mandelbrot set
  */
 __global__ void mandelbrot_pixel_k(int *dwells, unsigned int w, unsigned int h,
@@ -66,6 +68,7 @@ __global__ void mandelbrot_pixel_k(int *dwells, unsigned int w, unsigned int h,
     }
 } // mandelbrot_pixel_k
 
+
 /** Equivalent to the dynamic parallelism approach **/
 __global__ void mandelbrot_block_k(int *dwells, unsigned int w, unsigned int h,
                                    complex cmin, complex cmax, unsigned int x0,
@@ -79,6 +82,8 @@ __global__ void mandelbrot_block_k(int *dwells, unsigned int w, unsigned int h,
 
         if (comm_dwell != DIFF_DWELL) {
             // uniform dwell, just fill
+
+            // CHANGE TO SBR (posiblemente un grid de 1 x 1)
             dim3 bs(BSX, BSY), grid(divup(d, BSX), divup(d, BSY));
             dwell_fill_k<<<grid, bs>>>(dwells, w, x0, y0, d, comm_dwell);
         } else if (depth + 1 < MAX_DEPTH && d / SUBDIV > MIN_SIZE) {
@@ -90,6 +95,8 @@ __global__ void mandelbrot_block_k(int *dwells, unsigned int w, unsigned int h,
                                              MAX_DWELL, MIN_SIZE, MAX_DEPTH);
         } else {
             // leaf, per-pixel kernel
+
+            // CHANGE TO SBR (posiblemente un grid de 1 x 1)
             dim3 bs(BSX, BSY), grid(divup(d, BSX), divup(d, BSY));
             mandelbrot_pixel_k<<<grid, bs>>>(dwells, w, h, cmin, cmax, x0, y0, d,
                                              MAX_DWELL);
