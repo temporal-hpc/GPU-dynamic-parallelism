@@ -39,8 +39,8 @@ __device__ int dp_sbr_border_dwell(int *dwells, int w, int h, complex cmin,
     return ldwells[0];
 } // border_dwell
 
-// CRISTOBAL SBR 
 /** the kernel to fill the image region with a specific dwell value */
+// SBR VERSION
 __global__ void dp_sbr_dwell_fill_k(int *dwells, size_t w, unsigned int x0,
                              unsigned int y0, int d, int dwell) {
     unsigned int x = threadIdx.x + blockIdx.x * blockDim.x;
@@ -49,10 +49,10 @@ __global__ void dp_sbr_dwell_fill_k(int *dwells, size_t w, unsigned int x0,
     for (unsigned int ry = y; ry < d; ry += blockDim.y) {
         for (unsigned int rx = x; rx < d; rx += blockDim.x) {
             // CRISTOBAL TODO (comentar el if ya que se pregunta en los for)
-            if (rx < d && ry < d) {
+            //if (rx < d && ry < d) {
                 unsigned int rxx = rx + x0, ryy = ry + y0;
                 dwells[ryy * (size_t)w + rxx] = dwell;
-            }
+            //}
         }
     }
     // ORIGINAL DE DP
@@ -63,9 +63,9 @@ __global__ void dp_sbr_dwell_fill_k(int *dwells, size_t w, unsigned int x0,
     //}
 } // dwell_fill_k
 
-// CRISTOBAL SBR 
 /** the kernel to fill in per-pixel values of the portion of the Mandelbrot set
  */
+// SBR VERSION
 __global__ void dp_sbr_mandelbrot_pixel_k(int *dwells, unsigned int w, unsigned int h,
                                    complex cmin, complex cmax, unsigned int x0,
                                    unsigned int y0, int d, unsigned int MAX_DWELL) {
@@ -75,10 +75,10 @@ __global__ void dp_sbr_mandelbrot_pixel_k(int *dwells, unsigned int w, unsigned 
     for (unsigned int ry = y; ry < d; ry += blockDim.y) {
         for (unsigned int rx = x; rx < d; rx += blockDim.x) {
             // CRISTOBAL TODO (comentar el if ya que se pregunta en los for)
-            if (rx < d && ry < d) {
+            //if (rx < d && ry < d) {
                 unsigned int rxx = rx + x0, ryy = ry + y0;
                 dwells[ryy * (size_t)w + rxx] = pixel_dwell(w, h, cmin, cmax, rxx, ryy, MAX_DWELL);
-            }
+            //}
         }
     }
 
