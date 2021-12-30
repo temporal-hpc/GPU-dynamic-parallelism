@@ -14,20 +14,23 @@
 #define SAVE_GRIDLINES 1
 
 #include "stats.cuh"
-#include "gridlines.cuh"
-#include "ask.cuh"
-#include "askNEW.cuh"
-#include "exhaustive.cuh"
 #include "complex.cuh"
-#include "dynamicParallelism.cuh"
+#include "gridlines.cuh"
 #include "macros.cuh"
 #include "mandelbrotHelper.cuh"
 #include "tools.cuh"
-#include "doTests.cuh"
+
+#include "exhaustive.cuh"
+#include "dp_mbr.cuh"
+#include "dp_sbr.cuh"
+#include "ask_sbr.cuh"
+#include "ask_mbr.cuh"
+#include "benchmark.cuh"
+
 
 
 using namespace std;
-const char* approachStr[4] = {"Ex", "DP", "ASK-v1", "ASK-v2"};
+const char* approachStr[5] = {"Ex", "DP-SBR", "DP-MBR", "ASK-SBR", "ASK-MBR"};
 
 /** gets the color, given the dwell */
 void dwell_color(int *r, int *g, int *b, int dwell, unsigned int CA_MAXDWELL);
@@ -81,7 +84,7 @@ int main(int argc, char **argv) {
     #ifdef VERBOSE
         printf("%s (REPEATS=%3i, REALIZATIONS=%3i)............", approachStr[approach], REPEATS, REALIZATIONS); fflush(stdout);
     #endif
-    statistics stat = doTest(approach, d_dwells, W, H, bottomLeftCorner, upperRightCorner, g, r, CA_MAXDWELL, B, MAX_DEPTH);
+    statistics stat = doBenchmark(approach, d_dwells, W, H, bottomLeftCorner, upperRightCorner, g, r, CA_MAXDWELL, B, MAX_DEPTH);
     cudaDeviceSynchronize();
     #ifdef VERBOSE
         printf("done: %f secs (stErr %f%%)\n", stat.mean, 100.0*stat.sterr/stat.mean); fflush(stdout);

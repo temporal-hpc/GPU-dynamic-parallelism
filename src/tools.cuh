@@ -7,9 +7,10 @@ void check_args_info(int argc){
         cout << "\nExecute as ./bin/gpuDP <Approach> <W> <H> <rmin> <rmax> <cmin> <cmax> <CA_MAXDWELL> <g> <r> <b> <MAX_DEPTH> <filename>" << endl;
         cout << "   Approach:" << endl;
         cout << "               0 - Ex: Exhaustive (classic one-pass approach)" << endl;
-        cout << "               1 - DP: Dynamic Parallelism (from Nvidia)" << endl;
-        cout << "               2 - ASK-v1: Adaptive Serial Kernels (one thread-block per region)" << endl;
-        cout << "               3 - ASK-v2: Adaptive Serial Kernels (multiple thread-blocks per region)" << endl;
+        cout << "               1 - DP-SBR: Dynamic Parallelism Single-Block per Region (SBR)" << endl;
+        cout << "               2 - DP-MBR: Dynamic Parallelism Multiple-Blocks per Region (MBR)" << endl;
+        cout << "               3 - ASK-SBR: Adaptive Serial Kernels Single-Block per Region (SBR)" << endl;
+        cout << "               4 - ASK-MBR: Adaptive Serial Kernels Multiple-Block per Region (MBR)" << endl;
         cout << "   -----------------------------------------------------------------------------------------------" << endl;
         cout << "   Parameters                  Example         Info" << endl;
         cout << "   -----------------------------------------------------------------------------------------------" << endl;

@@ -43,7 +43,7 @@ do
                 B=$((2**${Bexp}))
                 a="${N},    ${g},${r},${B}"
                 echo "BENCHMARK g=${g},r=${r},B=${B},    N=${N}"
-                for approach in 0 1 2 3
+                for approach in 0 1 2 3 4
                 do
                     echo -n -e "\tA${approach}......"
                     res=$(exec ${GPUPROG} $approach ${N} ${N} -1.5 0.5 -1 1 ${CA_MAXDWELL} ${g} ${r} ${B} $MAX_DEPTH none)

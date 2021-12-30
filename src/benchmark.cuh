@@ -1,32 +1,36 @@
 #pragma once
 
-float doExhaustive(int *d_dwells, unsigned int w, unsigned int h, complex bottomLeftCorner, complex upperRightCorner,
+float rea_Ex(int *d_dwells, unsigned int w, unsigned int h, complex bottomLeftCorner, complex upperRightCorner,
                               unsigned int g0, unsigned int r,
                               unsigned int CA_MAXDWELL, unsigned int B,
                               unsigned int MAX_DEPTH);
-float doDynamicParallelism(int *d_dwells, unsigned int w, unsigned int h, complex bottomLeftCorner, complex upperRightCorner,
+float rea_DP_SBR(int *d_dwells, unsigned int w, unsigned int h, complex bottomLeftCorner, complex upperRightCorner,
                               unsigned int g0, unsigned int r,
                               unsigned int CA_MAXDWELL, unsigned int B,
                               unsigned int MAX_DEPTH);
-float doAdaptiveSerialKernels(int *d_dwells, unsigned int w, unsigned int h, complex bottomLeftCorner, complex upperRightCorner,
+float rea_DP_MBR(int *d_dwells, unsigned int w, unsigned int h, complex bottomLeftCorner, complex upperRightCorner,
                               unsigned int g0, unsigned int r,
                               unsigned int CA_MAXDWELL, unsigned int B,
                               unsigned int MAX_DEPTH);
-float doAdaptiveSerialKernelsNEW(int *d_dwells, unsigned int w, unsigned int h, complex bottomLeftCorner, complex upperRightCorner,
+float rea_ASK_SBR(int *d_dwells, unsigned int w, unsigned int h, complex bottomLeftCorner, complex upperRightCorner,
+                              unsigned int g0, unsigned int r,
+                              unsigned int CA_MAXDWELL, unsigned int B,
+                              unsigned int MAX_DEPTH);
+float rea_ASK_MBR(int *d_dwells, unsigned int w, unsigned int h, complex bottomLeftCorner, complex upperRightCorner,
                               unsigned int g0, unsigned int r,
                               unsigned int CA_MAXDWELL, unsigned int B,
                               unsigned int MAX_DEPTH);
 
 
 
-statistics doTest(int approach, int *d_dwells, unsigned int w, unsigned int h,
+statistics doBenchmark(int approach, int *d_dwells, unsigned int w, unsigned int h,
                               complex bottomLeftCorner, complex upperRightCorner,
                               unsigned int g0, unsigned int r,
                               unsigned int CA_MAXDWELL, unsigned int B,
                               unsigned int MAX_DEPTH) {
 
     typedef float (*f)(int*, unsigned int, unsigned int, complex, complex, unsigned int, unsigned int, unsigned int, unsigned int, unsigned int);
-    f func[4] = {doExhaustive, doDynamicParallelism, doAdaptiveSerialKernels, doAdaptiveSerialKernelsNEW};
+    f func[5] = {rea_Ex, rea_DP_SBR, rea_DP_MBR, rea_ASK_SBR, rea_ASK_MBR};
     float elapsedTime = 0.0f;
     statistics stats;
     RunningStat meas;
@@ -42,7 +46,7 @@ statistics doTest(int approach, int *d_dwells, unsigned int w, unsigned int h,
 }
 
 
-float doExhaustive(int *d_dwells, unsigned int w, unsigned int h, complex bottomLeftCorner, complex upperRightCorner,
+float rea_Ex(int *d_dwells, unsigned int w, unsigned int h, complex bottomLeftCorner, complex upperRightCorner,
                               unsigned int g0, unsigned int r,
                               unsigned int CA_MAXDWELL, unsigned int B,
                               unsigned int MAX_DEPTH) {
@@ -65,8 +69,7 @@ float doExhaustive(int *d_dwells, unsigned int w, unsigned int h, complex bottom
     return elapsedTime;
 }
 
-
-float doAdaptiveSerialKernels(int *d_dwells, unsigned int w, unsigned int h, complex bottomLeftCorner, complex upperRightCorner,
+float rea_ASK_SBR(int *d_dwells, unsigned int w, unsigned int h, complex bottomLeftCorner, complex upperRightCorner,
                               unsigned int g0, unsigned int r,
                               unsigned int CA_MAXDWELL, unsigned int B,
                               unsigned int MAX_DEPTH) {
@@ -103,7 +106,7 @@ float doAdaptiveSerialKernels(int *d_dwells, unsigned int w, unsigned int h, com
         float iterationTime = 0;
         cudaEventRecord(start, 0);
 
-        AdaptiveSerialKernels(d_dwells, h_OLTSize, d_OLTSize, d_offsets1, d_offsets2, w, h, bottomLeftCorner, upperRightCorner, w / g0, 1, g0, r, CA_MAXDWELL, B, MAX_DEPTH);
+        ASK_SBR(d_dwells,h_OLTSize,d_OLTSize,d_offsets1,d_offsets2,w,h,bottomLeftCorner,upperRightCorner,w/g0,1,g0,r,CA_MAXDWELL,B,MAX_DEPTH);
 
         cucheck(cudaDeviceSynchronize());
         cudaEventRecord(stop, 0);
@@ -122,7 +125,7 @@ float doAdaptiveSerialKernels(int *d_dwells, unsigned int w, unsigned int h, com
     return elapsedTime;
 }
 
-float doAdaptiveSerialKernelsNEW(int *d_dwells, unsigned int w, unsigned int h,
+float rea_ASK_MBR(int *d_dwells, unsigned int w, unsigned int h,
                               complex bottomLeftCorner, complex upperRightCorner,
                               unsigned int g0, unsigned int r,
                               unsigned int CA_MAXDWELL, unsigned int B,
@@ -160,10 +163,8 @@ float doAdaptiveSerialKernelsNEW(int *d_dwells, unsigned int w, unsigned int h,
         float iterationTime = 0;
         cudaEventRecord(start, 0);
 
-        AdaptiveSerialKernelsNEW(d_dwells, h_OLTSize, d_OLTSize, &d_offsets1, &d_offsets2,
-                              w, h, bottomLeftCorner, upperRightCorner,
-                              w / g0, 1, g0, r, CA_MAXDWELL,
-                              B, MAX_DEPTH);
+        ASK_MBR(d_dwells,h_OLTSize,d_OLTSize,&d_offsets1,&d_offsets2,w,h,bottomLeftCorner,upperRightCorner,w/g0,1,g0,r,CA_MAXDWELL,B,MAX_DEPTH);
+
         cucheck(cudaDeviceSynchronize());
         cudaEventRecord(stop, 0);
         cudaEventSynchronize(stop);
@@ -184,7 +185,7 @@ float doAdaptiveSerialKernelsNEW(int *d_dwells, unsigned int w, unsigned int h,
     return elapsedTime;
 }
 
-float doDynamicParallelism(int *d_dwells, unsigned int w, unsigned int h,
+float rea_DP_SBR(int *d_dwells, unsigned int w, unsigned int h,
                            complex bottomLeftCorner, complex upperRightCorner,
                            unsigned int g0, unsigned int r,
                            unsigned int CA_MAXDWELL, unsigned int B,
@@ -197,7 +198,30 @@ float doDynamicParallelism(int *d_dwells, unsigned int w, unsigned int h,
 
     cudaEventRecord(start, 0);
     for (int i = 0; i < REPEATS; i++) {
-        mandelbrot_block_k<<<gridSize, blockSize>>>( d_dwells, w, h, bottomLeftCorner, upperRightCorner, 0, 0, w / g0, 1, r, CA_MAXDWELL, B, MAX_DEPTH);
+        dp_sbr_mandelbrot_block_k<<<gridSize, blockSize>>>( d_dwells, w, h, bottomLeftCorner, upperRightCorner, 0, 0, w / g0, 1, r, CA_MAXDWELL, B, MAX_DEPTH);
+        cudaDeviceSynchronize();
+    }
+    cudaEventRecord(stop, 0);
+    cudaEventSynchronize(stop);
+    cudaEventElapsedTime(&elapsedTime, start, stop); // that's our time!
+    elapsedTime /= (REPEATS * 1000.f);
+    return elapsedTime;
+}
+
+float rea_DP_MBR(int *d_dwells, unsigned int w, unsigned int h,
+                           complex bottomLeftCorner, complex upperRightCorner,
+                           unsigned int g0, unsigned int r,
+                           unsigned int CA_MAXDWELL, unsigned int B,
+                           unsigned int MAX_DEPTH) {
+    float elapsedTime;
+    dim3 blockSize(BSX, BSY), gridSize(g0, g0);
+    cudaEvent_t start, stop;
+    cudaEventCreate(&start);
+    cudaEventCreate(&stop);
+
+    cudaEventRecord(start, 0);
+    for (int i = 0; i < REPEATS; i++) {
+        dp_mbr_mandelbrot_block_k<<<gridSize, blockSize>>>( d_dwells, w, h, bottomLeftCorner, upperRightCorner, 0, 0, w / g0, 1, r, CA_MAXDWELL, B, MAX_DEPTH);
         cudaDeviceSynchronize();
     }
     cudaEventRecord(stop, 0);

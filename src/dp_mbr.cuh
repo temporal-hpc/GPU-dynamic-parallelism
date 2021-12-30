@@ -5,7 +5,7 @@
 #include "mandelbrotHelper.cuh"
 
 /** evaluates the common border dwell, if it exists */
-__device__ int border_dwell(int *dwells, int w, int h, complex cmin,
+__device__ int dp_mbr_border_dwell(int *dwells, int w, int h, complex cmin,
                                      complex cmax, int x0, int y0, int d,
                                      unsigned int MAX_DWELL) {
     // check whether all boundary pixels have the same dwell
@@ -41,7 +41,7 @@ __device__ int border_dwell(int *dwells, int w, int h, complex cmin,
 
 // CRISTOBAL SBR 
 /** the kernel to fill the image region with a specific dwell value */
-__global__ void dwell_fill_k(int *dwells, size_t w, unsigned int x0,
+__global__ void dp_mbr_dwell_fill_k(int *dwells, size_t w, unsigned int x0,
                              unsigned int y0, int d, int dwell) {
     unsigned int x = threadIdx.x + blockIdx.x * blockDim.x;
     unsigned int y = threadIdx.y + blockIdx.y * blockDim.y;
@@ -55,7 +55,7 @@ __global__ void dwell_fill_k(int *dwells, size_t w, unsigned int x0,
 // CRISTOBAL SBR 
 /** the kernel to fill in per-pixel values of the portion of the Mandelbrot set
  */
-__global__ void mandelbrot_pixel_k(int *dwells, unsigned int w, unsigned int h,
+__global__ void dp_mbr_mandelbrot_pixel_k(int *dwells, unsigned int w, unsigned int h,
                                    complex cmin, complex cmax, unsigned int x0,
                                    unsigned int y0, int d, unsigned int MAX_DWELL) {
     unsigned int x = threadIdx.x + blockDim.x * blockIdx.x;
@@ -70,14 +70,13 @@ __global__ void mandelbrot_pixel_k(int *dwells, unsigned int w, unsigned int h,
 
 
 /** Equivalent to the dynamic parallelism approach **/
-__global__ void mandelbrot_block_k(int *dwells, unsigned int w, unsigned int h,
+__global__ void dp_mbr_mandelbrot_block_k(int *dwells, unsigned int w, unsigned int h,
                                    complex cmin, complex cmax, unsigned int x0,
                                    unsigned int y0, int d, int depth,
                                    unsigned int SUBDIV, unsigned int MAX_DWELL,
                                    unsigned int MIN_SIZE, unsigned int MAX_DEPTH) {
     x0 += d * blockIdx.x, y0 += d * blockIdx.y;
-    int comm_dwell =
-        border_dwell(dwells, w, h, cmin, cmax, x0, y0, d, MAX_DWELL);
+    int comm_dwell = dp_mbr_border_dwell(dwells, w, h, cmin, cmax, x0, y0, d, MAX_DWELL);
     if (threadIdx.x == 0 && threadIdx.y == 0) {
 
         if (comm_dwell != DIFF_DWELL) {
@@ -85,12 +84,12 @@ __global__ void mandelbrot_block_k(int *dwells, unsigned int w, unsigned int h,
 
             // CHANGE TO SBR (posiblemente un grid de 1 x 1)
             dim3 bs(BSX, BSY), grid(divup(d, BSX), divup(d, BSY));
-            dwell_fill_k<<<grid, bs>>>(dwells, w, x0, y0, d, comm_dwell);
+            dp_mbr_dwell_fill_k<<<grid, bs>>>(dwells, w, x0, y0, d, comm_dwell);
         } else if (depth + 1 < MAX_DEPTH && d / SUBDIV > MIN_SIZE) {
             // subdivide recursively
 
             dim3 bs(blockDim.x, blockDim.y), grid(SUBDIV, SUBDIV);
-            mandelbrot_block_k<<<grid, bs>>>(dwells, w, h, cmin, cmax, x0, y0,
+            dp_mbr_mandelbrot_block_k<<<grid, bs>>>(dwells, w, h, cmin, cmax, x0, y0,
                                              d / SUBDIV, depth + 1, SUBDIV,
                                              MAX_DWELL, MIN_SIZE, MAX_DEPTH);
         } else {
@@ -98,7 +97,7 @@ __global__ void mandelbrot_block_k(int *dwells, unsigned int w, unsigned int h,
 
             // CHANGE TO SBR (posiblemente un grid de 1 x 1)
             dim3 bs(BSX, BSY), grid(divup(d, BSX), divup(d, BSY));
-            mandelbrot_pixel_k<<<grid, bs>>>(dwells, w, h, cmin, cmax, x0, y0, d,
+            dp_mbr_mandelbrot_pixel_k<<<grid, bs>>>(dwells, w, h, cmin, cmax, x0, y0, d,
                                              MAX_DWELL);
         }
     }

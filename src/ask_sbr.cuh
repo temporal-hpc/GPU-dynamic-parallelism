@@ -4,7 +4,7 @@
 #include "macros.cuh"
 #include "mandelbrotHelper.cuh"
 
-__global__ void ASK(unsigned int *d_ns, int *d_offs1, int *d_offs2, int *dwells,
+__global__ void kernel_ASK_SBR(unsigned int *d_ns, int *d_offs1, int *d_offs2, int *dwells,
                     int w, int h, complex cmin, complex cmax, int d, int depth,
                     unsigned int SUBDIV, unsigned int MAX_DWELL,
                     unsigned int MIN_SIZE, unsigned int MAX_DEPTH) {
@@ -101,7 +101,7 @@ __global__ void ASK(unsigned int *d_ns, int *d_offs1, int *d_offs2, int *dwells,
     }
 }
 
-void AdaptiveSerialKernels(int *dwell, unsigned int *h_nextSize,
+void ASK_SBR(int *dwell, unsigned int *h_nextSize,
                            unsigned int *d_nextSize, int *d_offsets1,
                            int *d_offsets2, int w, int h, complex cmin, complex cmax,
                            int d, int depth, unsigned int INIT_SUBDIV,
@@ -118,8 +118,7 @@ void AdaptiveSerialKernels(int *dwell, unsigned int *h_nextSize,
         cudaEventRecord(start, 0);
         printf("\n[level %2i]...... d = %i ..... ", 1, d); fflush(stdout); 
     #endif
-    ASK<<<g, b>>>(d_nextSize, d_offsets1, d_offsets2, dwell, h, w, cmin, cmax, d,
-                  depth, SUBDIV, MAX_DWELL, MIN_SIZE, MAX_DEPTH);
+    kernel_ASK_SBR<<<g, b>>>(d_nextSize, d_offsets1, d_offsets2, dwell, h, w, cmin, cmax, d, depth, SUBDIV, MAX_DWELL, MIN_SIZE, MAX_DEPTH);
     cucheck(cudaDeviceSynchronize());
     for(int i = depth + 1; i < MAX_DEPTH && d / SUBDIV > MIN_SIZE; i++) {
         cudaMemcpy(h_nextSize, d_nextSize, sizeof(int), cudaMemcpyDeviceToHost);
@@ -149,8 +148,7 @@ void AdaptiveSerialKernels(int *dwell, unsigned int *h_nextSize,
             printf("[level %2i]...... d = %i, MIN_SIZE = %i ---- ", i, d, MIN_SIZE); fflush(stdout);
             cudaEventRecord(start, 0);
         #endif
-        ASK<<<g, b>>>(d_nextSize, d_offsets1, d_offsets2, dwell, h, w, cmin, cmax, d,
-                      i, SUBDIV, MAX_DWELL, MIN_SIZE, MAX_DEPTH);
+        kernel_ASK_SBR<<<g, b>>>(d_nextSize, d_offsets1, d_offsets2, dwell, h, w, cmin, cmax, d, i, SUBDIV, MAX_DWELL, MIN_SIZE, MAX_DEPTH);
         cucheck(cudaDeviceSynchronize());
         //getchar();
 

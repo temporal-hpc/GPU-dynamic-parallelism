@@ -4,7 +4,7 @@
 #include "macros.cuh"
 #include "mandelbrotHelper.cuh"
 
-__global__ void ASKNEW(unsigned int *d_ns, unsigned int *d_nbf, int *d_offs1, int *d_offs2, int *dwells,
+__global__ void kernel_ASK_MBR(unsigned int *d_ns, unsigned int *d_nbf, int *d_offs1, int *d_offs2, int *dwells,
                     int w, int h, complex cmin, complex cmax, int d, int depth,
                     unsigned int SUBDIV, unsigned int MAX_DWELL,
                     unsigned int MIN_SIZE, unsigned int MAX_DEPTH, int OLTSize) {
@@ -86,7 +86,7 @@ __global__ void ASKNEW(unsigned int *d_ns, unsigned int *d_nbf, int *d_offs1, in
 }
 
 /** the kernel to fill the image region with a specific dwell value */
-__global__ void doT(int *dwells, size_t w, int d, int *OLT, int OLTSize) {
+__global__ void kernel_ASK_MBR_T(int *dwells, size_t w, int d, int *OLT, int OLTSize) {
 
     // offset = OLTSize - numRegionesDerecha
     // acceso -> offset + blockIdx.*2
@@ -116,7 +116,7 @@ __global__ void doT(int *dwells, size_t w, int d, int *OLT, int OLTSize) {
 
 /** the kernel to fill in per-pixel values of the portion of the Mandelbrot set
  */
-__global__ void doBruteForce(int *dwells, unsigned int w, unsigned int h,
+__global__ void kernel_ASK_MBR_EX(int *dwells, unsigned int w, unsigned int h,
                                    complex cmin, complex cmax,
                                    int d, unsigned int MAX_DWELL, int *OLT, int OLTSize) {
 
@@ -134,7 +134,7 @@ __global__ void doBruteForce(int *dwells, unsigned int w, unsigned int h,
     }
 }
 
-void AdaptiveSerialKernelsNEW(int *dwells, unsigned int *h_nextSize,
+void ASK_MBR(int *dwells, unsigned int *h_nextSize,
                            unsigned int *d_nextSize, int **d_offsets1,
                            int **d_offsets2, int w, int h, complex cmin, complex cmax,
                            int d, int depth, unsigned int INIT_SUBDIV,
@@ -156,8 +156,7 @@ void AdaptiveSerialKernelsNEW(int *dwells, unsigned int *h_nextSize,
         printf("\n[level %2i]..... OLTSIZE = %lu --- ", 1, OLTSize); fflush(stdout);
     #endif
 
-    ASKNEW<<<g, b>>>(d_nextSize, d_nbf, *d_offsets1, *d_offsets2, dwells, h, w, cmin, cmax, d,
-                  depth, SUBDIV, MAX_DWELL, MIN_SIZE, MAX_DEPTH, OLTSize);
+    kernel_ASK_MBR<<<g, b>>>(d_nextSize,d_nbf,*d_offsets1,*d_offsets2,dwells,h, w,cmin,cmax,d,depth,SUBDIV,MAX_DWELL,MIN_SIZE,MAX_DEPTH,OLTSize);
     cucheck(cudaDeviceSynchronize());
     cucheck(cudaMemcpy(h_nextSize, d_nextSize, sizeof(int), cudaMemcpyDeviceToHost));
     #ifdef DEBUG
@@ -168,9 +167,9 @@ void AdaptiveSerialKernelsNEW(int *dwells, unsigned int *h_nextSize,
     if (*h_nextSize < g.x*g.y*g.z){
         g = dim3((g.x*g.y*g.z)-*h_nextSize, (d + b.x - 1)/b.x, (d + b.y - 1)/b.y);
         if (2 < MAX_DEPTH && d/SUBDIV > MIN_SIZE){
-            doT<<<g, b>>>(dwells, w, d, *d_offsets2, OLTSize);
+            kernel_ASK_MBR_T<<<g, b>>>(dwells, w, d, *d_offsets2, OLTSize);
         } else {
-            doBruteForce<<<g, b>>>(dwells, w, h, cmin, cmax, d, MAX_DWELL, *d_offsets2, OLTSize);
+            kernel_ASK_MBR_EX<<<g, b>>>(dwells, w, h, cmin, cmax, d, MAX_DWELL, *d_offsets2, OLTSize);
         }
     }
     #ifdef DEBUG
@@ -206,8 +205,7 @@ void AdaptiveSerialKernelsNEW(int *dwells, unsigned int *h_nextSize,
             printf("[level %2i]..... OLTSIZE = %lu --- ", i, OLTSize); fflush(stdout);
         #endif
         //printf("ANTES DE KERNEL MAX_DEPTH = %i      d = %i    SUBDIV=%i    d/SUBDIV = %i      MIN_SIZE=%i", MAX_DEPTH, d, SUBDIV, d/SUBDIV, MIN_SIZE);
-        ASKNEW<<<g, b>>>(d_nextSize, d_nbf, *d_offsets1,  *d_offsets2, dwells, h, w, cmin, cmax, d,
-                      i, SUBDIV, MAX_DWELL, MIN_SIZE, MAX_DEPTH, OLTSize);
+        kernel_ASK_MBR<<<g, b>>>(d_nextSize,d_nbf,*d_offsets1,*d_offsets2,dwells,h,w,cmin,cmax, d,i,SUBDIV,MAX_DWELL,MIN_SIZE,MAX_DEPTH, OLTSize);
         cucheck(cudaDeviceSynchronize());
         //printf(" *h_nextsize %lu     g.x*g.y*g.z %lu     \n", (long unsigned) *h_nextSize, (long unsigned) g.x * g.y * g.z);
         cucheck(cudaMemcpy(h_nextSize, d_nextSize, sizeof(int), cudaMemcpyDeviceToHost));
@@ -217,9 +215,9 @@ void AdaptiveSerialKernelsNEW(int *dwells, unsigned int *h_nextSize,
         if (*h_nextSize < g.x*g.y*g.z){
             g = dim3((g.x*g.y*g.z)-*h_nextSize, (d + b.x - 1)/b.x, (d + b.y - 1)/b.y);
             if (i+1 < MAX_DEPTH && d/SUBDIV > MIN_SIZE){
-                doT<<<g, b>>>(dwells, w, d,  *d_offsets2, OLTSize);
+                kernel_ASK_MBR_T<<<g, b>>>(dwells, w, d,  *d_offsets2, OLTSize);
             } else {
-                doBruteForce<<<g, b>>>(dwells, w, h, cmin, cmax, d, MAX_DWELL,  *d_offsets2, OLTSize);
+                kernel_ASK_MBR_EX<<<g, b>>>(dwells, w, h, cmin, cmax, d, MAX_DWELL,  *d_offsets2, OLTSize);
             }
         }
         #ifdef DEBUG
