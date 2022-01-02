@@ -4,7 +4,7 @@ using namespace std;
 
 void check_args_info(int argc){
     if (argc != 14) {
-        cout << "\nExecute as ./bin/gpuDP <Approach> <W> <H> <rmin> <rmax> <cmin> <cmax> <CA_MAXDWELL> <g> <r> <b> <MAX_DEPTH> <filename>" << endl;
+        cout << "\nExecute as ./bin/gpuDP <Approach> <W> <H> <rmin> <rmax> <cmin> <cmax> <CA_MAXDWELL> <g> <r> <B> <MAX_DEPTH> <filename>" << endl;
         cout << "   Approach:" << endl;
         cout << "               0 - Ex: Exhaustive (classic one-pass approach)" << endl;
         cout << "               1 - DP-SBR: Dynamic Parallelism Single-Block per Region (SBR)" << endl;

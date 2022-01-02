@@ -1,13 +1,14 @@
 #!/bin/bash
-if [ "$#" -ne 3 ]; then
-    echo "run as ./benchmark.sh <STRING> <ARCH> <BS>"
-    echo "Example: ./benchmark.sh A100 sm_80 32"
+if [ "$#" -ne 4 ]; then
+    echo "run as ./benchmark.sh <STRING> <ARCH> <BS> <EXEC>"
+    echo "Example: ./benchmark.sh A100 sm_80 32 prog"
     exit
 fi
 STRING=$1
 ARCH=$2
 BS=$3
-GPUPROG=./bin/gpuDP
+EXEC=$4
+GPUPROG=./bin/${EXEC}
 CA_MAXDWELL=512
 MAX_DEPTH=1000
 DATE=$(exec date +"%T-%m-%d-%Y (%:z %Z)")
@@ -23,7 +24,7 @@ maxEXP=10
 
 AP=("Exhaustive" "DP-SBR" "DP-MBR" "ASK-SBR" "ASK-MBR")
 # REALIZATIONS ARRAY
-REAL=(16 16 16 16 16 16 16 16 16 8 8 4 4 4 4 4 4)
+REAL=(16 16 16 16 16 16 16 16 16 8 8 4 4 3 3 2 2)
 # REPEATS
 REPE=4
 #echo "REALIZATIONS=${REAL}  REPEATS=${REPE}"
@@ -36,7 +37,7 @@ do
     N=$((2**${size}))
     lim=$((${size}<${maxEXP} ? ${size} : ${maxEXP}))
     echo "Starting N=${N}"
-    make -B ARCH=${ARCH} REALIZATIONS=${REAL[${size}]}  REPEATS=${REPE} BSX=${BS} BSY=${BS} BENCHMARK=BENCHMARK
+    make -B ARCH=${ARCH} REALIZATIONS=${REAL[${size}]}  REPEATS=${REPE} BSX=${BS} BSY=${BS} BENCHMARK=BENCHMARK EXEC=${EXEC}
     for ((gexp=1; gexp <= ${lim}; gexp++));
     do
         g=$((2**${gexp}))

@@ -1,9 +1,9 @@
-NAME=gpuDP
+EXEC=gpuDP
 GRIDLINES=no
 VERBOSE=no
 DEBUG=no
 SRC=src/main.cu
-TGT=bin/$(NAME)
+TGT=bin/$(EXEC)
 TMP=*~ $(TGT)
 BSX=32
 BSY=32
