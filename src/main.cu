@@ -82,7 +82,7 @@ int main(int argc, char **argv) {
     // 2) GPU Compute
     // ---------------------
     #ifdef VERBOSE
-        printf("%s (REPEATS=%3i, REALIZATIONS=%3i)............", approachStr[approach], REPEATS, REALIZATIONS); fflush(stdout);
+        printf("%s (REALIZATIONS=%3i, REPEATS=%3i)............", approachStr[approach], REALIZATIONS, REPEATS); fflush(stdout);
     #endif
     statistics stat = doBenchmark(approach, d_dwells, W, H, bottomLeftCorner, upperRightCorner, g, r, CA_MAXDWELL, B, MAX_DEPTH);
     cudaDeviceSynchronize();
