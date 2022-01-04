@@ -20,8 +20,7 @@ OUTFILE=data/${STRING}-ARCH${ARCH}-BSX${BSX}-BSY${BSY}.dat
 # COMPILE
 #make -B ARCH=${ARCH} REALIZATIONS=${REAL}  REPEATS=${REPE} BSX=${BSX} BSY=${BSY} BENCHMARK=BENCHMARK
 echo "#NEW BENCHMARK ON ${DATE}: GPU${DEV} ${STRING} ${ARCH} BSX=${BSX} BSY=${BSY} MAXDWELL=${CA_MAXDWELL} MAX_DEPTH=${MAX_DEPTH}">> ${OUTFILE}
-echo "#N, g,r,B, REAL,REP       perf-Exhaustive                             perf-DP-SBR
-perf-DP-MBR                           perf-ASK-SBR                         perf-ASK-MBR" >> ${OUTFILE}
+echo "#N, g,r,B, REAL,REP       perf-Exhaustive                             perf-DP-SBR                         perf-DP-MBR                           perf-ASK-SBR                         perf-ASK-MBR" >> ${OUTFILE}
 
 maxEXP=10
 
