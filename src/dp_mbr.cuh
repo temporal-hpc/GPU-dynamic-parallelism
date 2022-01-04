@@ -79,22 +79,18 @@ __global__ void dp_mbr_mandelbrot_block_k(int *dwells, unsigned int w, unsigned 
 
         if (comm_dwell != DIFF_DWELL) {
             // uniform dwell, just fill
-
             dim3 bs(BSX, BSY), grid(divup(d, BSX), divup(d, BSY));
             dp_mbr_dwell_fill_k<<<grid, bs>>>(dwells, w, x0, y0, d, comm_dwell);
-        } else if (depth + 1 < MAX_DEPTH && d / SUBDIV > MIN_SIZE) {
+        } 
+        else if (depth + 1 < MAX_DEPTH && d / SUBDIV > MIN_SIZE) {
             // subdivide recursively
-
             dim3 bs(blockDim.x, blockDim.y), grid(SUBDIV, SUBDIV);
-            dp_mbr_mandelbrot_block_k<<<grid, bs>>>(dwells, w, h, cmin, cmax, x0, y0,
-                                             d / SUBDIV, depth + 1, SUBDIV,
-                                             MAX_DWELL, MIN_SIZE, MAX_DEPTH);
-        } else {
+            dp_mbr_mandelbrot_block_k<<<grid, bs>>>(dwells, w, h, cmin, cmax, x0, y0, d / SUBDIV, depth + 1, SUBDIV, MAX_DWELL, MIN_SIZE, MAX_DEPTH);
+        } 
+        else {
             // leaf, per-pixel kernel
-
             dim3 bs(BSX, BSY), grid(divup(d, BSX), divup(d, BSY));
-            dp_mbr_mandelbrot_pixel_k<<<grid, bs>>>(dwells, w, h, cmin, cmax, x0, y0, d,
-                                             MAX_DWELL);
+            dp_mbr_mandelbrot_pixel_k<<<grid, bs>>>(dwells, w, h, cmin, cmax, x0, y0, d, MAX_DWELL);
         }
     }
 } // mandelbrot_block_k
