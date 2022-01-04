@@ -1,22 +1,23 @@
 #!/bin/bash
-if [ "$#" -ne 4 ]; then
-    echo "run as ./benchmark.sh <STRING> <ARCH> <BS> <EXEC>"
-    echo "Example: ./benchmark.sh A100 sm_80 32 prog"
+if [ "$#" -ne 5 ]; then
+    echo "run as ./benchmark.sh <STRING> <ARCH> <BSX> <BSY> <EXEC>"
+    echo "Example: ./benchmark.sh A100 sm_80 32 32 progBS32"
     exit
 fi
 STRING=$1
 ARCH=$2
-BS=$3
-EXEC=$4
+BSX=$3
+BSY=$4
+EXEC=$5
 GPUPROG=./bin/${EXEC}
 CA_MAXDWELL=512
 MAX_DEPTH=1000
 DATE=$(exec date +"%T-%m-%d-%Y (%:z %Z)")
 echo "DATE = ${DATE}"
-OUTPUT=data/${STRING}-ARCH${ARCH}-BS${BS}.dat
+OUTPUT=data/${STRING}-ARCH${ARCH}-BSX${BSX}-BSY${BSY}.dat
 
 # COMPILE
-#make -B ARCH=${ARCH} REALIZATIONS=${REAL}  REPEATS=${REPE} BSX=${BS} BSY=${BS} BENCHMARK=BENCHMARK
+#make -B ARCH=${ARCH} REALIZATIONS=${REAL}  REPEATS=${REPE} BSX=${BSX} BSY=${BSY} BENCHMARK=BENCHMARK
 echo "#NEW BENCHMARK ${STRING} ${ARCH}  ${DATE}        MAXDWELL=${CA_MAXDWELL}  MAX_DEPTH=${MAX_DEPTH}">> ${OUTPUT}
 echo "#N, g,r,B, REAL,REP       perf-Exhaustive                             perf-DP-SBR                            perf-DP-MBR                           perf-ASK-SBR                         perf-ASK-MBR" >> ${OUTPUT}
 
@@ -37,7 +38,7 @@ do
     N=$((2**${size}))
     lim=$((${size}<${maxEXP} ? ${size} : ${maxEXP}))
     echo "Starting N=${N}"
-    make -B ARCH=${ARCH} REALIZATIONS=${REAL[${size}]}  REPEATS=${REPE} BSX=${BS} BSY=${BS} BENCHMARK=BENCHMARK EXEC=${EXEC}
+    make -B ARCH=${ARCH} REALIZATIONS=${REAL[${size}]}  REPEATS=${REPE} BSX=${BSX} BSY=${BSY} BENCHMARK=BENCHMARK EXEC=${EXEC}
     for ((gexp=1; gexp <= ${lim}; gexp++));
     do
         g=$((2**${gexp}))
