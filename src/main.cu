@@ -39,20 +39,21 @@ int main(int argc, char **argv) {
 
     check_args_info(argc);
 
-    char approach = atoi(argv[1]);
-    unsigned int W = stoi(argv[2]);
-    unsigned int H = stoi(argv[3]);
-    float rmin = atof(argv[4]);
-    float rmax = atof(argv[5]);
-    float cmin = atof(argv[6]);
-    float cmax = atof(argv[7]);
+    int dev = atoi(argv[1]);
+    char approach = atoi(argv[2]);
+    unsigned int W = stoi(argv[3]);
+    unsigned int H = stoi(argv[4]);
+    float rmin = atof(argv[5]);
+    float rmax = atof(argv[6]);
+    float cmin = atof(argv[7]);
+    float cmax = atof(argv[8]);
 
-    int CA_MAXDWELL = atoi(argv[8]);
-    int g = atoi(argv[9]);
-    int r = atoi(argv[10]);
-    int B = atoi(argv[11]);
-    int MAX_DEPTH = atoi(argv[12]);
-    string fileName = argv[13];
+    int CA_MAXDWELL = atoi(argv[9]);
+    int g = atoi(argv[10]);
+    int r = atoi(argv[11]);
+    int B = atoi(argv[12]);
+    int MAX_DEPTH = atoi(argv[13]);
+    string fileName = argv[14];
 
     int *h_dwells;
     int *d_dwells;
@@ -66,6 +67,11 @@ int main(int argc, char **argv) {
         printf("\nGrid..............................................%i x %i (%.2f GiB)\n", W, H, domainGBytes);
         printf("g=%i r=%i B=%i\n", g, r, B);
     #endif
+
+    // ---------------------------
+    // 0) Choose GPU by 'dev' id
+    // ---------------------------
+    cucheck(cudaSetDevice(dev));
 
 
     // ---------------------

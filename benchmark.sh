@@ -1,25 +1,28 @@
 #!/bin/bash
-if [ "$#" -ne 5 ]; then
-    echo "run as ./benchmark.sh <STRING> <ARCH> <BSX> <BSY> <EXEC>"
-    echo "Example: ./benchmark.sh A100 sm_80 32 32 progBS32"
+if [ "$#" -ne 6 ]; then
+    echo "run as ./benchmark.sh <DEV> <STRING> <ARCH> <BSX> <BSY> <EXEC>"
+    echo "Example: ./benchmark.sh 0 A100 sm_80 32 32 progBS32"
     exit
 fi
-STRING=$1
-ARCH=$2
-BSX=$3
-BSY=$4
-EXEC=$5
+DEV=$1
+STRING=$2
+ARCH=$3
+BSX=$4
+BSY=$5
+EXEC=$6
 GPUPROG=./bin/${EXEC}
 CA_MAXDWELL=512
 MAX_DEPTH=1000
 DATE=$(exec date +"%T-%m-%d-%Y (%:z %Z)")
 echo "DATE = ${DATE}"
-OUTPUT=data/${STRING}-ARCH${ARCH}-BSX${BSX}-BSY${BSY}.dat
+OUTFILE=data/${STRING}-ARCH${ARCH}-BSX${BSX}-BSY${BSY}.dat
 
 # COMPILE
 #make -B ARCH=${ARCH} REALIZATIONS=${REAL}  REPEATS=${REPE} BSX=${BSX} BSY=${BSY} BENCHMARK=BENCHMARK
-echo "#NEW BENCHMARK ${STRING} ${ARCH}  ${DATE}        MAXDWELL=${CA_MAXDWELL}  MAX_DEPTH=${MAX_DEPTH}">> ${OUTPUT}
-echo "#N, g,r,B, REAL,REP       perf-Exhaustive                             perf-DP-SBR                            perf-DP-MBR                           perf-ASK-SBR                         perf-ASK-MBR" >> ${OUTPUT}
+echo "#NEW BENCHMARK ON ${DATE}: GPU${DEV} ${STRING} ${ARCH} BSX=${BSX} BSY=${BSY} MAXDWELL=${CA_MAXDWELL}
+MAX_DEPTH=${MAX_DEPTH}">> ${OUTFILE}
+echo "#N, g,r,B, REAL,REP       perf-Exhaustive                             perf-DP-SBR
+perf-DP-MBR                           perf-ASK-SBR                         perf-ASK-MBR" >> ${OUTFILE}
 
 maxEXP=10
 
@@ -55,11 +58,11 @@ do
                 for approach in 0 1 2 3 4
                 do
                     printf '%10s......' ${AP[${approach}]}
-                    res=$(exec ${GPUPROG} $approach ${N} ${N} -1.5 0.5 -1 1 ${CA_MAXDWELL} ${g} ${r} ${B} $MAX_DEPTH none)
+                    res=$(exec ${GPUPROG} ${DEV} ${approach} ${N} ${N} -1.5 0.5 -1 1 ${CA_MAXDWELL} ${g} ${r} ${B} $MAX_DEPTH none)
                     echo "done: ${res}"
                     a="${a},        ${res}"
                 done
-                echo $a >> ${OUTPUT}
+                echo $a >> ${OUTFILE}
                 echo -e "\n"
             done
         done
