@@ -13,7 +13,6 @@ EXEC=$6
 GPUPROG=./bin/${EXEC}
 CA_MAXDWELL=512
 MAX_DEPTH=1000
-DP_PENDING_KERNEL_BUFFER=$((1024*512))
 DATE=$(exec date +"%T-%m-%d-%Y (%:z %Z)")
 echo "DATE = ${DATE}"
 OUTFILE=data/${STRING}-ARCH${ARCH}-BSX${BSX}-BSY${BSY}.dat
@@ -25,6 +24,7 @@ maxEXP=10
 
 AP=("Exhaustive" "DP-SBR" "DP-MBR" "ASK-SBR" "ASK-MBR")
 # REALIZATIONS ARRAY
+DPBUFFER=(12 12 13 13 14 14 15 15 16 16 17 17 18 18 19 19)
 REAL=(16 16 16 16 16 16 16 8 8 8 8 4 4 3 3 2 2)
 # REPEATS
 REPE=4
@@ -38,7 +38,7 @@ do
     N=$((2**${size}))
     lim=$((${size}<${maxEXP} ? ${size} : ${maxEXP}))
     echo "Starting N=${N}"
-    make -B ARCH=${ARCH} REALIZATIONS=${REAL[${size}]}  REPEATS=${REPE} BSX=${BSX} BSY=${BSY} BENCHMARK=BENCHMARK EXEC=${EXEC} DP_PENDING_KERNEL_BUFFER=${DP_PENDING_KERNEL_BUFFER}
+    make -B ARCH=${ARCH} REALIZATIONS=${REAL[${size}]}  REPEATS=${REPE} BSX=${BSX} BSY=${BSY} BENCHMARK=BENCHMARK EXEC=${EXEC} DP_PENDING_KERNEL_BUFFER=$((2**${DPBUFFER[${size}]}))
     for ((gexp=1; gexp <= ${lim}; gexp++));
     do
         g=$((2**${gexp}))
