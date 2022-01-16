@@ -1,15 +1,16 @@
 #!/bin/bash
-if [ "$#" -ne 6 ]; then
-    echo "run as ./benchmark.sh <DEV> <STRING> <ARCH> <BSX> <BSY> <EXEC>"
-    echo "Example: ./benchmark.sh 0 A100 sm_80 32 32 progBS32"
+if [ "$#" -ne 7 ]; then
+    echo "run as ./benchmark.sh <DEV> <STRING> <ARCH> <START_EXP> <BSX> <BSY> <EXEC>"
+    echo "Example: ./benchmark.sh 0 A100 sm_80 10 32 32 progBS32"
     exit
 fi
 DEV=$1
 STRING=$2
 ARCH=$3
-BSX=$4
-BSY=$5
-EXEC=$6
+START_EXP=$4
+BSX=$5
+BSY=$6
+EXEC=$7
 GPUPROG=./bin/${EXEC}
 CA_MAXDWELL=512
 MAX_DEPTH=1000
@@ -33,7 +34,7 @@ REPE=4
 NexpMAX=16
 
 # RUN
-for ((size=0; size <= ${NexpMAX}; size++));
+for ((size=${START_EXP}; size <= ${NexpMAX}; size++));
 do
     N=$((2**${size}))
     lim=$((${size}<${maxEXP} ? ${size} : ${maxEXP}))
