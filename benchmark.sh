@@ -1,15 +1,16 @@
 #!/bin/bash
-if [ "$#" -ne 6 ]; then
-    echo "run as ./benchmark.sh <DEV> <STRING> <ARCH> <BSX> <BSY> <EXEC>"
-    echo "Example: ./benchmark.sh 0 A100 sm_80 32 32 progBS32"
+if [ "$#" -ne 7 ]; then
+    echo "run as ./benchmark.sh <DEV> <STRING> <ARCH> <START_EXP> <BSX> <BSY> <EXEC>"
+    echo "Example: ./benchmark.sh 0 A100 sm_80 10 32 32 progBS32"
     exit
 fi
 DEV=$1
 STRING=$2
 ARCH=$3
-BSX=$4
-BSY=$5
-EXEC=$6
+START_EXP=$4
+BSX=$5
+BSY=$6
+EXEC=$7
 GPUPROG=./bin/${EXEC}
 CA_MAXDWELL=512
 MAX_DEPTH=1000
@@ -17,16 +18,15 @@ DATE=$(exec date +"%T-%m-%d-%Y (%:z %Z)")
 echo "DATE = ${DATE}"
 OUTFILE=data/${STRING}-ARCH${ARCH}-BSX${BSX}-BSY${BSY}.dat
 
-# COMPILE
-#make -B ARCH=${ARCH} REALIZATIONS=${REAL}  REPEATS=${REPE} BSX=${BSX} BSY=${BSY} BENCHMARK=BENCHMARK
 echo "#NEW BENCHMARK ON ${DATE}: GPU${DEV} ${STRING} ${ARCH} BSX=${BSX} BSY=${BSY} MAXDWELL=${CA_MAXDWELL} MAX_DEPTH=${MAX_DEPTH}">> ${OUTFILE}
-echo "#N, g,r,B, REAL,REP       perf-Exhaustive                             perf-DP-SBR                         perf-DP-MBR                           perf-ASK-SBR                         perf-ASK-MBR" >> ${OUTFILE}
+echo "#N, g,r,B, REAL,REP       perf-Exhaustive (mean, stdev, sterr, sterr%%)      perf-DP-SBR                          perf-DP-MBR                           perf-ASK-SBR                         perf-ASK-MBR" >> ${OUTFILE}
 
 maxEXP=10
 
 AP=("Exhaustive" "DP-SBR" "DP-MBR" "ASK-SBR" "ASK-MBR")
 # REALIZATIONS ARRAY
-REAL=(16 16 16 16 16 16 16 16 16 8 8 4 4 3 3 2 2)
+DPBUFFER=(11 11 12 12 13 13 14 14 15 15 15 15 15 16 16 16 16)
+REAL=(16 16 16 16 16 16 16 8 8 8 8 4 4 4 4 4 4)
 # REPEATS
 REPE=4
 #echo "REALIZATIONS=${REAL}  REPEATS=${REPE}"
@@ -34,12 +34,12 @@ REPE=4
 NexpMAX=16
 
 # RUN
-for ((size=0; size <= ${NexpMAX}; size++));
+for ((size=${START_EXP}; size <= ${NexpMAX}; size++));
 do
     N=$((2**${size}))
     lim=$((${size}<${maxEXP} ? ${size} : ${maxEXP}))
     echo "Starting N=${N}"
-    make -B ARCH=${ARCH} REALIZATIONS=${REAL[${size}]}  REPEATS=${REPE} BSX=${BSX} BSY=${BSY} BENCHMARK=BENCHMARK EXEC=${EXEC}
+    make -B ARCH=${ARCH} REALIZATIONS=${REAL[${size}]}  REPEATS=${REPE} BSX=${BSX} BSY=${BSY} BENCHMARK=BENCHMARK EXEC=${EXEC} DP_PENDING_KERNEL_BUFFER=$((2**${DPBUFFER[${size}]}))
     for ((gexp=1; gexp <= ${lim}; gexp++));
     do
         g=$((2**${gexp}))

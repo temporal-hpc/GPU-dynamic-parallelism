@@ -11,8 +11,9 @@ BENCHMARK=no
 REPEATS=32
 REALIZATIONS=10
 ARCH=sm_80
+DP_PENDING_KERNEL_BUFFER=$$((1024*512))
 build:
-	nvcc -O3 -arch=${ARCH} -rdc=true -lcudadevrt -Xcompiler -fopenmp -lpng $(SRC) -o $(TGT) -D${VERBOSE} -D${GRIDLINES} -D${DEBUG} -D${BENCHMARK} -DBSX=$(BSX) -DBSY=$(BSY) -DREPEATS=$(REPEATS) -DREALIZATIONS=${REALIZATIONS}
+	nvcc -O3 -arch=${ARCH} -rdc=true -lcudadevrt -Xcompiler -fopenmp -lpng $(SRC) -o $(TGT) -D${VERBOSE} -D${GRIDLINES} -D${DEBUG} -D${BENCHMARK} -DBSX=$(BSX) -DBSY=$(BSY) -DREALIZATIONS=${REALIZATIONS} -DREPEATS=$(REPEATS) -DDP_PENDING_KERNEL_BUFFER=${DP_PENDING_KERNEL_BUFFER}
 
 run:	$(TGT)
 	./$(TGT)

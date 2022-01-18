@@ -9,6 +9,10 @@
 #include <string.h>
 #include <time.h>
 
+#ifndef DP_PENDING_KERNEL_BUFFER
+    #define DP_PENDING_KERNEL_BUFFER (1024*512)
+#endif
+
 #define GRID_CODE 999
 #define SAVE_FRACTAL 0
 #define SAVE_GRIDLINES 1
@@ -66,12 +70,14 @@ int main(int argc, char **argv) {
         float domainGBytes = (float)(sizeof(unsigned int) * W * H)/(1024*1024*1024);
         printf("\nGrid..............................................%i x %i (%.2f GiB)\n", W, H, domainGBytes);
         printf("g=%i r=%i B=%i\n", g, r, B);
+        printf("DP Pending Kernel Buffer = %i\n", DP_PENDING_KERNEL_BUFFER);
     #endif
 
     // ---------------------------
     // 0) Choose GPU by 'dev' id
     // ---------------------------
     cucheck(cudaSetDevice(dev));
+    cucheck(cudaDeviceSetLimit(cudaLimitDevRuntimePendingLaunchCount, DP_PENDING_KERNEL_BUFFER));
 
 
     // ---------------------
