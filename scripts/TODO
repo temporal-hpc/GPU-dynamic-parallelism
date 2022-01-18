@@ -1,0 +1,18 @@
+TODO:
+- decidir si se usaran los mvar o no en los graficos experimentales.
+
+
+
+
+
+
+DONE
+- probar graficos nuevos de time y speedup
+- Incluir ecuaciones de time y speedup
+- Permitir distinto G inicial
+- terminar de actualizar las ecuaciones en wrf-debug
+- revisar si aun tiene sentido expresar el costo de C como factor de A, es decir C_S = alpha*A
+- unificar work con wrf en uno mismo
+- si todo sale bien, aplicar los cambios a los generadores de graficos
+- nuevos graficos para multiB y tambien B en eje x.
+- poner nuevos graficos en paper
