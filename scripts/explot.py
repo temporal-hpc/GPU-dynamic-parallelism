@@ -1,210 +1,219 @@
 import numpy as np
+import pandas as pd
 import matplotlib.pyplot as plt
 import sys
 import tools as Q
 
-# functional mapping for [work, wrf, time, speedup, speedup-sbr, speedup-mbr]
-funcs = [lambda n,g,B,r,P,lam,A,q,c: Q.subdivWork(n, g, B, r, P, lam, A),
-         lambda n,g,B,r,P,lam,A,q,c: Q.exhaustiveWork(n,A)/Q.subdivWork(n, g, B, r, P, lam, A),
-         lambda n,g,B,r,P,lam,A,q,c: Q.subdivSBR(n, g, B, r, P, lam, A, q, c),
-         lambda n,g,B,r,P,lam,A,q,c: [Q.exhaustive(n,A,q,c)/Q.subdivSBR(n, g, B, r, P, lam, A, q, c),
-                                        Q.exhaustive(n,A,q,c)/Q.subdivMBR(n, g, B, r, P, lam, A, q, c)],
-         lambda n,g,B,r,P,lam,A,q,c: Q.exhaustive(n,A,q,c)/Q.subdivSBR(n, g, B, r, P, lam, A, q, c),
-         lambda n,g,B,r,P,lam,A,q,c: Q.exhaustive(n,A,q,c)/Q.subdivMBR(n, g, B, r, P, lam, A, q, c)]
+#lambdas
+dFunc = [  lambda _df: [_df['Extime'], _df['DPSBRtime'], _df['DPMBRtime'], _df['ASKSBRtime'], _df['ASKMBRtime']],
+            lambda _df: [_df['Extime']/_df['Extime'], _df['Extime']/_df['DPSBRtime'], _df['Extime']/_df['DPMBRtime'], _df['Extime']/_df['ASKSBRtime'], _df['Extime']/_df['ASKMBRtime']]]
 
-# functional mapping for [work, wrf, time, speedup-sbr, speedup-mbr]
-refFuncs = [lambda n,g,B,r,P,lam,A,q,c: Q.exhaustiveWork(n,A),
-            lambda n,g,B,r,P,lam,A,q,c: Q.exhaustiveWork(n,A)/Q.exhaustiveWork(n,A),
-            lambda n,g,B,r,P,lam,A,q,c: Q.exhaustive(n,A,q,c),
-            lambda n,g,B,r,P,lam,A,q,c: Q.exhaustive(n,A,q,c)/Q.exhaustive(n,A,q,c),
-            lambda n,g,B,r,P,lam,A,q,c: Q.exhaustive(n,A,q,c)/Q.exhaustive(n,A,q,c)]
 
-# functional mapping for [work, wrf, time, speedup-sbr, speedup-mbr]
-setYscale = [lambda ax: ax.set_yscale('log', base=2),
-             lambda ax: ax.set_yscale('linear'),
-             lambda ax: ax.set_yscale('log', base=2),
-             lambda ax: ax.set_yscale('linear'),
-             lambda ax: ax.set_yscale('linear')]
+func_xscale = [lambda _ax: _ax.set_xscale('log', base=2),
+              lambda _ax: _ax.set_xscale('log', base=2),
+              lambda _ax: _ax.set_xscale('log', base=2),
+              lambda _ax: _ax.set_xscale('log', base=2),
+              lambda _ax: _ax.set_xscale('linear')]
 
-# functional mapping for [work, wrf, time, speedup-sbr, speedup-mbr]
-setYlim = [lambda ax,ymin,ymax,dmin,dmax: ax.set_ylim(dmin, 1.2*dmax),
-           lambda ax,ymin,ymax,dmin,dmax: ax.set_ylim(ymin, ymax),
-           lambda ax,ymin,ymax,dmin,dmax: ax.set_ylim(dmin, 1.2*dmax),
-           lambda ax,ymin,ymax,dmin,dmax: ax.set_ylim(ymin, ymax),
-           lambda ax,ymin,ymax,dmin,dmax: ax.set_ylim(ymin, ymax)]
+dfFilter = [lambda n,g,r,B,_df: _df[                (_df['g']==g) & (_df['r']==r) & (_df['B']==B)],
+            lambda n,g,r,B,_df: _df[(_df['n']==n)                 & (_df['r']==r) & (_df['B']==B)],
+            lambda n,g,r,B,_df: _df[(_df['n']==n) & (_df['g']==g)                 & (_df['B']==B)],
+            lambda n,g,r,B,_df: _df[(_df['n']==n) & (_df['g']==g) & (_df['r']==r)                ],
+            lambda n,g,r,B,_df: _df[(_df['n']==n)                                                ]]
 
-# functional mapping of variables
-mvarMap = [lambda mvar,n,g,B,r,P,lam,A,q,c: [mvar,    g,    B,    r,    P,   lam,    A,    q,    c],
-           lambda mvar,n,g,B,r,P,lam,A,q,c: [n   , mvar,    B,    r,    P,   lam,    A,    q,    c],
-           lambda mvar,n,g,B,r,P,lam,A,q,c: [n   ,    g, mvar,    r,    P,   lam,    A,    q,    c],
-           lambda mvar,n,g,B,r,P,lam,A,q,c: [n   ,    g,    B, mvar,    P,   lam,    A,    q,    c],
-           lambda mvar,n,g,B,r,P,lam,A,q,c: [n   ,    g,    B,    r, mvar,   lam,    A,    q,    c],
-           lambda mvar,n,g,B,r,P,lam,A,q,c: [n   ,    g,    B,    r,    P,  mvar,    A,    q,    c],
-           lambda mvar,n,g,B,r,P,lam,A,q,c: [n   ,    g,    B,    r,    P,   lam, mvar,    q,    c],
-           lambda mvar,n,g,B,r,P,lam,A,q,c: [n   ,    g,    B,    r,    P,   lam,    A, mvar,    c],
-           lambda mvar,n,g,B,r,P,lam,A,q,c: [n   ,    g,    B,    r,    P,   lam,    A,    q, mvar]]
+dStyle = [[':','v-','^-','+-','x-'],
+          [':','v-','^-','+-','x-'],
+          [':','v-','^-','+-','x-'],
+          [':','v-','^-','+-','x-'],
+          [':','v','^','+','x']]
 
-# ------------
-# main code
-# ------------
-if len(sys.argv) !=14:
-    print("\nEjecutar como: python <prog> <GPU-NAME> <HWq> <HWc> <measure> <n> <g> <r> <B> <mvar1> <mvar2> <mvar3> <mvar4> <MVAR> <VAR> <ymin> <ymax>")
-    print("measure = {time, speedup}")
-    print("MVAR    = {n, g, r, B}")
-    print("VAR     = {n, g, r, B}")
+
+
+
+# ----------------
+# 1) INIT code
+# ----------------
+if len(sys.argv) !=13:
+    print("\nEjecutar como: python explot.py <datafile> <GPU_MODEL> <HWq> <HWc> <measure> <n> <g> <r> <B> <VAR> <ymin> <ymax>")
+    print("------------------------------------------------")
+    print("datafile    : <path-to-file>")
+    print("GPU_MODEL   : <string>")
+    print("HWq         : # of SMs in GPU")
+    print("HWc         : # of CUDA cores/SM")
+    print("measure     : {time, speedup}")
+    print("n           : problem size n x n")
+    print("g           : initial subdivision of g x g)")
+    print("r           : subdivison of r x r")
+    print("B           : smallest regions of B x B")
+    print("VAR         : {n, g, r, B, grB}")
+    print("{ymin,ymax} : Y range for plots")
+    print("------------------------------------------------")
+    print("Example:\n python explot.py ../data/A100-ARCHsm_80-BSX64-BSY8.dat \"Nvidia A100\" 108 64 speedup   $((2**16)) 2 2 32  4 8 16 32   g n 0 10\n\n")
     exit(2)
 
+datafile = sys.argv[1]
+GPUmodel = sys.argv[2]
+q = int(sys.argv[3])
+c = int(sys.argv[4])
+measure = sys.argv[5]
+n = int(sys.argv[6])
+g = int(sys.argv[7])
+r = int(sys.argv[8])
+B = int(sys.argv[9])
 
-# GPU specs
-GPUname = sys.argv[1]
-q = int(sys.argv[2])
-c = int(sys.argv[3])
 
-# plot config
-measure = sys.argv[4]
-n = np.full(res, int(sys.argv[5]))
-g = np.full(res, int(sys.argv[6]))
-r = np.full(res, int(sys.argv[7]))
-B = np.full(res, int(sys.argv[8]))
-
-# multi parameters
-mvar1 = np.full(res, float(sys.argv[9]))
-mvar2 = np.full(res, float(sys.argv[10]))
-mvar3 = np.full(res, float(sys.argv[11]))
-mvar4 = np.full(res, float(sys.argv[12]))
-
-MVAR = sys.argv[13]
-VAR = sys.argv[14]
+VAR = sys.argv[10]
 
 # y range
-ymin = float(sys.argv[15])
-ymax = float(sys.argv[16])
+ymin = float(sys.argv[11])
+ymax = float(sys.argv[12])
 
 # maps
-dFunc = {"time":0, "speedup":1}
-dmvar = {"n":0, "g":1, "r":2, "B":3}
-dmvarStr = {"n":"n", "g":"g", "r":"r", "B":"B"}
+dMeasure = {"time":0, "speedup":1}
+dVAR = {"n":0, "g":1, "r":2, "B":3, "grB":4}
+dVARStr = {"n":"n", "g":"g", "r":"r", "B":"B", "grB":"\{g,r,B\}"}
+dxlabel = {"n":f"${dVARStr[VAR]}$", "g":f"${dVARStr[VAR]}$", "r":f"${dVARStr[VAR]}$", "B":f"${dVARStr[VAR]}$", "grB":f"Configuration Space ${dVARStr[VAR]}$"}
 dLabel = {"time":"T", "speedup":r"S"}
-dTitle = {"time":f"Execution Time [s] vs ${dmvarStr[VAR]}$", "speedup":f"$S({VAR})$, multi-${dmvarStr[MVAR]}$"}
+dTitle = {"time":f"Execution Time [s] vs ${dVARStr[VAR]}$, {GPUmodel}", "speedup":f"Experimental Speedup $S({dVARStr[VAR]})$, {GPUmodel}"}
+
+print(f"[EXPLOT]> GPU_MODEL={GPUmodel},  HWq={q}  HWc={c}")
+print(f"[EXPLOT]> n={n} g={g} r={r} B={B}  VAR={VAR}")
+print(f"[EXPLOT]> ymin={ymin} ymax={ymax}\n")
 
 
-# x range (from data file)
-xmin = float(sys.argv[17])
-xmax = float(sys.argv[18])
 
 
-# creating xrange
-print(f"[CMODEL]> MVAR={MVAR} VAR={VAR}")
-print(f"[CMODEL]> n={n[0]} g={g[0]} r={r[0]} B={B[0]},    GPU={GPUname}  HWq={q} HWc={c}")
-print(f"[CMODEL]> xmin={xmin} xmax={xmax} ymin={ymin} ymax={ymax} res={res}")
-print(f"[CMODEL]> dFunc[{measure}] = {dFunc[measure]}")
-exit(1)
 
 
-# xrange
-xrange = np.linspace(xmin, xmax, res)
-# creating plot
-fig = plt.figure(figsize=(4,3))
+
+
+
+
+
+# -----------------------------------------------------------
+# 2) load the data frame and filter according to parameters
+# -----------------------------------------------------------
+print(f"[EXPLOT]> Loading data frame...........", end='')
+df = pd.read_csv(datafile, comment='#')
+print(f"done: shape ->", df.shape)
+subdf = dfFilter[dVAR[VAR]](n,g,r,B,df)
+subdf = subdf.assign(grB=pd.Series(np.arange(len(subdf))).values)
+print("[EXPLOT]> data frame:\n", subdf)
+
+
+
+
+
+
+
+
+
+
+
+# -----------------------------------------------------------
+# 3) create 'measure' values
+# -----------------------------------------------------------
+# TODO
+# GENERALIZAR ESTO (TIME Y SPEEDUP)
+# aplicar scala logaritmica a eje x
+FUNCS = dFunc[dMeasure[measure]](subdf)
+EX_FUNC     = FUNCS[0]
+DPSBR_FUNC  = FUNCS[1]
+DPMBR_FUNC  = FUNCS[2]
+ASKSBR_FUNC = FUNCS[3]
+ASKMBR_FUNC = FUNCS[4]
+
+
+maxDPSBR = DPSBR_FUNC.max()
+maxDPMBR = DPMBR_FUNC.max()
+maxASKSBR = ASKSBR_FUNC.max()
+maxASKMBR = ASKMBR_FUNC.max()
+
+maxDPSBRi = DPSBR_FUNC.idxmax()
+maxDPMBRi = DPMBR_FUNC.idxmax()
+maxASKSBRi = ASKSBR_FUNC.idxmax()
+maxASKMBRi = ASKMBR_FUNC.idxmax()
+
+gDPSBR = subdf.at[maxDPSBRi, 'g']
+rDPSBR = subdf.at[maxDPSBRi, 'r']
+BDPSBR = subdf.at[maxDPSBRi, 'B']
+grBDPSBR =subdf.at[maxDPSBRi, 'grB']
+
+
+gDPMBR = subdf.at[maxDPMBRi, 'g']
+rDPMBR = subdf.at[maxDPMBRi, 'r']
+BDPMBR = subdf.at[maxDPMBRi, 'B']
+grBDPMBR =subdf.at[maxDPMBRi, 'grB']
+
+gASKSBR = subdf.at[maxASKSBRi, 'g']
+rASKSBR = subdf.at[maxASKSBRi, 'r']
+BASKSBR = subdf.at[maxASKSBRi, 'B']
+grBASKSBR =subdf.at[maxASKSBRi, 'grB']
+
+gASKMBR = subdf.at[maxASKMBRi, 'g']
+rASKMBR = subdf.at[maxASKMBRi, 'r']
+BASKMBR = subdf.at[maxASKMBRi, 'B']
+grBASKMBR =subdf.at[maxASKMBRi, 'grB']
+
+print(f"maxDPSBR -> x={grBDPSBR} S={maxDPSBR} ({gDPSBR},{rDPSBR},{BDPSBR})")
+print(f"maxDPMBR -> x={grBDPMBR} S={maxDPMBR} ({gDPMBR},{rDPMBR},{BDPMBR})")
+print(f"maxASKSBR -> x={grBASKSBR} S={maxASKSBR} ({gASKSBR},{rASKSBR},{BASKSBR})")
+print(f"maxASKMBR -> x={grBASKMBR} S={maxASKMBR} ({gASKMBR},{rASKMBR},{BASKMBR})")
+
+
+
+
+
+
+
+
+
+# -----------------------------------------------------------
+# 4) plot
+# -----------------------------------------------------------
+fig = plt.figure(figsize=(8,6))
 ax = fig.add_subplot()
 #fig, ax = plt.subplots()
-plt.suptitle(dTitle[measure], y=0.93, fontsize=10)
+plt.suptitle(dTitle[measure], y=0.98, fontsize=12)
+plt.title(Q.genSubtitleExp(measure,VAR,n,g,r,B,q,c), fontsize=10)
 
-if measure == "speedup" or measure == "speedup-sbr" or measure == "speedup-mbr":
-    plt.title(Q.genSubtitle(measure,MVAR,VAR,n,g,B,r,P,lam,A,q,c), fontsize=8)
-else:
-    plt.title(Q.genSubtitle(measure,MVAR,VAR,n,g,B,r,P,lam,A,q,c), fontsize=9)
+# curves
+ax.plot(subdf[VAR], EX_FUNC, dStyle[dVAR[VAR]][0], lw=1, markersize=4, color=Q.cGrayscale[0])
+ax.plot(subdf[VAR], ASKSBR_FUNC, dStyle[dVAR[VAR]][1], lw=1, markersize=3, color=Q.cTemporal[1], alpha=Q.alpha_grB)
+ax.plot(subdf[VAR], ASKMBR_FUNC, dStyle[dVAR[VAR]][2], lw=1, markersize=3, color=Q.cRed[0], alpha=Q.alpha_grB)
+ax.plot(subdf[VAR], DPMBR_FUNC, dStyle[dVAR[VAR]][3], lw=1, markersize=4,  color=Q.cGreen[0], alpha=Q.alpha_grB)
+ax.plot(subdf[VAR], DPSBR_FUNC, dStyle[dVAR[VAR]][4], lw=1, markersize=4,  color=Q.cPurple[2], alpha=Q.alpha_grB)
 
-ax.set_xlabel(fr'${dmvarStr[VAR]}$')
-ax.set_ylabel(dLabel[measure], rotation=0, labelpad=15)
+# text on plot for grB landscape
+if(VAR=='grB'):
+    plt.plot(grBASKSBR, maxASKSBR, dStyle[dVAR[VAR]][1], markersize=4,  label="ASK-SBR", color=Q.cTemporal[1])
+    plt.plot(grBASKMBR, maxASKMBR, dStyle[dVAR[VAR]][2], markersize=4,  label="ASK-MBR", color=Q.cRed[0])
+    plt.plot(grBDPSBR, maxDPSBR, dStyle[dVAR[VAR]][3], markersize=7,    label="DP-SBR",  color=Q.cGreen[0])
+    plt.plot(grBDPMBR, maxDPMBR, dStyle[dVAR[VAR]][4], markersize=6,    label="DP-MBR",  color=Q.cPurple[2])
 
-if VAR == "n":
-    xrange = np.logspace(np.log2(xmin), np.log2(xmax), res, base=2)
-    n = xrange
-    ax.set_xscale('log', base=2)
-if VAR == "g":
-    xrange = np.logspace(np.log2(xmin), np.log2(xmax), res, base=2)
-    r = xrange
-    ax.set_xscale('log', base=2)
-if VAR == "B":
-    xrange = np.logspace(np.log2(xmin), np.log2(xmax), res, base=2)
-    B = xrange
-    ax.set_xscale('log', base=2)
-if VAR == "P":
-    P = xrange
-if VAR == "r":
-    xrange = np.logspace(np.log2(xmin), np.log2(xmax), res, base=2)
-    r = xrange
-    ax.set_xscale('log', base=2)
-if VAR == "lam":
-    xrange = np.logspace(np.log2(xmin), np.log2(xmax), res, base=10)
-    lam = xrange
-    ax.set_xscale('log', base=10)
-if VAR == "A":
-    xrange = np.logspace(np.log2(xmin), np.log2(xmax), res, base=2)
-    lam = xrange
-    ax.set_xscale('log', base=2)
-if VAR == "q":
-    xrange = np.logspace(np.log2(xmin), np.log2(xmax), res, base=2)
-    q = xrange
-    ax.set_xscale('log', base=2)
-if VAR == "c":
-    xrange = np.logspace(np.log2(xmin), np.log2(xmax), res, base=2)
-    c = xrange
-    ax.set_xscale('log', base=2)
+    plt.text(grBDPSBR+5, maxDPSBR, f"({gDPSBR},{rDPSBR},{BDPSBR})",      fontsize=8, fontweight='bold')
+    plt.text(grBDPMBR+5, maxDPMBR, f"({gDPMBR},{rDPMBR},{BDPMBR})",      fontsize=8, fontweight='bold')
+    plt.text(grBASKSBR+5, maxASKSBR, f"({gASKSBR},{rASKSBR},{BASKSBR})", fontsize=8, fontweight='bold')
+    plt.text(grBASKMBR+5, maxASKMBR, f"({gASKMBR},{rASKMBR},{BASKMBR})", fontsize=8, fontweight='bold')
 
+ax.set_xlabel(fr'{dxlabel[VAR]}')
+ax.set_ylabel(dLabel[measure], rotation=0, labelpad=5)
+func_xscale[dVAR[VAR]](ax)
+ax.set_ylim([ymin, ymax])
 
-v = mvarMap[dmvar[MVAR]](mvar1,n,g,B,r,P,lam,A,q,c)
-d1 = funcs[dFunc[measure]](v[0],v[1],v[2],v[3],v[4],v[5],v[6],v[7],v[8])
-v = mvarMap[dmvar[MVAR]](mvar2,n,g,B,r,P,lam,A,q,c)
-d2 = funcs[dFunc[measure]](v[0],v[1],v[2],v[3],v[4],v[5],v[6],v[7],v[8])
-v = mvarMap[dmvar[MVAR]](mvar3,n,g,B,r,P,lam,A,q,c)
-d3 = funcs[dFunc[measure]](v[0],v[1],v[2],v[3],v[4],v[5],v[6],v[7],v[8])
-v = mvarMap[dmvar[MVAR]](mvar4,n,g,B,r,P,lam,A,q,c)
-d4 = funcs[dFunc[measure]](v[0],v[1],v[2],v[3],v[4],v[5],v[6],v[7],v[8])
+if(VAR=='grB'):
+    plt.tick_params(
+    axis='x',          # changes apply to the x-axis
+    which='both',      # both major and minor ticks are affected
+    bottom=False,      # ticks along the bottom edge are off
+    top=False,         # ticks along the top edge are off
+    labelbottom=False) # labels along the bottom edge are off
+    ax.set_xticklabels([])
 
-d5 = refFuncs[dFunc[measure]](v[0],v[1],v[2],v[3],v[4],v[5],v[6],v[7],v[8])
+#fig.tight_layout()
+plt.subplots_adjust(bottom=0.05, left=0.06, right=0.98, top=0.90)
+plt.legend(prop={"size":10})
+plt.savefig(f'plots/explot-{GPUmodel}-q{q}-c{c}-{measure}-{VAR}.eps', format='eps')
+plt.show()
 
-# refplot
-if measure == "time" or measure == "work":
-    refPlot,     = plt.plot(xrange, d5, label="Ex, "+Q.genLabel(MVAR, dmvarStr[MVAR], mvar4[0]), lw=2, ls=':', color=Q.cGrayscale[2])
-else:
-    refPlot,     = plt.plot(xrange, d5, lw=0.5, ls='--', color=Q.cGrayscale[2])
-
-# mainplot
-if measure=="speedup":
-    # SBR part
-    subdivPlot1, = plt.plot(xrange, d1[0], label="SBR, " + Q.genLabel(MVAR, dmvarStr[MVAR], mvar1[0]), lw=1, ls=":", color=Q.cTemporal[3])
-    subdivPlot2, = plt.plot(xrange, d2[0], label="SBR, " + Q.genLabel(MVAR, dmvarStr[MVAR], mvar2[0]), lw=1, ls="-.", color=Q.cTemporal[2])
-    subdivPlot3, = plt.plot(xrange, d3[0], label="SBR, " + Q.genLabel(MVAR, dmvarStr[MVAR], mvar3[0]), lw=1, ls="--", color=Q.cTemporal[1])
-    subdivPlot4, = plt.plot(xrange, d4[0], label="SBR, " + Q.genLabel(MVAR, dmvarStr[MVAR], mvar4[0]), lw=1, ls="-", color=Q.cTemporal[0])
-
-    # MBR part
-    subdivPlot1b, = plt.plot(xrange, d1[1], label="MBR, " + Q.genLabel(MVAR, dmvarStr[MVAR], mvar1[0]), lw=1, ls=":", color=Q.cOrange[3])
-    subdivPlot2b, = plt.plot(xrange, d2[1], label="MBR, " + Q.genLabel(MVAR, dmvarStr[MVAR], mvar2[0]), lw=1, ls="-.", color=Q.cOrange[2])
-    subdivPlot3b, = plt.plot(xrange, d3[1], label="MBR, " + Q.genLabel(MVAR, dmvarStr[MVAR], mvar3[0]), lw=1, ls="--", color=Q.cOrange[1])
-    subdivPlot4b, = plt.plot(xrange, d4[1], label="MBR, " + Q.genLabel(MVAR, dmvarStr[MVAR], mvar4[0]), lw=1, ls="-", color=Q.cOrange[0])
-else:
-    subdivPlot1, = plt.plot(xrange, d1, label="Sub, " + Q.genLabel(MVAR, dmvarStr[MVAR], mvar1[0]), lw=1, ls=":", color=Q.cTemporal[3])
-    subdivPlot2, = plt.plot(xrange, d2, label="Sub, " + Q.genLabel(MVAR, dmvarStr[MVAR], mvar2[0]), lw=1, ls="-.", color=Q.cTemporal[2])
-    subdivPlot3, = plt.plot(xrange, d3, label="Sub, " + Q.genLabel(MVAR, dmvarStr[MVAR], mvar3[0]), lw=1, ls="--", color=Q.cTemporal[1])
-    subdivPlot4, = plt.plot(xrange, d4, label="Sub, " + Q.genLabel(MVAR, dmvarStr[MVAR], mvar4[0]), lw=1, ls="-", color=Q.cTemporal[0])
-
-
-#plt.legend(loc="lower left", ncol=2, prop={"size":5.5}, bbox_to_anchor=(-0.2, -0.3))
-if measure == "speedup" or measure == "speedup-sbr" or measure == "speedup-mbr":
-    plt.legend(prop={"size":6.5}, ncol=2)
-else:
-    plt.legend(prop={"size":7})
-
-
-#ax.margins(0.1)
-setYscale[dFunc[measure]](ax)
-ax.set_xlim([xmin, xmax])
-if measure == "speedup":
-    setYlim[dFunc[measure]](ax,ymin,ymax, min(Q.minmaxFromLists(min, d1[0], d2[0], d3[0], d4[0], d5[0]), Q.minmaxFromLists(min, d1[1], d2[1], d3[1], d4[1], d5[1])), max(Q.minmaxFromLists(max, d1[0],d2[0],d3[0],d4[0],d5[0]), Q.minmaxFromLists(max, d1[1],d2[1],d3[1],d4[1],d5[1])))
-else:
-    setYlim[dFunc[measure]](ax,ymin,ymax, Q.minmaxFromLists(min, d1,d2,d3,d4,d5), Q.minmaxFromLists(max, d1,d2,d3,d4,d5))
-plt.tight_layout()
-plt.savefig(f'plots/{measure}-multi{MVAR}-{VAR}.eps', format='eps')
-#plt.show()
 print("END\n\n")

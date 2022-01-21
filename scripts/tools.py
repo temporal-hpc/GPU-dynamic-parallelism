@@ -13,8 +13,12 @@ cMapOrange = ["#fc8d62", "#fb9871", "#fa9f7b", "#f9a685"]
 
 cTemporal = ["#006e76", "#32868d", "#409097", "#519ea4"]
 cOrange = ["#D8693E", "#d87751", "#d8815f", "#d59880"]
+cRed = ["#cb181d", "#fb6a4a", "#fcae91", "#fee5d9"]
+cGreen = ["#238b45", "#74c476", "#bae4b3", "#edf8e9"]
 cPurple = ["#8860b4", "#9473b8", "#9d81bc", "#ab99c0"]
 cGrayscale = ["#111111", "#333333", "#888888", "#CCCCCC"]
+
+alpha_grB=0.2
 
 
 # list of colors for classB
@@ -40,11 +44,7 @@ def subdivSBR(n, g, B, r, P, lam, A, q, c):
         K = sum
         #print(f"n[{k}]={n[k]} g[{k}]={g[k]} B[{k}]={B[k]} r[{k}]={r[k]} P[{k}]={P[k]} lam[{k}]={lam[k]} A[{k}]={A[k]} q[{k}]={q[k]} c[{k}]={c[k]}  tau[{k}]={tau[k]}")
         #print(f"K = {K}")
-
-        # ceil version 1.0 (outdated)
-        # L = A[k] * (P[k]**(tau[k]-1)) * np.ceil((n[k]**2.0)/(q[k]*c[k]))
-
-        # ceil version 2.0
+# ceil version 1.0 (outdated) # L = A[k] * (P[k]**(tau[k]-1)) * np.ceil((n[k]**2.0)/(q[k]*c[k])) # ceil version 2.0
         L = A[k] *  np.ceil( (n[k]**2.0)/(G[k]*(R[k]**(tau[k]-1))*c[k]) ) * np.ceil( (G[k]*(R[k]**(tau[k]-1)))/q[k] ) * (P[k]**(tau[k]-1))
         #print(f"L = {L}")
         result[k] = K + L
@@ -128,6 +128,22 @@ def genSubtitle(measure,MVAR,VAR, n, g, B, r, P, lam, A, q, c):
             subtitle += f', $q$={q[0]}'
         if VAR != "c" and MVAR != "c":
             subtitle += f', $c$={c[0]}'
+
+    return subtitle
+
+def genSubtitleExp(measure,VAR, n, g, r, B, q, c):
+    subtitle = ""
+    if VAR != "n":
+        subtitle += r"$n=2^{" + f"{int(np.log2(n))}" + r"}$, "
+    if VAR != "g" and VAR != "grB":
+        subtitle += f'$g={g}$, '
+    if VAR != "r" and VAR != "grB":
+        subtitle += f'$r={r}$, '
+    if VAR != "B" and VAR != "grB":
+        subtitle += f'$B={B}$, '
+
+    if measure == "speedup":
+        subtitle += f'$q={q}, c={c}$'
 
     return subtitle
 

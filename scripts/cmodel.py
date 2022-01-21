@@ -209,6 +209,6 @@ if measure == "speedup":
 else:
     setYlim[dFunc[measure]](ax,ymin,ymax, Q.minmaxFromLists(min, d1,d2,d3,d4,d5), Q.minmaxFromLists(max, d1,d2,d3,d4,d5))
 plt.tight_layout()
-plt.savefig(f'plots/{measure}-multi{MVAR}-{VAR}.eps', format='eps')
+plt.savefig(f'../plots/{measure}-multi{MVAR}-{VAR}.eps', format='eps')
 #plt.show()
 print("END\n\n")
