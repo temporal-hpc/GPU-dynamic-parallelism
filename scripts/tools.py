@@ -163,7 +163,8 @@ def fixedFilter(_df,p1,p2,p3, v1,v2,v3, BSX, BSY):
     # filter for the chosen n
     subdf = _df[(_df[p1]==v1) & (_df[p2]==v2) & (_df[p3]==v3)]
     subdf = subdf.assign(grB=pd.Series(np.arange(len(subdf))).values)
-    ftext = fr"@${BSX} \times {BSY},{p1}={v1},{p2}={v2},{p3}={v3}$"
+    #ftext = fr"@${BSX} \times {BSY},{p1}={v1},{p2}={v2},{p3}={v3}$"
+    ftext = fr"@${p1}={v1},{p2}={v2},{p3}={v3}$"
     return subdf,ftext
 
 # fixed filter for grB landscape
@@ -171,7 +172,8 @@ def fixedFilter_grB(_df,n, BSX, BSY):
     # filter for the chosen n
     subdf = _df[(_df['n']==n)]
     subdf = subdf.assign(grB=pd.Series(np.arange(len(subdf))).values)
-    ftext = fr"@${BSX}\times{BSY}$"
+    #ftext = fr"@${BSX}\times{BSY}$"
+    ftext = fr""
     return subdf,ftext
 
 # optimal filter when exploring n
@@ -192,33 +194,46 @@ def optimalFilter_n(n,g,r,B,_df,col, BSX, BSY):
         #print(ndf)
     #print(subdf)
     #exit(1)
-    ftext = fr"@${BSX}\times{BSY}$"
+    #ftext = fr"@${BSX}\times{BSY}$"
+    ftext = fr""
     return subdf,ftext
 
 # optimal filter for g,r or B
-def optimalFilter(n,g,r,B,_df,param1,param2,col, BSX, BSY):
+def optimalFilter(n,g,r,B,_df,grBFilter, col, BSX, BSY):
     # filter for the chosen n
     subdf = _df[(_df['n']==n)]
     # find the optimal r,g,B tuple
     bestIndex = subdf[col].idxmin()
-    val1 = subdf.at[bestIndex, param1]
-    val2 = subdf.at[bestIndex, param2]
-    # filter according to var1 and var2
-    subdf = subdf[(subdf[param1]==val1) & (subdf[param2]==val2)]
+    params = ['g','r','B']
+    valStr = ['x','x','x']
+    vals   = [-1,-1,-1]
+    for i in range(3):
+        if grBFilter[i] == 0:
+            valStr[i]=params[i]
+        else:
+            vals[i] = subdf.at[bestIndex, params[i]]
+            valStr[i] = f"{vals[i]}"
+            subdf = subdf[(subdf[params[i]]==vals[i])]
+
+
+    #subdf = subdf[(subdf[param1]==val1) & (subdf[param2]==val2)]
     subdf = subdf.assign(grB=pd.Series(np.arange(len(subdf))).values)
     #print(f"\nOptimal params for {col}:  {param1}={val1} {param2}={val2}")
-    #print(f"{col} dataframe:\n",subdf)
+    print(f"{col} dataframe:\n",subdf)
     if col=="Extime":
-        ftext = fr"@$BS={BSX}\times{BSY}$"
+        #ftext = fr"@$BS={BSX}\times{BSY}$"
+        ftext = fr""
     else:
-        ftext = fr"@$BS={BSX}\times{BSY},{param1}={val1},{param2}={val2}$"
+        #ftext = fr"@$BS={BSX}\times{BSY},{param1}={val1},{param2}={val2}$"
+        ftext = fr"@$({valStr[0]},{valStr[1]},{valStr[2]})$"
     return subdf,ftext
 
 # optimal filter when exploring grB lanscape
 def optimalFilter_grB(n,g,r,B,_df, BSX, BSY):
     subdf = _df[(_df['n']==n)]
     subdf = subdf.assign(grB=pd.Series(np.arange(len(subdf))).values)
-    ftext = fr"@${BSX}\times{BSY}$"
+    #ftext = fr"@${BSX}\times{BSY}$"
+    ftext = fr""
     return subdf,ftext
 
 def paintSpecialPoints(VAR, iVAR, ax,
@@ -280,10 +295,15 @@ def paintSpecialPoints(VAR, iVAR, ax,
     #print(f"maxASKSBR -> x={grBASKSBR} S={maxASKSBR} ({gASKSBR},{rASKSBR},{BASKSBR})")
     #print(f"maxASKMBR -> x={grBASKMBR} S={maxASKMBR} ({gASKMBR},{rASKMBR},{BASKMBR})")
 
-    plt.plot(grBASKSBR, optASKSBR, dStyle[iVAR][1], markersize=5,  label=fr"ASK-SBR@$BS={BSX3}\times{BSY3}$", color=cTemporal[1])
-    plt.plot(grBASKMBR, optASKMBR, dStyle[iVAR][2], markersize=5,  label=fr"ASK-MBR@$BS={BSX4}\times{BSY4}$", color=cRed[0])
-    plt.plot(grBDPSBR, optDPSBR, dStyle[iVAR][3], markersize=8,    label=fr"DP-SBR@$BS={BSX1}\times{BSY1}$",  color=cGreen[0])
-    plt.plot(grBDPMBR, optDPMBR, dStyle[iVAR][4], markersize=6,    label=fr"DP-MBR@$BS={BSX2}\times{BSY2}$",  color=cPurple[2])
+    #plt.plot(grBASKSBR, optASKSBR, dStyle[iVAR][1], markersize=5,  label=fr"ASK-SBR@${BSX3}\times{BSY3}$", color=cTemporal[1])
+    #plt.plot(grBASKMBR, optASKMBR, dStyle[iVAR][2], markersize=5,  label=fr"ASK-MBR@${BSX4}\times{BSY4}$", color=cRed[0])
+    #plt.plot(grBDPSBR, optDPSBR, dStyle[iVAR][3], markersize=8,    label=fr"DP-SBR@${BSX1}\times{BSY1}$",  color=cGreen[0])
+    #plt.plot(grBDPMBR, optDPMBR, dStyle[iVAR][4], markersize=6,    label=fr"DP-MBR@${BSX2}\times{BSY2}$",  color=cPurple[2])
+
+    plt.plot(grBDPSBR, optDPSBR, dStyle[iVAR][3], markersize=8,    label=fr"DP-SBR",  color=cGreen[0])
+    plt.plot(grBDPMBR, optDPMBR, dStyle[iVAR][4], markersize=6,    label=fr"DP-MBR",  color=cPurple[2])
+    plt.plot(grBASKSBR, optASKSBR, dStyle[iVAR][1], markersize=5,  label=fr"ASK-SBR", color=cTemporal[1])
+    plt.plot(grBASKMBR, optASKMBR, dStyle[iVAR][2], markersize=5,  label=fr"ASK-MBR", color=cRed[0])
 
     plt.text(grBDPSBR+5, optDPSBR, f"({gDPSBR},{rDPSBR},{BDPSBR})",      fontsize=8, fontweight='bold')
     plt.text(grBDPMBR+5, optDPMBR, f"({gDPMBR},{rDPMBR},{BDPMBR})",      fontsize=8, fontweight='bold')

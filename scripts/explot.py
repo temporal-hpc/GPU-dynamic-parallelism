@@ -45,9 +45,9 @@ dfFixedFilter = [lambda n,g,r,B,_df,BSX,BSY: Q.fixedFilter(_df,'g','r','B',g,r,B
 # - speedup vs grB     --> filter for the chosen n, plot all and then highlight the optimal g,r,B point for each approach.
 # - speedup vs n       --> filter nothing, then for each different 'n', find the optimal g,r,B of each approach.
 dfOptimalFilter = [ lambda n,g,r,B,_df,ap,BSX,BSY: Q.optimalFilter_n(n,g,r,B,_df,ap+'time',BSX,BSY),
-                    lambda n,g,r,B,_df,ap,BSX,BSY: Q.optimalFilter(n,g,r,B,_df,'r','B',ap+'time',BSX,BSY),
-                    lambda n,g,r,B,_df,ap,BSX,BSY: Q.optimalFilter(n,g,r,B,_df,'g','B',ap+'time',BSX,BSY),
-                    lambda n,g,r,B,_df,ap,BSX,BSY: Q.optimalFilter(n,g,r,B,_df,'g','r',ap+'time',BSX,BSY),
+                    lambda n,g,r,B,_df,ap,BSX,BSY: Q.optimalFilter(n,g,r,B,_df,[0,1,1],ap+'time',BSX,BSY),
+                    lambda n,g,r,B,_df,ap,BSX,BSY: Q.optimalFilter(n,g,r,B,_df,[1,0,1],ap+'time',BSX,BSY),
+                    lambda n,g,r,B,_df,ap,BSX,BSY: Q.optimalFilter(n,g,r,B,_df,[1,1,0],ap+'time',BSX,BSY),
                     lambda n,g,r,B,_df,ap,BSX,BSY: Q.optimalFilter_grB(n,g,r,B,_df,BSX,BSY)]
 
 dMeasure = {"time":0, "speedup":1}
@@ -55,6 +55,8 @@ dVAR = {"n":0, "g":1, "r":2, "B":3, "grB":4}
 dVARStr = {"n":"n", "g":"g", "r":"r", "B":"B", "grB":"\{g,r,B\}"}
 dLabel = {"time":"T", "speedup":r"S"}
 dFuncText = [lambda text: text, lambda text: text, lambda text: text, lambda text: text, lambda text: ""]
+
+dExText = {"time": lambda text: text, "speedup": lambda text: ""}
 
 
 # ----------------
@@ -246,11 +248,11 @@ plt.suptitle(dTitle[measure], fontsize=12)
 plt.title(Q.genSubtitleExp(GPUmodel, measure, VAR, n, g, r, B, q, c), fontsize=10, loc='center')
 
 # curves
-ax.plot(df_EX[VAR], EX_FUNC, Q.dStyle[iVAR][0], lw=1, markersize=4, label=dFuncText[iVAR]('Exhaustive'+ftext_EX),color=Q.cGrayscale[0], alpha=1.0)
-ax.plot(df_ASKSBR[VAR], ASKSBR_FUNC, Q.dStyle[iVAR][1],lw=1,markersize=4,label=dFuncText[iVAR]('ASK-SBR'+ftext_ASKSBR),color=Q.cTemporal[1],alpha=Q.alpha_grB[iVAR])
-ax.plot(df_ASKMBR[VAR], ASKMBR_FUNC, Q.dStyle[iVAR][2], lw=1, markersize=4,label=dFuncText[iVAR]('ASK-MBR'+ftext_ASKMBR),color=Q.cRed[0],alpha=Q.alpha_grB[iVAR])
+ax.plot(df_EX[VAR], EX_FUNC, Q.dStyle[iVAR][0], lw=1, markersize=4, label=dFuncText[iVAR](dExText[measure]('Exhaustive'+ftext_EX)),color=Q.cGrayscale[0], alpha=1.0)
 ax.plot(df_DPSBR[VAR], DPSBR_FUNC, Q.dStyle[iVAR][3], lw=1, markersize=4, label=dFuncText[iVAR]('DP-SBR'+ftext_DPSBR),color=Q.cGreen[2],alpha=Q.alpha_grB[iVAR])
 ax.plot(df_DPMBR[VAR], DPMBR_FUNC, Q.dStyle[iVAR][4], lw=1, markersize=4, label=dFuncText[iVAR]('DP-MBR'+ftext_DPMBR),color=Q.cPurple[0],alpha=Q.alpha_grB[iVAR])
+ax.plot(df_ASKSBR[VAR], ASKSBR_FUNC, Q.dStyle[iVAR][1],lw=1,markersize=4,label=dFuncText[iVAR]('ASK-SBR'+ftext_ASKSBR),color=Q.cTemporal[1],alpha=Q.alpha_grB[iVAR])
+ax.plot(df_ASKMBR[VAR], ASKMBR_FUNC, Q.dStyle[iVAR][2], lw=1, markersize=4,label=dFuncText[iVAR]('ASK-MBR'+ftext_ASKMBR),color=Q.cRed[0],alpha=Q.alpha_grB[iVAR])
 
 # text on plot for grB landscape
 Q.paintSpecialPoints(VAR, iVAR, ax, df_DPSBR, DPSBR_FUNC, BSX1, BSY1,
