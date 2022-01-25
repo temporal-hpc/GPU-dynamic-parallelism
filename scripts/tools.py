@@ -219,7 +219,7 @@ def optimalFilter(n,g,r,B,_df,grBFilter, col, BSX, BSY):
     #subdf = subdf[(subdf[param1]==val1) & (subdf[param2]==val2)]
     subdf = subdf.assign(grB=pd.Series(np.arange(len(subdf))).values)
     #print(f"\nOptimal params for {col}:  {param1}={val1} {param2}={val2}")
-    print(f"{col} dataframe:\n",subdf)
+    #print(f"{col} dataframe:\n",subdf)
     if col=="Extime":
         #ftext = fr"@$BS={BSX}\times{BSY}$"
         ftext = fr""
@@ -319,7 +319,7 @@ def paintSpecialPoints(VAR, iVAR, ax,
     ax.set_xticklabels([])
 
 def adapt_df(VAR, dfREF, df):
-    df.drop('Extime', 1)
+    df.drop(columns='Extime')
     if VAR=='n' or VAR=='grB':
         ExVals = dfREF['Extime'].values
         #print("df ref\n",dfREF)

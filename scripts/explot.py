@@ -198,11 +198,11 @@ df_ASKSBR = Q.adapt_df(VAR, df_EX, df_ASKSBR)
 df_ASKMBR, ftext_ASKMBR = dFixedOptimal[OPT](n,g,r,B,df_ASKMBR,iVAR,'ASKMBR',BSX4,BSY4)
 df_ASKMBR = Q.adapt_df(VAR, df_EX, df_ASKMBR)
 
-print(f"done: shape ->", df_EX.shape)
-print(f"done: shape ->", df_DPSBR.shape)
-print(f"done: shape ->", df_DPMBR.shape)
-print(f"done: shape ->", df_ASKSBR.shape)
-print(f"done: shape ->", df_ASKMBR.shape)
+#print(f"done: shape ->", df_EX.shape)
+#print(f"done: shape ->", df_DPSBR.shape)
+#print(f"done: shape ->", df_DPMBR.shape)
+#print(f"done: shape ->", df_ASKSBR.shape)
+#print(f"done: shape ->", df_ASKMBR.shape)
 print("done")
 
 
@@ -249,9 +249,9 @@ plt.title(Q.genSubtitleExp(GPUmodel, measure, VAR, n, g, r, B, q, c), fontsize=1
 
 # curves
 ax.plot(df_EX[VAR], EX_FUNC, Q.dStyle[iVAR][0], lw=1, markersize=4, label=dFuncText[iVAR](dExText[measure]('Exhaustive'+ftext_EX)),color=Q.cGrayscale[0], alpha=1.0)
-ax.plot(df_DPSBR[VAR], DPSBR_FUNC, Q.dStyle[iVAR][3], lw=1, markersize=4, label=dFuncText[iVAR]('DP-SBR'+ftext_DPSBR),color=Q.cGreen[2],alpha=Q.alpha_grB[iVAR])
+ax.plot(df_DPSBR[VAR], DPSBR_FUNC, Q.dStyle[iVAR][3], lw=1, markersize=4, label=dFuncText[iVAR]('DP-SBR'+ftext_DPSBR),color=Q.cGreen[1],alpha=Q.alpha_grB[iVAR])
 ax.plot(df_DPMBR[VAR], DPMBR_FUNC, Q.dStyle[iVAR][4], lw=1, markersize=4, label=dFuncText[iVAR]('DP-MBR'+ftext_DPMBR),color=Q.cPurple[0],alpha=Q.alpha_grB[iVAR])
-ax.plot(df_ASKSBR[VAR], ASKSBR_FUNC, Q.dStyle[iVAR][1],lw=1,markersize=4,label=dFuncText[iVAR]('ASK-SBR'+ftext_ASKSBR),color=Q.cTemporal[1],alpha=Q.alpha_grB[iVAR])
+ax.plot(df_ASKSBR[VAR], ASKSBR_FUNC, Q.dStyle[iVAR][1],lw=1,markersize=4,label=dFuncText[iVAR]('ASK-SBR'+ftext_ASKSBR),color=Q.cTemporal[0],alpha=Q.alpha_grB[iVAR])
 ax.plot(df_ASKMBR[VAR], ASKMBR_FUNC, Q.dStyle[iVAR][2], lw=1, markersize=4,label=dFuncText[iVAR]('ASK-MBR'+ftext_ASKMBR),color=Q.cRed[0],alpha=Q.alpha_grB[iVAR])
 
 # text on plot for grB landscape
