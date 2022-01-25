@@ -15,11 +15,12 @@ GPUPROG=./bin/${EXEC}
 CA_MAXDWELL=512
 MAX_DEPTH=1000
 DATE=$(exec date +"%T-%m-%d-%Y (%:z %Z)")
-echo "DATE = ${DATE}"
+echo "Benchmark Starting on ${DATE}"
 OUTFILE=data/${STRING}-ARCH${ARCH}-BSX${BSX}-BSY${BSY}.dat
 
 echo "#NEW BENCHMARK ON ${DATE}: GPU${DEV} ${STRING} ${ARCH} BSX=${BSX} BSY=${BSY} MAXDWELL=${CA_MAXDWELL} MAX_DEPTH=${MAX_DEPTH}">> ${OUTFILE}
 echo "#N, g,r,B, REAL,REP       perf-Exhaustive (mean, stdev, sterr, sterr%%)      perf-DP-SBR                          perf-DP-MBR                           perf-ASK-SBR                         perf-ASK-MBR" >> ${OUTFILE}
+echo "n,g,r,B,REA,REP,Ex,Extime,Exstdev,Exsterr,Exsterrp,DPSBR,DPSBRtime,DPSBRstdev,DPSBRsterr,DPSBRsterrp,DPMBR,DPMBRtime,DPMBRstdev,DPMBRsterr,DPMBRsterrp,ASKSBR,ASKSBRtime,ASKSBRstdev,ASKSBRsterr,ASKSBRsterrp,ASKMBR,ASKMBRtime,ASKMBRstdev,ASKMBRsterr,ASKMBRsterrp"
 
 maxEXP=10
 
@@ -68,3 +69,4 @@ do
     echo "N=${N} Finished"
     echo ""
 done
+echo "Benchmark Finished on ${DATE}"
