@@ -1,12 +1,14 @@
 #!/bin/sh
-if [ "$#" -ne 1 ]; then
-    echo "run as ./genplots.sh <measure>"
+if [ "$#" -ne 2 ]; then
+    echo "run as ./genplots.sh <measure> <mode>"
     echo "<measure> = {work, wrf, time, speedup}"
+    echo "<mode> = {optimal, fixed}"
     exit
 fi
 
 # chosen measure (work, wrf, time,speedup)
 mes=${1}
+mode=${2}
 # fixed variables
 cn=$((2**16)); cg=8; cB=8; cr=2; cP=0.7; clam=100; cA=8;
 # parallelism parameters
@@ -16,8 +18,8 @@ res=$((2**10))
 # legend parameters
 n1=$((2**8)); n2=$((2**16)); n3=$((2**24)); n4=$((2**32))
 g1=128; g2=32; g3=8; g4=2
-B1=2; B2=4; B3=8; B4=16
-r1=16; r2=8; r3=4; r4=2
+B1=4; B2=16; B3=64; B4=256
+r1=2; r2=8; r3=32; r4=64
 P1=0.9; P2=0.8; P3=0.7; P4=0.6
 lam1=$((10**3)); lam2=$((10**2)); lam3=$((10**1)); lam4=$((10**0))
 A1=1; A2=2; A3=4; A4=8
@@ -47,12 +49,7 @@ qa=("q" ${q1} ${q2} ${q3} ${q4} ${qx1} ${qx2})
 ca=("c" ${c1} ${c2} ${c3} ${c4} ${cx1} ${cx2})
 
 CONFIG="${mes}     ${cn} ${cg} ${cB} ${cr} ${cP}  ${clam}  ${cA}  ${cq} ${cc}"
-if [ "${mes}" == "speedup" ]
-then
-    SUFFIX="${ymin}   $((${ymax}+3))    ${res}"
-else
-    SUFFIX="${ymin}   $((${ymax}))    ${res}"
-fi
+SUFFIX="${ymin}   $((${ymax}+5))    ${res}    ${mode}"
 for i in "${variables[@]}"; do
     declare -n mul="${i}a"
     PREFIX="${CONFIG}       ${mul[1]} ${mul[2]} ${mul[3]} ${mul[4]}     ${i}"

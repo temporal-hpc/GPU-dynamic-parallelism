@@ -42,18 +42,20 @@ def subdivSBR(n, g, B, r, P, lam, A, q, c):
     tau = np.floor(np.log(n/(g*B)) / np.log(r))
     result = np.zeros(len(n))
     for k in range(0, len(n)):
-        sum = 0
-        for i in range(0, int(tau[k])-1):
-            Q = np.ceil(A[k] * (4.0*n[k]/(g[k]*(r[k]**(i))*c[k])))
-            T = np.ceil((n[k]**2.0) / (G[k]*(R[k]**(i))*c[k]))
-            sum += (Q + P[k]*lam[k]*A[k] + (1-P[k])*T) * (P[k]**i) * np.ceil(G[k]*(R[k]**(i))/q[k])
-        K = sum
+        result[k] = subdivSBR_scalar(n[k], g[k], B[k], r[k], P[k], lam[k], A[k], q[k], c[k])
+        #print(f"result[k] = {result[k]}")
+        #sum = 0
+        #for i in range(0, int(tau[k])-1):
+        #    Q = np.ceil(A[k] * (4.0*n[k]/(g[k]*(r[k]**(i))*c[k])))
+        #    T = np.ceil((n[k]**2.0) / (G[k]*(R[k]**(i))*c[k]))
+        #    sum += (Q + P[k]*lam[k]*A[k] + (1-P[k])*T) * (P[k]**i) * np.ceil(G[k]*(R[k]**(i))/q[k])
+        #K = sum
         #print(f"n[{k}]={n[k]} g[{k}]={g[k]} B[{k}]={B[k]} r[{k}]={r[k]} P[{k}]={P[k]} lam[{k}]={lam[k]} A[{k}]={A[k]} q[{k}]={q[k]} c[{k}]={c[k]}  tau[{k}]={tau[k]}")
         #print(f"K = {K}")
 # ceil version 1.0 (outdated) # L = A[k] * (P[k]**(tau[k]-1)) * np.ceil((n[k]**2.0)/(q[k]*c[k])) # ceil version 2.0
-        L = A[k] *  np.ceil( (n[k]**2.0)/(G[k]*(R[k]**(tau[k]-1))*c[k]) ) * np.ceil( (G[k]*(R[k]**(tau[k]-1)))/q[k] ) * (P[k]**(tau[k]-1))
+        #L = A[k] *  np.ceil( (n[k]**2.0)/(G[k]*(R[k]**(tau[k]-1))*c[k]) ) * np.ceil( (G[k]*(R[k]**(tau[k]-1)))/q[k] ) * (P[k]**(tau[k]-1))
         #print(f"L = {L}")
-        result[k] = K + L
+        #result[k] = K + L
         #print(f"W_S = {K + L}\n")
 
         # Exhaustive part
@@ -61,6 +63,26 @@ def subdivSBR(n, g, B, r, P, lam, A, q, c):
         #print(f"W_E = {E}\n")
         #print(f"E/Sub = {E/result[k]}\n")
         #input("Press Enter to continue...")
+    return result
+
+
+# Work subdiv [actualizado r-> lineal]
+# single block per region (SBR)
+def subdivSBR_scalar(n, g, B, r, P, lam, A, q, c):
+    R = r*r
+    G = g*g
+    tau = np.floor(np.log(n/(g*B)) / np.log(r))
+    #print(f"n = {n},  g={g},  B={B},  r={r}")
+    #print(f"tau = {tau}")
+    result = 0
+    sum = 0
+    for i in range(0, int(tau)-1):
+        Q = np.ceil(A * (4.0*n/(g*(r**(i))*c)))
+        T = np.ceil((n**2.0) / (G*(R**(i))*c))
+        sum += (Q + P*lam*A + (1-P)*T) * (P**i) * np.ceil(G*(R**(i))/q)
+    K = sum
+    L = A *  np.ceil( (n**2.0)/(G*(R**(tau-1))*c) ) * np.ceil( (G*(R**(tau-1)))/q ) * (P**(tau-1))
+    result = K + L
     return result
 
 
@@ -71,23 +93,24 @@ def subdivMBR(n, g, B, r, P, lam, A, q, c):
     tau = np.floor(np.log(n/(g*B)) / np.log(r))
     result = np.zeros(len(n))
     for k in range(0, len(n)):
-        sum = 0
-        H = np.ceil( (n[k]**2.0)/(q[k] * c[k]))
-        CS = lam[k]*A[k]
-        for i in range(0, int(tau[k])-1):
-            M1 = np.ceil((4.0*n[k]*A[k])/(g[k] * (r[k]**i) * c[k])) * np.ceil( (G[k]*(R[k]**i))/q[k] ) * P[k]**i
-            M2 = np.ceil((G[k]*R[k]**i)/(q[k])) * CS * (P[k]**(i+1))
-            M3 = H * (P[k]**i) * (1-P[k])
-            sum += (M1 + M2 + M3)
-        K = sum
+        result[k] = subdivMBR_scalar(n[k], g[k], B[k], r[k], P[k], lam[k], A[k], q[k], c[k])
+        #sum = 0
+        #H = np.ceil( (n[k]**2.0)/(q[k] * c[k]))
+        #CS = lam[k]*A[k]
+        #for i in range(0, int(tau[k])-1):
+        #    M1 = np.ceil((4.0*n[k]*A[k])/(g[k] * (r[k]**i) * c[k])) * np.ceil( (G[k]*(R[k]**i))/q[k] ) * P[k]**i
+        #    M2 = np.ceil((G[k]*R[k]**i)/(q[k])) * CS * (P[k]**(i+1))
+        #    M3 = H * (P[k]**i) * (1-P[k])
+        #    sum += (M1 + M2 + M3)
+        #K = sum
         #print(f"n[{k}]={n[k]} g[{k}]={g[k]} B[{k}]={B[k]} r[{k}]={r[k]} P[{k}]={P[k]} lam[{k}]={lam[k]} A[{k}]={A[k]} q[{k}]={q[k]} c[{k}]={c[k]}  tau[{k}]={tau[k]}")
         #print(f"K = {K}")
 
         # new ceil version
-        L = A[k] * (P[k]**(tau[k]-1)) * H
+        #L = A[k] * (P[k]**(tau[k]-1)) * H
 
         #print(f"L = {L}")
-        result[k] = K + L
+        #result[k] = K + L
         #print(f"W_S = {K + L}\n")
 
         # Exhaustive part
@@ -96,6 +119,82 @@ def subdivMBR(n, g, B, r, P, lam, A, q, c):
         #print(f"E/Sub = {E/result[k]}\n")
         #input("Press Enter to continue...")
     return result
+
+# multiple blocks per region (MBR)
+def subdivMBR_scalar(n, g, B, r, P, lam, A, q, c):
+    R = r*r
+    G = g*g
+    tau = np.floor(np.log(n/(g*B)) / np.log(r))
+    result = 0
+    sum = 0
+    H = np.ceil( (n**2.0)/(q * c))
+    CS = lam*A
+    for i in range(0, int(tau)-1):
+        M1 = np.ceil((4.0*n*A)/(g * (r**i) * c)) * np.ceil( (G*(R**i))/q ) * P**i
+        M2 = np.ceil((G*R**i)/(q)) * CS * (P**(i+1))
+        M3 = H * (P**i) * (1-P)
+        sum += (M1 + M2 + M3)
+    K = sum
+    L = A * (P**(tau-1)) * H
+    result = K + L
+    return result
+
+
+def opt_grB_range(VAR, n, g, B, r, P, lam, A, q, c, vRange, rtFunc):
+    opt_gRange = np.full(len(n), 0)
+    opt_rRange = np.full(len(n), 0)
+    opt_BRange = np.full(len(n), 0)
+    opt_g, opt_r, opt_B = opt_grB(VAR,n[0],g[0],B[0],r[0],P[0],lam[0],A[0],q[0],c[0],vRange,rtFunc)
+    opt_gRange[0] = opt_g
+    opt_rRange[0] = opt_r
+    opt_BRange[0] = opt_B
+    for k in range(1, len(n)):
+        if n[k] == n[k-1]:
+            opt_gRange[k] = opt_gRange[k-1]
+            opt_rRange[k] = opt_rRange[k-1]
+            opt_BRange[k] = opt_BRange[k-1]
+        else:
+            opt_g, opt_r, opt_B = opt_grB(VAR,n[k],g[k],B[k],r[k],P[k],lam[k],A[k],q[k],c[k],vRange,rtFunc)
+            opt_gRange[k] = opt_g
+            opt_rRange[k] = opt_r
+            opt_BRange[k] = opt_B
+
+    return opt_gRange, opt_rRange, opt_BRange
+
+
+# finds optimal r, g, B
+def opt_grB(VAR, n, g, B, r, P, lam, A, q, c, vRange, rtFunc):
+    opt_g = vRange[0]
+    opt_B = vRange[0]
+    opt_r = vRange[0]
+    opt_rt = rtFunc(n, opt_g, opt_B, opt_r, P, lam, A, q, c)
+    opt_sp = exhaustive(n,A,q,c)/opt_rt
+    for gx in vRange:
+        for rx in vRange:
+            for Bx in vRange:
+                rt = rtFunc(n, gx, Bx, rx, P, lam, A, q, c)
+                ex = exhaustive(n, A, q, c)
+                #print(f"trying (g,r,B) = ({gx}, {rx}, {Bx}) --> {rt}  (opt_rt={opt_rt})")
+                #print(f"exhaustive --> {ex}")
+                sp = ex/rt
+                #print(f"speedup --> {sp}   (opt_sp={opt_sp})")
+                #print(f"optimals --> g={opt_g}, r={opt_r}, B={opt_B}")
+                if rt < opt_rt:
+                    #print("\n*** UPDATE ***\n")
+                    opt_rt = rt
+                    opt_g = gx
+                    opt_r = rx
+                    opt_B = Bx
+                    opt_sp = sp
+                #input("press enter")
+
+    #print("******************************8")
+    #print(f"[VAR={VAR}, rtFunc={rtFunc.__name__}] n={n} --> opt (g,r,B) = ({opt_g}, {opt_r}, {opt_B})  --> opt_rt = {opt_rt}")
+    #print(f"opt_speedup = {opt_sp}")
+    #print("******************************8")
+    #input("press enter")
+    return      opt_g,    opt_r,  opt_B
+
 
 
 def exhaustiveWork(n, A):
@@ -116,14 +215,14 @@ def genSubtitle(measure,MVAR,VAR, n, g, B, r, P, lam, A, q, c):
     subtitle = ""
     if VAR != "n" and MVAR != "n":
         subtitle += r"$n=2^{" + f"{int(np.log2(n[0]))}" + "}$, "
-    if VAR != "g" and MVAR != "g":
-        subtitle += f'g={g[0]}, '
-    if VAR != "B" and MVAR != "B":
-        subtitle += f'B={B[0]}, '
+    #if VAR != "g" and MVAR != "g":
+    #    subtitle += f'g={g[0]}, '
+    #if VAR != "B" and MVAR != "B":
+    #    subtitle += f'B={B[0]}, '
     if VAR != "P" and MVAR != "P":
         subtitle += f'P={P[0]}, '
-    if VAR != "r" and MVAR != "r":
-        subtitle += f'r={r[0]}, '
+    #if VAR != "r" and MVAR != "r":
+    #    subtitle += f'r={r[0]}, '
     if VAR != "lam" and MVAR != "lam":
         subtitle += f'$\lambda$={lam[0]}, '
     if VAR != "A" and MVAR != "A":
@@ -151,12 +250,34 @@ def genSubtitleExp(GPUmodel, measure,VAR, n, g, r, B, q, c):
 
     return subtitle
 
-def genLabel(MVAR, mvarSTR, val):
+def genLabelRef(MVAR, mvarSTR, val):
     if MVAR == "n":
         exp = int(np.log2(val))
-        return f"${mvarSTR} = "+ "2^{" + f"{exp}" + "}$"
+        return f"${mvarSTR} = "+ "2^{" + f"{exp}" + "}$,"
     else:
         return f"${mvarSTR} = "+"{:g}".format(val)+"$"
+
+def genLabel(VAR, MVAR, mvarSTR, val, g, B, r):
+    #print(f"g={g}")
+    #input("press enter")
+    gtext = f"$g={g[0]}$"
+    rtext = f"$r={r[0]}$"
+    Btext = f"$B={B[0]}$"
+    grBText = ""
+    if VAR != "g" and MVAR != "g":
+        grBText += ","+gtext
+    if VAR != "r" and MVAR != "r":
+        grBText += ","+rtext
+    if VAR != "B" and MVAR != "B":
+        grBText += ","+Btext
+    if VAR == "n":
+        grBText = ""
+
+    if MVAR == "n":
+        exp = int(np.log2(val))
+        return f"${mvarSTR} = "+ "2^{" + f"{exp}" + "}$," + grBText
+    else:
+        return f"${mvarSTR} = "+"{:g}".format(val)+"$" + grBText
 
 # fixed filter for n,g,r, or B
 def fixedFilter(_df,p1,p2,p3, v1,v2,v3, BSX, BSY):

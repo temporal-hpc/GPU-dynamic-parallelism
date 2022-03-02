@@ -1,12 +1,20 @@
 TODO:
-- decidir si se usaran los mvar o no en los graficos experimentales.
-
-
+- sacar los grb de los labels cuando el eje x es 'n'
+- actualizar script para obtener los nuevos graficos con modo 'optimal'
 
 
 
 
 DONE
+- implementar opt_grB usando subdivSBR/MBR versiones scalar 
+- poner los valores optimos de grB en la leyenda.
+- esconder los valores grB del titulo
+- [FIXED] speedup sale bajo en mode=optimal
+    - funcion opt_grB si esta encontrando las configs de mejor speedup
+    - por fuera de opt_grB() funciona mal parece que algo pasa. 
+    - [CAUSE] rtfunct was being called with wrong grB argument order.
+
+- [no usarlos] decidir si se usaran los mvar o no en los graficos experimentales.
 - probar graficos nuevos de time y speedup
 - Incluir ecuaciones de time y speedup
 - Permitir distinto G inicial
