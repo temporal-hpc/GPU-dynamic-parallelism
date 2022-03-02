@@ -213,26 +213,37 @@ def minmaxFromLists(m, d1, d2, d3, d4, d5):
 
 def genSubtitle(measure,MVAR,VAR, n, g, B, r, P, lam, A, q, c):
     subtitle = ""
+    stlist = []
     if VAR != "n" and MVAR != "n":
-        subtitle += r"$n=2^{" + f"{int(np.log2(n[0]))}" + "}$, "
+        #subtitle += r"$n=2^{" + f"{int(np.log2(n[0]))}" + "}$, "
+        stlist.append(r"$n=2^{" + f"{int(np.log2(n[0]))}" + "}$")
     #if VAR != "g" and MVAR != "g":
     #    subtitle += f'g={g[0]}, '
     #if VAR != "B" and MVAR != "B":
     #    subtitle += f'B={B[0]}, '
     if VAR != "P" and MVAR != "P":
-        subtitle += f'P={P[0]}, '
+        #subtitle += f'P={P[0]}, '
+        stlist.append(f'P={P[0]}')
     #if VAR != "r" and MVAR != "r":
     #    subtitle += f'r={r[0]}, '
     if VAR != "lam" and MVAR != "lam":
-        subtitle += f'$\lambda$={lam[0]}, '
+        #subtitle += f'$\lambda$={lam[0]}, '
+        stlist.append(f'$\lambda$={lam[0]}')
     if VAR != "A" and MVAR != "A":
-        subtitle += f'$C_A$={A[0]}'
+        #subtitle += f'$C_A$={A[0]}'
+        stlist.append(f'$C_A$={A[0]}')
 
     if measure == "speedup" or measure == "speedup-sbr" or measure == "speedup-mbr":
         if VAR != "q" and MVAR != "q":
-            subtitle += f', $q$={q[0]}'
+            #subtitle += f', $q$={q[0]}'
+            stlist.append(f'$q$={q[0]}')
         if VAR != "c" and MVAR != "c":
-            subtitle += f', $c$={c[0]}'
+            #subtitle += f', $c$={c[0]}'
+            stlist.append(f'$c$={c[0]}')
+
+    subtitle += stlist[0]
+    for k in range(1,len(stlist)):
+        subtitle += "," + stlist[k]
 
     return subtitle
 

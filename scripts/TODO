@@ -1,11 +1,12 @@
 TODO:
-- sacar los grb de los labels cuando el eje x es 'n'
-- actualizar script para obtener los nuevos graficos con modo 'optimal'
-
 
 
 
 DONE
+- arreglar bug de las comas repetidas en el subtitulo
+    - [IDEA] meter los campos en una lista primero
+- actualizar script para obtener los nuevos graficos con modo 'optimal'
+- sacar los grb de los labels cuando el eje x es 'n'
 - implementar opt_grB usando subdivSBR/MBR versiones scalar 
 - poner los valores optimos de grB en la leyenda.
 - esconder los valores grB del titulo
