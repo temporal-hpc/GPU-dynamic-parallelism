@@ -49,7 +49,7 @@ qa=("q" ${q1} ${q2} ${q3} ${q4} ${qx1} ${qx2})
 ca=("c" ${c1} ${c2} ${c3} ${c4} ${cx1} ${cx2})
 
 CONFIG="${mes}     ${cn} ${cg} ${cB} ${cr} ${cP}  ${clam}  ${cA}  ${cq} ${cc}"
-SUFFIX="${ymin}   $((${ymax}+5))    ${res}    ${mode}"
+SUFFIX="${ymin}   $((${ymax}+3))    ${res}    ${mode}"
 for i in "${variables[@]}"; do
     declare -n mul="${i}a"
     PREFIX="${CONFIG}       ${mul[1]} ${mul[2]} ${mul[3]} ${mul[4]}     ${i}"
