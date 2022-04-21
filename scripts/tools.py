@@ -1,6 +1,7 @@
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
+import matplotlib.ticker as mticker
 from matplotlib.widgets import Slider, Button
 
 # list of color gradients (from bold to light)
@@ -140,14 +141,20 @@ def subdivMBR_scalar(n, g, B, r, P, lam, A, q, c):
     return result
 
 
-def opt_grB_range(VAR, n, g, B, r, P, lam, A, q, c, vRange, rtFunc):
+def opt_grB_range(measure,VAR, n, g, B, r, P, lam, A, q, c, vRange, rtFunc):
     opt_gRange = np.full(len(n), 0)
     opt_rRange = np.full(len(n), 0)
     opt_BRange = np.full(len(n), 0)
+    # make q and c equal 1 when measure is time or wrf (no parallelism involved, just work)
+    if measure=="wrf" or measure=="time":
+        q=np.full(len(n), int(1))
+        c=np.full(len(n), int(1))
+
     opt_g, opt_r, opt_B = opt_grB(VAR,n[0],g[0],B[0],r[0],P[0],lam[0],A[0],q[0],c[0],vRange,rtFunc)
     opt_gRange[0] = opt_g
     opt_rRange[0] = opt_r
     opt_BRange[0] = opt_B
+    #print(f"opt_rgB = {opt_gRange[0]}, {opt_rRange[0]}, {opt_BRange[0]}\n")
     for k in range(1, len(n)):
         if n[k] == n[k-1]:
             opt_gRange[k] = opt_gRange[k-1]
@@ -174,7 +181,8 @@ def opt_grB(VAR, n, g, B, r, P, lam, A, q, c, vRange, rtFunc):
             for Bx in vRange:
                 rt = rtFunc(n, gx, Bx, rx, P, lam, A, q, c)
                 ex = exhaustive(n, A, q, c)
-                #print(f"trying (g,r,B) = ({gx}, {rx}, {Bx}) --> {rt}  (opt_rt={opt_rt})")
+                #print(f"trying n={n} P={P} lam={lam} q={q} c={c}")
+                #print(f"with (g,r,B) = ({gx}, {rx}, {Bx}) --> {rt}  (opt_rt={opt_rt})")
                 #print(f"exhaustive --> {ex}")
                 sp = ex/rt
                 #print(f"speedup --> {sp}   (opt_sp={opt_sp})")
@@ -269,8 +277,9 @@ def genLabelRef(MVAR, mvarSTR, val):
         return f"${mvarSTR} = "+"{:g}".format(val)+"$"
 
 def genLabel(VAR, MVAR, mvarSTR, val, g, B, r):
-    #print(f"g={g}")
-    #input("press enter")
+    f1 = mticker.ScalarFormatter(useOffset=False, useMathText=True)
+    f2 = lambda x,pos : "${}$".format(f1._formatSciNotation('%1.10e' % x))
+    fmt = mticker.FuncFormatter(f2)
     gtext = f"$g={g[0]}$"
     rtext = f"$r={r[0]}$"
     Btext = f"$B={B[0]}$"
@@ -286,7 +295,9 @@ def genLabel(VAR, MVAR, mvarSTR, val, g, B, r):
 
     if MVAR == "n":
         exp = int(np.log2(val))
-        return f"${mvarSTR} = "+ "2^{" + f"{exp}" + "}$," + grBText
+        return f"${mvarSTR} = "+ "2^{" + f"{exp}" + "}$" + grBText
+    elif MVAR == "lam":
+        return f"${mvarSTR}$ = " + "${}$".format(f1.format_data(val)) + grBText
     else:
         return f"${mvarSTR} = "+"{:g}".format(val)+"$" + grBText
 
