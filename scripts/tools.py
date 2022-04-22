@@ -332,7 +332,8 @@ def optimalFilter_n(n,g,r,B,_df,col, BSX, BSY):
         B = ndf.at[bestIndex, 'B']
         #print(f"bestIndex = {bestIndex}, g={g}, r={r}, B={B}")
         ndf = ndf[(ndf['g']==g) & (ndf['r']==r) & (ndf['B']==B)]
-        subdf = subdf.append(ndf)
+        #subdf = subdf.append(ndf)
+        subdf = pd.concat([subdf, ndf])
         subdf = subdf.assign(grB=pd.Series(np.arange(len(subdf))).values)
         #print(ndf)
     #print(subdf)

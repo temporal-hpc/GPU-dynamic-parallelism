@@ -65,7 +65,7 @@ dExText = {"time": lambda text: text, "speedup": lambda text: ""}
 if len(sys.argv)!=24:
     print("\nEjecutar como: python explot.py <datafile-prefix> <GPU_MODEL> <BSX0> <BSY0> <BSX1> <BSY1> <BSX2> <BSY2> <BSX3> <BSY3> <BSX4> <BSY4> <HWq> <HWc> <measure> <n> <g> <r> <B> <VAR> <OPT> <ymin> <ymax>")
     print("------------------------------------------------")
-    print("datafile-prefix   : prefix filename+path before bsize being specified")
+    print("datafile-prefix   : path+fileprefix before bsize being specified (check example below)")
     print("GPU_MODEL         : <string>")
     print("BSX{0,1,2,3,4}    : BSX config for Exhaustive, DP-SBR, DP-MBR, ASK-SBR and ASK-MBR respectively")
     print("BSY{0,1,2,3,4}    : BSY config for Exhaustive, DP-SBR, DP-MBR, ASK-SBR and ASK-MBR respectively")
@@ -80,7 +80,7 @@ if len(sys.argv)!=24:
     print("OPT               : {fixed, optimal} (fixed -> uses chosen {g,r,B})")
     print("{ymin,ymax}       : Y range for plots")
     print("------------------------------------------------")
-    print("Example:\n python explot.py file1.dat file2.dat file3.dat file4.dat \"Nvidia A100\" 16 16   32 32   16 16   64 8   64 8   108 64 speedup   $((2**16)) 2 2 32  4 8 16 32   g n 0 10\n\n")
+    print("Example:\n python explot.py ../data/A100-ARCHsm_80 \"Nvidia A100\"   8 8   16 16   32 32   64 4   64 8   108 64 speedup   $((2**16)) 2 2 32  4 8 16 32 n 0 10\n\n")
     exit(2)
 
 dfile_prefix = sys.argv[1]
