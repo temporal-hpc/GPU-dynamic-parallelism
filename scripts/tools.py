@@ -359,7 +359,6 @@ def optimalFilter(n,g,r,B,_df,grBFilter, col, BSX, BSY):
             valStr[i] = f"{vals[i]}"
             subdf = subdf[(subdf[params[i]]==vals[i])]
 
-
     #subdf = subdf[(subdf[param1]==val1) & (subdf[param2]==val2)]
     subdf = subdf.assign(grB=pd.Series(np.arange(len(subdf))).values)
     #print(f"\nOptimal params for {col}:  {param1}={val1} {param2}={val2}")
@@ -372,12 +371,19 @@ def optimalFilter(n,g,r,B,_df,grBFilter, col, BSX, BSY):
         ftext = fr"@$({valStr[0]},{valStr[1]},{valStr[2]})$"
     return subdf,ftext
 
-# optimal filter when exploring grB lanscape
+# optimal filter when exploring grB configuration space
 def optimalFilter_grB(n,g,r,B,_df, BSX, BSY):
     subdf = _df[(_df['n']==n)]
+    #subdf_REF = _dfREF[(_dfREF['n']==n)]
+    #print("OPT_grB df ref\n",subdf_REF)
+    #print("OPT_grB df before\n",subdf)
+    #subdf = adapt_df("grB", subdf_REF, subdf)
+    #print("OPT_grB df after\n",subdf)
     subdf = subdf.assign(grB=pd.Series(np.arange(len(subdf))).values)
     #ftext = fr"@${BSX}\times{BSY}$"
     ftext = fr""
+    #print("---------------------------")
+    #print("---------------------------")
     return subdf,ftext
 
 def paintSpecialPoints(VAR, iVAR, ax,
@@ -389,50 +395,55 @@ def paintSpecialPoints(VAR, iVAR, ax,
         return
 
     # maximum tuples
-    #maxDPSBR = DPSBR_FUNC.max()
-    #maxDPMBR = DPMBR_FUNC.max()
-    #maxASKSBR = ASKSBR_FUNC.max()
-    #maxASKMBR = ASKMBR_FUNC.max()
+    maxDPSBR = DPSBR_FUNC.max()
+    maxDPMBR = DPMBR_FUNC.max()
+    maxASKSBR = ASKSBR_FUNC.max()
+    maxASKMBR = ASKMBR_FUNC.max()
 
-    #maxDPSBRi = DPSBR_FUNC.idxmax()
-    #maxDPMBRi = DPMBR_FUNC.idxmax()
-    #maxASKSBRi = ASKSBR_FUNC.idxmax()
-    #maxASKMBRi = ASKMBR_FUNC.idxmax()
+    maxDPSBRi = DPSBR_FUNC.idxmax()
+    maxDPMBRi = DPMBR_FUNC.idxmax()
+    maxASKSBRi = ASKSBR_FUNC.idxmax()
+    maxASKMBRi = ASKMBR_FUNC.idxmax()
 
-    minDPSBR = df_DPSBR['DPSBRtime'].min()
-    minDPMBR = df_DPSBR['DPMBRtime'].min()
-    minASKSBR = df_DPSBR['ASKSBRtime'].min()
-    minASKMBR = df_DPSBR['ASKMBRtime'].min()
+    #minDPSBR = df_DPSBR['DPSBRtime'].min()
+    #minDPMBR = df_DPSBR['DPMBRtime'].min()
+    #minASKSBR = df_DPSBR['ASKSBRtime'].min()
+    #minASKMBR = df_DPSBR['ASKMBRtime'].min()
 
-    minDPSBRi = df_DPSBR['DPSBRtime'].idxmin()
-    minDPMBRi = df_DPSBR['DPMBRtime'].idxmin()
-    minASKSBRi = df_DPSBR['ASKSBRtime'].idxmin()
-    minASKMBRi = df_DPSBR['ASKMBRtime'].idxmin()
+    #minDPSBRi = df_DPSBR['DPSBRtime'].idxmin()
+    #minDPMBRi = df_DPSBR['DPMBRtime'].idxmin()
+    #minASKSBRi = df_DPSBR['ASKSBRtime'].idxmin()
+    #minASKMBRi = df_DPSBR['ASKMBRtime'].idxmin()
 
-    optDPSBR = DPSBR_FUNC.at[minDPSBRi]
-    optDPMBR = DPMBR_FUNC.at[minDPMBRi]
-    optASKSBR = ASKSBR_FUNC.at[minASKSBRi]
-    optASKMBR = ASKMBR_FUNC.at[minASKMBRi]
+    #optDPSBR = DPSBR_FUNC.at[minDPSBRi]
+    #optDPMBR = DPMBR_FUNC.at[minDPMBRi]
+    #optASKSBR = ASKSBR_FUNC.at[minASKSBRi]
+    #optASKMBR = ASKMBR_FUNC.at[minASKMBRi]
 
-    gDPSBR = df_DPSBR.at[minDPSBRi, 'g']
-    rDPSBR = df_DPSBR.at[minDPSBRi, 'r']
-    BDPSBR = df_DPSBR.at[minDPSBRi, 'B']
-    grBDPSBR =df_DPSBR.at[minDPSBRi, 'grB']
+    optDPSBR = DPSBR_FUNC.at[maxDPSBRi]
+    optDPMBR = DPMBR_FUNC.at[maxDPMBRi]
+    optASKSBR = ASKSBR_FUNC.at[maxASKSBRi]
+    optASKMBR = ASKMBR_FUNC.at[maxASKMBRi]
 
-    gDPMBR = df_DPMBR.at[minDPMBRi, 'g']
-    rDPMBR = df_DPMBR.at[minDPMBRi, 'r']
-    BDPMBR = df_DPMBR.at[minDPMBRi, 'B']
-    grBDPMBR =df_DPMBR.at[minDPMBRi, 'grB']
+    gDPSBR = df_DPSBR.at[maxDPSBRi, 'g']
+    rDPSBR = df_DPSBR.at[maxDPSBRi, 'r']
+    BDPSBR = df_DPSBR.at[maxDPSBRi, 'B']
+    grBDPSBR =df_DPSBR.at[maxDPSBRi, 'grB']
 
-    gASKSBR = df_ASKSBR.at[minASKSBRi, 'g']
-    rASKSBR = df_ASKSBR.at[minASKSBRi, 'r']
-    BASKSBR = df_ASKSBR.at[minASKSBRi, 'B']
-    grBASKSBR =df_ASKSBR.at[minASKSBRi, 'grB']
+    gDPMBR = df_DPMBR.at[maxDPMBRi, 'g']
+    rDPMBR = df_DPMBR.at[maxDPMBRi, 'r']
+    BDPMBR = df_DPMBR.at[maxDPMBRi, 'B']
+    grBDPMBR =df_DPMBR.at[maxDPMBRi, 'grB']
 
-    gASKMBR = df_ASKMBR.at[minASKMBRi, 'g']
-    rASKMBR = df_ASKMBR.at[minASKMBRi, 'r']
-    BASKMBR = df_ASKMBR.at[minASKMBRi, 'B']
-    grBASKMBR =df_ASKMBR.at[minASKMBRi, 'grB']
+    gASKSBR = df_ASKSBR.at[maxASKSBRi, 'g']
+    rASKSBR = df_ASKSBR.at[maxASKSBRi, 'r']
+    BASKSBR = df_ASKSBR.at[maxASKSBRi, 'B']
+    grBASKSBR =df_ASKSBR.at[maxASKSBRi, 'grB']
+
+    gASKMBR = df_ASKMBR.at[maxASKMBRi, 'g']
+    rASKMBR = df_ASKMBR.at[maxASKMBRi, 'r']
+    BASKMBR = df_ASKMBR.at[maxASKMBRi, 'B']
+    grBASKMBR =df_ASKMBR.at[maxASKMBRi, 'grB']
 
     #print(f"maxDPSBR -> x={grBDPSBR} S={maxDPSBR} ({gDPSBR},{rDPSBR},{BDPSBR})")
     #print(f"maxDPMBR -> x={grBDPMBR} S={maxDPMBR} ({gDPMBR},{rDPMBR},{BDPMBR})")
@@ -464,14 +475,17 @@ def paintSpecialPoints(VAR, iVAR, ax,
 
 def adapt_df(VAR, dfREF, df):
     df.drop(columns='Extime')
-    if VAR=='n' or VAR=='grB':
-        ExVals = dfREF['Extime'].values
-        #print("df ref\n",dfREF)
-        #print("df before\n",df)
-        df = df.assign(Extime=ExVals)
-        #print("df after\n",df)
-    else:
-        ExMin = dfREF['Extime'].min()
-        ExVals = np.full(len(df), ExMin)
-        df = df.assign(Extime=ExVals)
+    #print("df ref\n",dfREF)
+    #print("df before\n",df)
+    #if VAR=='n':
+    ExVals = dfREF['Extime'].values
+    length=len(ExVals)
+    print(f"Extime length {length}", ExVals)
+    df = df.assign(Extime=ExVals)
+    #else:
+    #    ExMin = dfREF['Extime'].min()
+    #    ExVals = np.full(len(df), ExMin)
+    #    df = df.assign(Extime=ExVals)
+    #print("df after\n",df)
+    #print("---------------------------")
     return df

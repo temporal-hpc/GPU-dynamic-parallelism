@@ -1,0 +1,27 @@
+A100:
+    Exhaustive  --> 16x16
+    DP SBR      --> 64x8
+    DP MBR      --> 64x8
+    ASK SBR     --> 16x16
+    ASK MBR     --> 16x16
+
+TITAN-RTX:
+    Exhaustive  --> 16x16
+    DP SBR      --> 64x8
+    DP MBR      --> 64x8
+    ASK SBR     --> 16x16
+    ASK MBR     --> 64x4
+
+TITAN-V:
+    Exhaustive  --> 8x8
+    DP SBR      --> 64x8
+    DP MBR      --> 64x8
+    ASK SBR     --> 16x16
+    ASK MBR     --> 64x4
+
+JETSON-NX:
+    Exhaustive  --> 64x4
+    DP SBR      --> 16x16
+    DP MBR      --> 16x16
+    ASK SBR     --> 8x8
+    ASK MBR     --> 16x16

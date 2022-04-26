@@ -1,8 +1,9 @@
 TODO:
-
+- begin testing the experimental plot scripts
 
 
 DONE
+- fill 'the GPU-best-blocks.txt' files
 - arreglar bug de las comas repetidas en el subtitulo
     - [IDEA] meter los campos en una lista primero
 - actualizar script para obtener los nuevos graficos con modo 'optimal'

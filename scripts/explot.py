@@ -41,7 +41,7 @@ dfFixedFilter = [lambda n,g,r,B,_df,BSX,BSY: Q.fixedFilter(_df,'g','r','B',g,r,B
                  lambda n,g,r,B,_df,BSX,BSY: Q.fixedFilter_grB(_df,n,BSX,BSY)]
 
 # optimal case
-# - speedup vs {g,r,B} --> filter for the chosen n, then find the optimal g,r,B and explore B at those fixed {g,r} values.
+# - speedup vs {g,r,B} --> filter for the chosen n, then find the optimal g,r,B and explore one of the three while fixing the other two.
 # - speedup vs grB     --> filter for the chosen n, plot all and then highlight the optimal g,r,B point for each approach.
 # - speedup vs n       --> filter nothing, then for each different 'n', find the optimal g,r,B of each approach.
 dfOptimalFilter = [ lambda n,g,r,B,_df,ap,BSX,BSY: Q.optimalFilter_n(n,g,r,B,_df,ap+'time',BSX,BSY),
@@ -63,9 +63,9 @@ dExText = {"time": lambda text: text, "speedup": lambda text: ""}
 # 1) INIT code
 # ----------------
 if len(sys.argv)!=24:
-    print("\nEjecutar como: python explot.py <datafile-prefix> <GPU_MODEL> <BSX0> <BSY0> <BSX1> <BSY1> <BSX2> <BSY2> <BSX3> <BSY3> <BSX4> <BSY4> <HWq> <HWc> <measure> <n> <g> <r> <B> <VAR> <OPT> <ymin> <ymax>")
+    print("\nRun as: python explot.py <datafile-prefix> <GPU_MODEL> <BSX0> <BSY0> <BSX1> <BSY1> <BSX2> <BSY2> <BSX3> <BSY3> <BSX4> <BSY4> <HWq> <HWc> <measure> <n> <g> <r> <B> <VAR> <OPT> <ymin> <ymax>")
     print("------------------------------------------------")
-    print("datafile-prefix   : path+fileprefix before bsize being specified (check example below)")
+    print("datafile-prefix   : path+fileprefix before {BSX,BSY} being specified (check example below)")
     print("GPU_MODEL         : <string>")
     print("BSX{0,1,2,3,4}    : BSX config for Exhaustive, DP-SBR, DP-MBR, ASK-SBR and ASK-MBR respectively")
     print("BSY{0,1,2,3,4}    : BSY config for Exhaustive, DP-SBR, DP-MBR, ASK-SBR and ASK-MBR respectively")
@@ -183,20 +183,26 @@ print("done")
 # ----------------------------------------------------------
 print(f"[EXPLOT]> Filtering data frames.........", end='')
 sys.stdout.flush()
+
+print("dfEX", df_EX)
+df_EX_copy = df_EX.copy()
 df_EX, ftext_EX = dFixedOptimal[OPT](n,g,r,B,df_EX,iVAR,'Ex',BSX0,BSY0)
-df_EX = Q.adapt_df(VAR, df_EX, df_EX)
+print("-----------------------------")
+print("-----------------------------")
 
+print("dfEX", df_EX)
+print("df_DPSBR", df_DPSBR)
+df_DPSBR = Q.adapt_df(VAR, df_EX_copy, df_DPSBR)
 df_DPSBR, ftext_DPSBR = dFixedOptimal[OPT](n,g,r,B,df_DPSBR,iVAR,'DPSBR',BSX1,BSY1)
-df_DPSBR = Q.adapt_df(VAR, df_EX, df_DPSBR)
 
+df_MBR = Q.adapt_df(VAR, df_EX_copy, df_DPMBR)
 df_DPMBR, ftext_DPMBR = dFixedOptimal[OPT](n,g,r,B,df_DPMBR,iVAR,'DPMBR',BSX2,BSY2)
-df_MBR = Q.adapt_df(VAR, df_EX, df_DPMBR)
 
+df_ASKSBR = Q.adapt_df(VAR, df_EX_copy, df_ASKSBR)
 df_ASKSBR, ftext_ASKSBR = dFixedOptimal[OPT](n,g,r,B,df_ASKSBR,iVAR,'ASKSBR',BSX3,BSY3)
-df_ASKSBR = Q.adapt_df(VAR, df_EX, df_ASKSBR)
 
+df_ASKMBR = Q.adapt_df(VAR, df_EX_copy, df_ASKMBR)
 df_ASKMBR, ftext_ASKMBR = dFixedOptimal[OPT](n,g,r,B,df_ASKMBR,iVAR,'ASKMBR',BSX4,BSY4)
-df_ASKMBR = Q.adapt_df(VAR, df_EX, df_ASKMBR)
 
 #print(f"done: shape ->", df_EX.shape)
 #print(f"done: shape ->", df_DPSBR.shape)
@@ -272,5 +278,5 @@ fig.tight_layout()
 func_adjust_margins[measure]
 plt.legend(prop={"size":10})
 plt.savefig(f'../plots/exp-{GPUmodel}-{measure}-{VAR}-{OPT}.pdf', format='pdf')
-plt.show()
+#plt.show()
 print("done")
