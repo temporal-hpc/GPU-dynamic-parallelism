@@ -20,7 +20,7 @@ cGreen = ["#238b45", "#74c476", "#bae4b3", "#edf8e9"]
 cPurple = ["#8860b4", "#9473b8", "#9d81bc", "#ab99c0"]
 cGrayscale = ["#111111", "#333333", "#888888", "#CCCCCC"]
 
-alpha_grB=[1.0, 1.0, 1.0, 1.0, 0.2]
+alpha_grB=[1.0, 1.0, 1.0, 1.0, 0.1]
 
 dStyle = [[':','v-','^-','+-','x-'],
           [':','v-','^-','+-','x-'],
@@ -256,14 +256,14 @@ def genSubtitle(measure,MVAR,VAR, n, g, B, r, P, lam, A, q, c):
     return subtitle
 
 def genSubtitleExp(GPUmodel, measure,VAR, n, g, r, B, q, c):
-    subtitle = f"{GPUmodel}\n"
+    subtitle = f"{GPUmodel}"
     #if VAR != "g" and VAR != "grB":
     #    subtitle += f'$g={g}$, '
     #if VAR != "r" and VAR != "grB":
     #    subtitle += f'$r={r}$, '
     #if VAR != "B" and VAR != "grB":
     #    subtitle += f'$B={B}$, '
-    subtitle += f'$q={q}, c={c}$'
+    #subtitle += f'$q={q}, c={c}$'
     if VAR != "n":
         subtitle += r", $n=2^{" + f"{int(np.log2(n))}" + r"}$"
 
@@ -450,20 +450,20 @@ def paintSpecialPoints(VAR, iVAR, ax,
     #print(f"maxASKSBR -> x={grBASKSBR} S={maxASKSBR} ({gASKSBR},{rASKSBR},{BASKSBR})")
     #print(f"maxASKMBR -> x={grBASKMBR} S={maxASKMBR} ({gASKMBR},{rASKMBR},{BASKMBR})")
 
-    plt.plot(grBDPSBR, optDPSBR, dStyle[iVAR][3], markersize=6,    label=fr"DP-SBR@${BSX1}\times{BSY1}$",  color=cGreen[0])
-    plt.plot(grBDPMBR, optDPMBR, dStyle[iVAR][4], markersize=4,    label=fr"DP-MBR@${BSX2}\times{BSY2}$",  color=cPurple[2])
-    plt.plot(grBASKSBR, optASKSBR, dStyle[iVAR][1], markersize=3,  label=fr"ASK-SBR@${BSX3}\times{BSY3}$", color=cTemporal[1])
-    plt.plot(grBASKMBR, optASKMBR, dStyle[iVAR][2], markersize=3,  label=fr"ASK-MBR@${BSX4}\times{BSY4}$", color=cRed[0])
+    plt.plot(grBDPSBR, optDPSBR, dStyle[iVAR][3], markersize=7,    label=fr"DP-SBR@${BSX1}\times{BSY1}$",  color=cGreen[0])
+    plt.plot(grBDPMBR, optDPMBR, dStyle[iVAR][4], markersize=5,    label=fr"DP-MBR@${BSX2}\times{BSY2}$",  color=cPurple[2])
+    plt.plot(grBASKSBR, optASKSBR, dStyle[iVAR][1], markersize=4,  label=fr"ASK-SBR@${BSX3}\times{BSY3}$", color=cTemporal[1])
+    plt.plot(grBASKMBR, optASKMBR, dStyle[iVAR][2], markersize=4,  label=fr"ASK-MBR@${BSX4}\times{BSY4}$", color=cRed[0])
 
     #plt.plot(grBDPSBR, optDPSBR, dStyle[iVAR][3], markersize=8,    label=fr"DP-SBR",  color=cGreen[0])
     #plt.plot(grBDPMBR, optDPMBR, dStyle[iVAR][4], markersize=6,    label=fr"DP-MBR",  color=cPurple[2])
     #plt.plot(grBASKSBR, optASKSBR, dStyle[iVAR][1], markersize=5,  label=fr"ASK-SBR", color=cTemporal[1])
     #plt.plot(grBASKMBR, optASKMBR, dStyle[iVAR][2], markersize=5,  label=fr"ASK-MBR", color=cRed[0])
 
-    plt.text(grBDPSBR+5, optDPSBR-0.5, f"({gDPSBR},{rDPSBR},{BDPSBR})",      fontsize=7, fontweight='bold')
-    plt.text(grBDPMBR+5, optDPMBR, f"({gDPMBR},{rDPMBR},{BDPMBR})",      fontsize=7, fontweight='bold')
-    plt.text(grBASKSBR+5, optASKSBR, f"({gASKSBR},{rASKSBR},{BASKSBR})", fontsize=7, fontweight='bold')
-    plt.text(grBASKMBR+5, optASKMBR-0.5, f"({gASKMBR},{rASKMBR},{BASKMBR})", fontsize=7, fontweight='bold')
+    plt.text(grBDPSBR+5, optDPSBR-0.9, f"({gDPSBR},{rDPSBR},{BDPSBR})",      fontsize=10, fontweight='bold')
+    plt.text(grBDPMBR-270, optDPMBR-0.7, f"({gDPMBR},{rDPMBR},{BDPMBR})",      fontsize=10, fontweight='bold')
+    plt.text(grBASKSBR+5, optASKSBR-1.0, f"({gASKSBR},{rASKSBR},{BASKSBR})", fontsize=10, fontweight='bold')
+    plt.text(grBASKMBR+5, optASKMBR-1.0, f"({gASKMBR},{rASKMBR},{BASKMBR})", fontsize=10, fontweight='bold')
 
     plt.tick_params(
     axis='x',          # changes apply to the x-axis

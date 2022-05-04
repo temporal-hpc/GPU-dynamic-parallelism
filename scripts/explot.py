@@ -252,7 +252,7 @@ fig = plt.figure(figsize=(4,3))
 ax = fig.add_subplot()
 #fig, ax = plt.subplots()
 #plt.suptitle(dTitle[measure], y=0.95, fontsize=10)
-plt.title(Q.genSubtitleExp(GPUmodel, measure, VAR, n, g, r, B, q, c), y=1, pad=3,fontsize=10, loc='center')
+plt.title(Q.genSubtitleExp(GPUmodel, measure, VAR, n, g, r, B, q, c), y=1, pad=3,fontsize=13, loc='center')
 
 # curves
 ax.plot(df_EX[VAR], EX_FUNC, Q.dStyle[iVAR][0], lw=1, markersize=3, label=dFuncText[iVAR](dExText[measure]('Exhaustive'+ftext_EX)),color=Q.cGrayscale[0], alpha=1.0)
@@ -268,8 +268,8 @@ Q.paintSpecialPoints(VAR, iVAR, ax, df_DPSBR, DPSBR_FUNC, BSX1, BSY1,
                                     df_ASKMBR, ASKMBR_FUNC, BSX4, BSY4);
 
 # visual tweaks
-ax.set_xlabel(fr'{dxlabel[VAR]}')
-ax.set_ylabel(dLabel[measure], rotation=0, labelpad=7)
+ax.set_xlabel(fr'{dxlabel[VAR]}', fontsize=12)
+ax.set_ylabel(dLabel[measure], rotation=0, labelpad=7, fontsize=12)
 func_ylabel_lr[measure](ax)
 func_ytick_lr[measure](ax)
 func_xscale[iVAR](ax)
@@ -279,7 +279,7 @@ fig.tight_layout()
 func_adjust_margins[measure]
 #fig.tight_layout()
 fig.tight_layout(rect=[0, -0.05, 1, 1])
-plt.legend(prop={"size":7})
+plt.legend(prop={"size":8})
 plt.savefig(f'../plots/exp-{GPUmodel}-{measure}-{VAR}-{OPT}.pdf', format='pdf')
 #plt.show()
 print("done")
