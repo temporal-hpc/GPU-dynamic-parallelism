@@ -68,6 +68,7 @@ __global__ void dp_mbr_mandelbrot_pixel_k(int *dwells, unsigned int w, unsigned 
 
 
 /** Equivalent to the dynamic parallelism approach **/
+#ifdef RDC_TRUE
 __global__ void dp_mbr_mandelbrot_block_k(int *dwells, unsigned int w, unsigned int h,
                                    complex cmin, complex cmax, unsigned int x0,
                                    unsigned int y0, int d, int depth,
@@ -94,3 +95,4 @@ __global__ void dp_mbr_mandelbrot_block_k(int *dwells, unsigned int w, unsigned 
         }
     }
 } // mandelbrot_block_k
+#endif

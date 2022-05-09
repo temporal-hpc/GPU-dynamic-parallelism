@@ -197,10 +197,12 @@ float rea_DP_SBR(int *d_dwells, unsigned int w, unsigned int h,
     cudaEventCreate(&stop);
 
     cudaEventRecord(start, 0);
-    for (int i = 0; i < REPEATS; i++) {
-        dp_sbr_mandelbrot_block_k<<<gridSize, blockSize>>>( d_dwells, w, h, bottomLeftCorner, upperRightCorner, 0, 0, w / g0, 1, r, CA_MAXDWELL, B, MAX_DEPTH);
-        cudaDeviceSynchronize();
-    }
+    #ifdef RDC_TRUE
+        for (int i = 0; i < REPEATS; i++) {
+            dp_sbr_mandelbrot_block_k<<<gridSize, blockSize>>>( d_dwells, w, h, bottomLeftCorner, upperRightCorner, 0, 0, w / g0, 1, r, CA_MAXDWELL, B, MAX_DEPTH);
+            cudaDeviceSynchronize();
+        }
+    #endif
     cudaEventRecord(stop, 0);
     cudaEventSynchronize(stop);
     cudaEventElapsedTime(&elapsedTime, start, stop); // that's our time!
@@ -220,10 +222,12 @@ float rea_DP_MBR(int *d_dwells, unsigned int w, unsigned int h,
     cudaEventCreate(&stop);
 
     cudaEventRecord(start, 0);
-    for (int i = 0; i < REPEATS; i++) {
-        dp_mbr_mandelbrot_block_k<<<gridSize, blockSize>>>( d_dwells, w, h, bottomLeftCorner, upperRightCorner, 0, 0, w / g0, 1, r, CA_MAXDWELL, B, MAX_DEPTH);
-        cudaDeviceSynchronize();
-    }
+    #ifdef RDC_TRUE
+        for (int i = 0; i < REPEATS; i++) {
+            dp_mbr_mandelbrot_block_k<<<gridSize, blockSize>>>( d_dwells, w, h, bottomLeftCorner, upperRightCorner, 0, 0, w / g0, 1, r, CA_MAXDWELL, B, MAX_DEPTH);
+            cudaDeviceSynchronize();
+        }
+    #endif
     cudaEventRecord(stop, 0);
     cudaEventSynchronize(stop);
     cudaEventElapsedTime(&elapsedTime, start, stop); // that's our time!
