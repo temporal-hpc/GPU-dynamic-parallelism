@@ -279,7 +279,7 @@ fig.tight_layout()
 func_adjust_margins[measure]
 #fig.tight_layout()
 fig.tight_layout(rect=[0, -0.05, 1, 1])
-plt.legend(prop={"size":8})
+plt.legend(prop={"size":8}, framealpha=0.5)
 plt.savefig(f'../plots/exp-{GPUmodel}-{measure}-{VAR}-{OPT}.pdf', format='pdf')
 #plt.show()
 print("done")

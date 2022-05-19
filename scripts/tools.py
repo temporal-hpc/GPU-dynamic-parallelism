@@ -131,7 +131,7 @@ def subdivMBR_scalar(n, g, B, r, P, lam, A, q, c):
     H = np.ceil( (n**2.0)/(q * c))
     CS = lam*A
     for i in range(0, int(tau)-1):
-        M1 = np.ceil((4.0*n*A)/(g * (r**i) * c)) * np.ceil( (G*(R**i))/q ) * P**i
+        M1 = np.ceil((4.0*n)/(g * (r**i) * c)) * np.ceil( (G*(R**i))/q ) * A * P**i
         M2 = np.ceil((G*R**i)/(q)) * CS * (P**(i+1))
         M3 = H * (P**i) * (1-P)
         sum += (M1 + M2 + M3)
@@ -237,9 +237,9 @@ def genSubtitle(measure,MVAR,VAR, n, g, B, r, P, lam, A, q, c):
     if VAR != "lam" and MVAR != "lam":
         #subtitle += f'$\lambda$={lam[0]}, '
         stlist.append(f'$\lambda$={lam[0]}')
-    if VAR != "A" and MVAR != "A":
-        #subtitle += f'$C_A$={A[0]}'
-        stlist.append(f'$C_A$={A[0]}')
+    #if VAR != "A" and MVAR != "A":
+    #    #subtitle += f'$A$={A[0]}'
+    #    stlist.append(f'$A$={A[0]}')
 
     if measure == "speedup" or measure == "speedup-sbr" or measure == "speedup-mbr":
         if VAR != "q" and MVAR != "q":
