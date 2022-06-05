@@ -20,7 +20,7 @@ cGreen = ["#238b45", "#74c476", "#bae4b3", "#edf8e9"]
 cPurple = ["#8860b4", "#9473b8", "#9d81bc", "#ab99c0"]
 cGrayscale = ["#111111", "#333333", "#888888", "#CCCCCC"]
 
-alpha_grB=[1.0, 1.0, 1.0, 1.0, 0.1]
+alpha_grB=[1.0, 1.0, 1.0, 1.0, 0.03]
 
 dStyle = [[':','v-','^-','+-','x-'],
           [':','v-','^-','+-','x-'],
@@ -461,9 +461,9 @@ def paintSpecialPoints(VAR, iVAR, ax,
     #plt.plot(grBASKMBR, optASKMBR, dStyle[iVAR][2], markersize=5,  label=fr"ASK-MBR", color=cRed[0])
 
     plt.text(grBDPSBR+5, optDPSBR-0.9, f"({gDPSBR},{rDPSBR},{BDPSBR})",      fontsize=10, fontweight='bold')
-    plt.text(grBDPMBR-270, optDPMBR-0.7, f"({gDPMBR},{rDPMBR},{BDPMBR})",      fontsize=10, fontweight='bold')
+    plt.text(grBDPMBR-200, optDPMBR+-1.0, f"({gDPMBR},{rDPMBR},{BDPMBR})",      fontsize=10, fontweight='bold')
     plt.text(grBASKSBR+5, optASKSBR-1.0, f"({gASKSBR},{rASKSBR},{BASKSBR})", fontsize=10, fontweight='bold')
-    plt.text(grBASKMBR+5, optASKMBR-1.0, f"({gASKMBR},{rASKMBR},{BASKMBR})", fontsize=10, fontweight='bold')
+    plt.text(grBASKMBR+5, optASKMBR-1.2, f"({gASKMBR},{rASKMBR},{BASKMBR})", fontsize=10, fontweight='bold')
 
     plt.tick_params(
     axis='x',          # changes apply to the x-axis
