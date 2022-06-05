@@ -460,10 +460,10 @@ def paintSpecialPoints(VAR, iVAR, ax,
     #plt.plot(grBASKSBR, optASKSBR, dStyle[iVAR][1], markersize=5,  label=fr"ASK-SBR", color=cTemporal[1])
     #plt.plot(grBASKMBR, optASKMBR, dStyle[iVAR][2], markersize=5,  label=fr"ASK-MBR", color=cRed[0])
 
-    plt.text(grBDPSBR+5, optDPSBR-0.9, f"({gDPSBR},{rDPSBR},{BDPSBR})",      fontsize=10, fontweight='bold')
-    plt.text(grBDPMBR-200, optDPMBR+-1.0, f"({gDPMBR},{rDPMBR},{BDPMBR})",      fontsize=10, fontweight='bold')
+    plt.text(grBDPSBR+5, optDPSBR-1.0, f"({gDPSBR},{rDPSBR},{BDPSBR})",      fontsize=10, fontweight='bold')
+    plt.text(grBDPMBR+5, optDPMBR-1.0, f"({gDPMBR},{rDPMBR},{BDPMBR})",      fontsize=10, fontweight='bold')
     plt.text(grBASKSBR+5, optASKSBR-1.0, f"({gASKSBR},{rASKSBR},{BASKSBR})", fontsize=10, fontweight='bold')
-    plt.text(grBASKMBR+5, optASKMBR-1.2, f"({gASKMBR},{rASKMBR},{BASKMBR})", fontsize=10, fontweight='bold')
+    plt.text(grBASKMBR+5, optASKMBR-1.0, f"({gASKMBR},{rASKMBR},{BASKMBR})", fontsize=10, fontweight='bold')
 
     plt.tick_params(
     axis='x',          # changes apply to the x-axis
