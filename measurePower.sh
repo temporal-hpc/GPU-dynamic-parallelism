@@ -21,7 +21,7 @@ do
     do 
         set -- $i
         make ARCH=${arch} MEASURE_POWER=MEASURE_POWER BSX=${1} BSY=${2} REPEATS=1000 REALIZATIONS=1
-        x=`./bin/gpuDP 0 ${app} ${size} ${size} -1.5 0.5 -1.0 1.0 512 ${conf} 100 none`
+        x=`./bin/gpuDP ${dev} ${app} ${size} ${size} -1.5 0.5 -1.0 1.0 512 ${conf} 1000 none`
         echo $x
     done
 done
