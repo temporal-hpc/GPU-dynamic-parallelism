@@ -17,7 +17,7 @@ for app in {0..4}
 do
     conf=${configs[$app]}
     echo $app
-    for i in "8 8" "16 16" "64 4" "64 8"
+    for i in "8 8" "16 16" "64 4" "64 8" "32 32"
     do 
         set -- $i
         make ARCH=${arch} MEASURE_POWER=MEASURE_POWER BSX=${1} BSY=${2} REPEATS=1000 REALIZATIONS=1
