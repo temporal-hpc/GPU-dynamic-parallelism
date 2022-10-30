@@ -20,8 +20,9 @@ do
     for i in "8 8" "16 16" "64 4" "64 8" "32 32"
     do 
         set -- $i
-        make ARCH=${arch} MEASURE_POWER=MEASURE_POWER BSX=${1} BSY=${2} REPEATS=1000 REALIZATIONS=1
-        x=`./bin/gpuDP ${dev} ${app} ${size} ${size} -1.5 0.5 -1.0 1.0 512 ${conf} 1000 none`
+        make ARCH=${arch} MEASURE_POWER=MEASURE_POWER BSX=${1} BSY=${2} REPEATS=100 REALIZATIONS=1
+        echo "./bin/gpuDP ${dev} ${app} ${size} ${size} -1.5 0.5 -1.0 1.0 512 ${conf} 1000 none"
+        ./bin/gpuDP ${dev} ${app} ${size} ${size} -1.5 0.5 -1.0 1.0 512 ${conf} 1000 none
         echo $x
     done
 done
