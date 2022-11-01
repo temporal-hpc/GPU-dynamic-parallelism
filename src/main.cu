@@ -113,9 +113,9 @@ int main(int argc, char** argv) {
     fflush(stdout);
 #endif
 
-    // -------------------
-    // 4) Export Fractal Image
-    // -------------------
+// -------------------
+// 4) Export Fractal Image
+// -------------------
     if (fileName != "none") {
         string fractalFileName = fileName + string(".png");
 #ifdef VERBOSE

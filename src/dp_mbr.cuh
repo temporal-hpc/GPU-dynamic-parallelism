@@ -77,7 +77,6 @@ __global__ void dp_mbr_mandelbrot_block_k(int *dwells, unsigned int w, unsigned 
     x0 += d * blockIdx.x, y0 += d * blockIdx.y;
     int comm_dwell = dp_mbr_border_dwell(dwells, w, h, cmin, cmax, x0, y0, d, MAX_DWELL);
     if (threadIdx.x == 0 && threadIdx.y == 0) {
-
         if (comm_dwell != DIFF_DWELL) {
             // uniform dwell, just fill
             dim3 bs(BSX, BSY), grid(divup(d, BSX), divup(d, BSY));
