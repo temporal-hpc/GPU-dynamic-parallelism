@@ -9,19 +9,27 @@ fi
 # chosen measure (work, wrf, time,speedup)
 mes=${1}
 mode=${2}
+
 # fixed variables
-cn=$((2**30)); cg=8; cB=8; cr=2; cP=0.7; clam=100; cA=16;
+# original
+#cn=$((2**30)); cg=8; cB=8; cr=2; cP=0.7; clam=100; cA=16;
+
+# testing for SBR better than MBR
+cn=$((2**24)); cg=8; cB=8; cr=2; cP=0.7; clam=100; cA=8;
+
 # parallelism parameters
 cq=128; cc=64;
 # number of samples
 res=$((2**10))
 # legend parameters
 n1=$((2**8)); n2=$((2**16)); n3=$((2**24)); n4=$((2**32))
+#n1=$((2**10)); n2=$((2**12)); n3=$((2**14)); n4=$((2**16))
 g1=128; g2=64; g3=32; g4=2
 B1=4; B2=16; B3=64; B4=256
 r1=64; r2=32; r3=8; r4=2
 P1=0.9; P2=0.8; P3=0.7; P4=0.6
 lam1=$((10**6)); lam2=$((10**4)); lam3=$((10**2)); lam4=$((10**0))
+#lam1=$((10**3)); lam2=$((10**2)); lam3=$((10**1)); lam4=$((10**0))
 A1=2; A2=4; A3=8; A4=16
 q1=512; q2=256; q3=128; q4=1
 c1=128; c2=64; c3=16; c4=1
@@ -42,7 +50,8 @@ aux=$(echo "scale=2;${cA}*1.6" |bc)
 ymax=${aux%.*}
 #echo $ymax
 #echo "-----------------------------------"
-variables=("n" "g" "B" "r" "P" "lam" "A" "q" "c")
+multiVars=("q" "c" "lam" "n" "g" "B" "r" "P" "A")
+variables=("q" "c" "lam" "g" "B" "r" "P" "A" "n")
 na=("n" ${n1} ${n2} ${n3} ${n4} ${nx1} ${nx2})
 ga=("g" ${g1} ${g2} ${g3} ${g4} ${gx1} ${gx2})
 Ba=("B" ${B1} ${B2} ${B3} ${B4} ${Bx1} ${Bx2})
@@ -54,8 +63,8 @@ qa=("q" ${q1} ${q2} ${q3} ${q4} ${qx1} ${qx2})
 ca=("c" ${c1} ${c2} ${c3} ${c4} ${cx1} ${cx2})
 
 CONFIG="${mes}     ${cn} ${cg} ${cB} ${cr} ${cP}  ${clam}  ${cA}  ${cq} ${cc}"
-SUFFIX="${ymin}   $((${ymax}+4))    ${res}    ${mode}"
-for i in "${variables[@]}"; do
+SUFFIX="${ymin}   $((${ymax}+1))    ${res}    ${mode}"
+for i in "${multiVars[@]}"; do
     declare -n mul="${i}a"
     PREFIX="${CONFIG}       ${mul[1]} ${mul[2]} ${mul[3]} ${mul[4]}     ${i}"
     for j in "${variables[@]}"; do

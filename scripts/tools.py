@@ -75,12 +75,13 @@ def subdivSBR_scalar(n, g, B, r, P, lam, A, q, c):
     tau = np.floor(np.log(n/(g*B)) / np.log(r))
     #print(f"n = {n},  g={g},  B={B},  r={r}")
     #print(f"tau = {tau}")
+    CS = lam*A
     result = 0
     sum = 0
     for i in range(0, int(tau)-1):
         Q = np.ceil(A * (4.0*n/(g*(r**(i))*c)))
         T = np.ceil((n**2.0) / (G*(R**(i))*c))
-        sum += (Q + P*lam*A + (1-P)*T) * (P**i) * np.ceil(G*(R**(i))/q)
+        sum += (Q + P*CS + (1-P)*T) * (P**i) * np.ceil(G*(R**(i))/q)
     K = sum
     L = A *  np.ceil( (n**2.0)/(G*(R**(tau-1))*c) ) * np.ceil( (G*(R**(tau-1)))/q ) * (P**(tau-1))
     result = K + L
@@ -129,12 +130,14 @@ def subdivMBR_scalar(n, g, B, r, P, lam, A, q, c):
     result = 0
     sum = 0
     H = np.ceil( (n**2.0)/(q * c))
-    CS = lam*A
+    CS = (lam*np.log2(lam*H))*A
     for i in range(0, int(tau)-1):
         M1 = np.ceil((4.0*n)/(g * (r**i) * c)) * np.ceil( (G*(R**i))/q ) * A * P**i
         M2 = np.ceil((G*R**i)/(q)) * CS * (P**(i+1))
         M3 = H * (P**i) * (1-P)
+        SC = M3*np.log2(lam)/np.log(H)
         sum += (M1 + M2 + M3)
+        sum += SC
     K = sum
     L = A * (P**(tau-1)) * H
     result = K + L

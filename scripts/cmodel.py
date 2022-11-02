@@ -255,16 +255,16 @@ else:
 # mainplot
 if measure=="speedup":
     # SBR part
-    subdivPlot1, = plt.plot(xrange, d1[0], label="SBR@" + Q.genLabel(VAR, MVAR, dmvarStr[MVAR]+'_1', mvar1[0], v1[1], v1[2], v1[3]), lw=1, ls=":", color=Q.cTemporal[3])
-    subdivPlot2, = plt.plot(xrange, d2[0], label="SBR@" + Q.genLabel(VAR, MVAR, dmvarStr[MVAR]+'_2', mvar2[0], v2[1], v2[2], v2[3]), lw=1, ls="-.", color=Q.cTemporal[2])
-    subdivPlot3, = plt.plot(xrange, d3[0], label="SBR@" + Q.genLabel(VAR, MVAR, dmvarStr[MVAR]+'_3', mvar3[0], v3[1], v3[2], v3[3]), lw=1, ls="--", color=Q.cTemporal[1])
-    subdivPlot4, = plt.plot(xrange, d4[0], label="SBR@" + Q.genLabel(VAR, MVAR, dmvarStr[MVAR]+'_4', mvar4[0], v4[1], v4[2], v4[3]), lw=1, ls="-", color=Q.cTemporal[0])
+    subdivPlot1, = plt.plot(xrange, d1[0], label="SBR@" + Q.genLabel(VAR, MVAR, dmvarStr[MVAR]+'_1', mvar1[0], v1[1], v1[2], v1[3]), lw=1, ls=":", color=Q.cTemporal[3], alpha=0.7)
+    subdivPlot2, = plt.plot(xrange, d2[0], label="SBR@" + Q.genLabel(VAR, MVAR, dmvarStr[MVAR]+'_2', mvar2[0], v2[1], v2[2], v2[3]), lw=1, ls="-.", color=Q.cTemporal[2], alpha=0.7)
+    subdivPlot3, = plt.plot(xrange, d3[0], label="SBR@" + Q.genLabel(VAR, MVAR, dmvarStr[MVAR]+'_3', mvar3[0], v3[1], v3[2], v3[3]), lw=1, ls="--", color=Q.cTemporal[1], alpha=0.7)
+    subdivPlot4, = plt.plot(xrange, d4[0], label="SBR@" + Q.genLabel(VAR, MVAR, dmvarStr[MVAR]+'_4', mvar4[0], v4[1], v4[2], v4[3]), lw=1, ls="-", color=Q.cTemporal[0], alpha=0.7)
 
     # MBR part
-    subdivPlot1b, = plt.plot(xrange, d1[1], label="MBR@" + Q.genLabel(VAR, MVAR, dmvarStr[MVAR]+'_1', mvar1[0], v1[4], v1[5], v1[6]), lw=1, ls=":", color=Q.cOrange[3])
-    subdivPlot2b, = plt.plot(xrange, d2[1], label="MBR@" + Q.genLabel(VAR, MVAR, dmvarStr[MVAR]+'_2', mvar2[0], v2[4], v2[5], v2[6]), lw=1, ls="-.", color=Q.cOrange[2])
-    subdivPlot3b, = plt.plot(xrange, d3[1], label="MBR@" + Q.genLabel(VAR, MVAR, dmvarStr[MVAR]+'_3', mvar3[0], v3[4], v3[5], v3[6]), lw=1, ls="--", color=Q.cOrange[1])
-    subdivPlot4b, = plt.plot(xrange, d4[1], label="MBR@" + Q.genLabel(VAR, MVAR, dmvarStr[MVAR]+'_4', mvar4[0], v4[4], v4[5], v4[6]), lw=1, ls="-", color=Q.cOrange[0])
+    subdivPlot1b, = plt.plot(xrange, d1[1], label="MBR@" + Q.genLabel(VAR, MVAR, dmvarStr[MVAR]+'_1', mvar1[0], v1[4], v1[5], v1[6]), lw=1, ls=":", color=Q.cOrange[3], alpha=0.7)
+    subdivPlot2b, = plt.plot(xrange, d2[1], label="MBR@" + Q.genLabel(VAR, MVAR, dmvarStr[MVAR]+'_2', mvar2[0], v2[4], v2[5], v2[6]), lw=1, ls="-.", color=Q.cOrange[2], alpha=0.7)
+    subdivPlot3b, = plt.plot(xrange, d3[1], label="MBR@" + Q.genLabel(VAR, MVAR, dmvarStr[MVAR]+'_3', mvar3[0], v3[4], v3[5], v3[6]), lw=1, ls="--", color=Q.cOrange[1], alpha=0.7)
+    subdivPlot4b, = plt.plot(xrange, d4[1], label="MBR@" + Q.genLabel(VAR, MVAR, dmvarStr[MVAR]+'_4', mvar4[0], v4[4], v4[5], v4[6]), lw=1, ls="-", color=Q.cOrange[0], alpha=0.7)
 else:
     subdivPlot1, = plt.plot(xrange, d1, label="Sub@" + Q.genLabel(VAR, MVAR, dmvarStr[MVAR]+'_1', mvar1[0], v1[1], v1[2], v1[3]), lw=1, ls=":", color=Q.cTemporal[3])
     subdivPlot2, = plt.plot(xrange, d2, label="Sub@" + Q.genLabel(VAR, MVAR, dmvarStr[MVAR]+'_2', mvar2[0], v2[1], v2[2], v2[3]), lw=1, ls="-.", color=Q.cTemporal[2])
