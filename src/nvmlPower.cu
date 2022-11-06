@@ -1,5 +1,5 @@
 /*
- Copyright (c) 2021 Temporal Guild Group, Austral University of Chile, Valdivia Chile.
+ Copyright (c) 2022 Temporal Guild Group, Austral University of Chile, Valdivia Chile.
  This file and all powermon software is licensed under the MIT License.
  Please refer to LICENSE for more details.
  */
@@ -11,10 +11,8 @@ double gpuTotalEnergy;
 double gpuTotalTime;
 
 bool GPUpollThreadStatus = false;
-bool CPUpollThreadStatus = false;
 unsigned int deviceCount = 0;
 char deviceNameStr[64];
-std::string CPUfilename;
 std::string GPUfilename;
 
 nvmlReturn_t nvmlResult;
@@ -22,13 +20,10 @@ nvmlDevice_t nvmlDeviceID;
 nvmlPciInfo_t nvmPCIInfo;
 nvmlEnableState_t pmmode;
 nvmlComputeMode_t computeMode;
-Rapl* rapl;
 
-int CPU_SAMPLE_US = 10000;
 int GPU_SAMPLE_US = 5000;
 
 pthread_t GPUpowerPollThread;
-pthread_t CPUpowerPollThread;
 
 /*
 Poll the GPU using nvml APIs.
@@ -198,65 +193,4 @@ int getNVMLError(nvmlReturn_t resultToCheck) {
         return 16;
 
     return 0;
-}
-
-// Begin measuring CPU power
-void CPUPowerBegin(int N, int data_type, int nt) {
-    // printf("CPUPowerBegin (CPU_SAMPLE_US = %i)", CPU_SAMPLE_US); fflush(stdout);
-    CPUpollThreadStatus = true;
-    const char* map[2] = { "FP32", "FP64" };
-    // CPUfilename = std::string("data/CPUPOWER-") + std::to_string(N)+"-"+ std::to_string(data_type)+"-"+std::to_string(nt)+"-"+std::string(".dat");
-    CPUfilename = std::string("data/CPUPOWER-") + std::to_string(N) + "-" + std::string(map[data_type]) + "-" + std::to_string(nt) + "-" + std::string(".dat");
-    rapl = new Rapl();
-    int code = pthread_create(&CPUpowerPollThread, NULL, CPUpowerPollingFunc, (void*)NULL);
-    if (code) {
-        fprintf(stderr, "Error - pthread_create() return code: %d\n", code);
-        exit(0);
-    }
-    usleep(1000 * WARMUP_MS);
-}
-
-// Stop measuring CPU power
-void CPUPowerEnd() {
-    // printf("CPUPowerEnd"); fflush(stdout);
-    double ckWh = 3600000.0;
-    usleep(1000 * COOLDOWN_MS);
-    CPUpollThreadStatus = false;
-    pthread_join(CPUpowerPollThread, 0);
-    // printf("\n\tTotal Energy: %f J\n\tAverage Power: %f W\n\tTime: %f\n\n", rapl->pkg_total_energy(), rapl->pkg_average_power(), rapl->total_time());
-    // printf("\n\nSummary:\nCPU Avg. Power:       %f W\n", rapl->pkg_average_power());
-    // printf("CPU Total Energy:     %f J = %f kWh\n", rapl->pkg_total_energy(), rapl->pkg_total_energy()/ckWh);
-    // printf("CPU Total Time:       %f secs\n", rapl->total_time());
-    // printf("\n");
-    // printf("DRAM Avg. Power:      %f W\n", rapl->dram_average_power());
-    // printf("DRAM Total Energy:    %f J = %f kWh\n", rapl->dram_total_energy(), rapl->dram_total_energy()/ckWh);
-    // printf("\n");
-    // printf("GPU Avg. Power:       %f W\n", gpuAveragePower);
-    // printf("GPU Total Energy:     %f J = %f kWh\n", gpuTotalEnergy, gpuTotalEnergy/ckWh);
-    // printf("GPU Total Time:       %f secs\n", gpuTotalTime);
-}
-
-// CPU power measure thread
-void* CPUpowerPollingFunc(void* ptr) {
-    int timestep = 0;
-    double dt = 0.0, acctime = 0.0, accenergy = 0.0, power = 0.0;
-    FILE* fp = fopen(CPUfilename.c_str(), "w+");
-    fprintf(fp, "%-15s, %-15s, %-15s, %-15s, %-15s, %-15s,\n", "#timestep", "power", "acc-energy", "avg-power", "dt", "acc-time");
-    while (CPUpollThreadStatus) {
-        timestep++;
-        pthread_setcancelstate(PTHREAD_CANCEL_DISABLE, 0);
-        usleep(CPU_SAMPLE_US);
-        // sample values
-        rapl->sample();
-        // Write current value of CPU PKG
-        fprintf(fp, "%-15i, %-15f, %-15f, %-15f, %-15f, %-15f,\n", timestep, rapl->pkg_current_power(), rapl->pkg_total_energy(), rapl->pkg_average_power(), rapl->current_time(), rapl->total_time());
-        // printf("\r [CPU = %-10.5f (W)  DRAM = %-10.5f (W)]   [GPU = %-10.5f (W)]",
-        // rapl->pkg_current_power(),
-        // rapl->dram_current_power(),
-        // gpuCurrentPower);
-        fflush(stdout);
-        pthread_setcancelstate(PTHREAD_CANCEL_ENABLE, 0);
-    }
-    fclose(fp);
-    pthread_exit(0);
 }
