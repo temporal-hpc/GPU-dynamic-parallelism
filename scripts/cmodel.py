@@ -156,9 +156,9 @@ dmvarStr = {"n":"n", "g":"g", "B":"B", "r":"r", "P":"P", "lam":"\lambda", "A":"\
 dLabel = {"work":r"${W}$",
           "wrf":r"$\Omega$",
           "time":"T",
-          "speedup":r"S",
-          "speedup-sbr":r"$S_{\textit{SBR}}$",
-          "speedup-mbr":r"$S_{\textit{MBR}}$"}
+          "speedup":r"$\mathcal{S}$",
+          "speedup-sbr":r"$\mathcal{S}_{\textit{SBR}}$",
+          "speedup-mbr":r"$\mathcal{S}_{\textit{MBR}}$"}
 dTitle = {"work":f"Theoretical Work vs ${dmvarStr[VAR]}$",
           "wrf":f"Theoretical $\Omega({VAR})$, multi-${dmvarStr[MVAR]}$",
           "time":f"Theoretical Execution Time [s] vs ${dmvarStr[VAR]}$",
