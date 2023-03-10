@@ -463,10 +463,29 @@ def paintSpecialPoints(VAR, iVAR, ax,
     #plt.plot(grBASKSBR, optASKSBR, dStyle[iVAR][1], markersize=5,  label=fr"ASK-SBR", color=cTemporal[1])
     #plt.plot(grBASKMBR, optASKMBR, dStyle[iVAR][2], markersize=5,  label=fr"ASK-MBR", color=cRed[0])
 
-    plt.text(grBDPSBR+5, optDPSBR-1.0, f"({gDPSBR},{rDPSBR},{BDPSBR})",      fontsize=10, fontweight='bold')
-    plt.text(grBDPMBR+5, optDPMBR-1.1, f"({gDPMBR},{rDPMBR},{BDPMBR})",      fontsize=10, fontweight='bold')
-    plt.text(grBASKSBR+5, optASKSBR-1.0, f"({gASKSBR},{rASKSBR},{BASKSBR})", fontsize=10, fontweight='bold')
-    plt.text(grBASKMBR-230, optASKMBR-1.0, f"({gASKMBR},{rASKMBR},{BASKMBR})", fontsize=10, fontweight='bold')
+    # GPU --> A100
+    #plt.text(grBDPSBR+-260, optDPSBR-1.0, f"({gDPSBR},{rDPSBR},{BDPSBR})",      fontsize=10, fontweight='bold')
+    #plt.text(grBDPMBR+-260, optDPMBR+0.5, f"({gDPMBR},{rDPMBR},{BDPMBR})",      fontsize=10, fontweight='bold')
+    #plt.text(grBASKSBR+5, optASKSBR+0.5, f"({gASKSBR},{rASKSBR},{BASKSBR})", fontsize=10, fontweight='bold')
+    #plt.text(grBASKMBR+10, optASKMBR-1.0, f"({gASKMBR},{rASKMBR},{BASKMBR})", fontsize=10, fontweight='bold')
+
+    # GPU --> TITAN RTX
+    #plt.text(grBDPSBR+20, optDPSBR-0.3, f"({gDPSBR},{rDPSBR},{BDPSBR})",      fontsize=10, fontweight='bold')
+    #plt.text(grBDPMBR+10, optDPMBR-0.8, f"({gDPMBR},{rDPMBR},{BDPMBR})",      fontsize=10, fontweight='bold')
+    #plt.text(grBASKSBR+20, optASKSBR-0.3, f"({gASKSBR},{rASKSBR},{BASKSBR})", fontsize=10, fontweight='bold')
+    #plt.text(grBASKMBR-235, optASKMBR-0.8, f"({gASKMBR},{rASKMBR},{BASKMBR})", fontsize=10, fontweight='bold')
+
+    # GPU --> TITAN V
+    #plt.text(grBDPSBR+10, optDPSBR-0.8, f"({gDPSBR},{rDPSBR},{BDPSBR})",      fontsize=10, fontweight='bold')
+    #plt.text(grBDPMBR, optDPMBR+0.5, f"({gDPMBR},{rDPMBR},{BDPMBR})",      fontsize=10, fontweight='bold')
+    #plt.text(grBASKSBR+20, optASKSBR-0.3, f"({gASKSBR},{rASKSBR},{BASKSBR})", fontsize=10, fontweight='bold')
+    #plt.text(grBASKMBR-220, optASKMBR-0.6, f"({gASKMBR},{rASKMBR},{BASKMBR})", fontsize=10, fontweight='bold')
+
+    # GPU --> JETSON XAVIER NX
+    plt.text(grBDPSBR+10, optDPSBR-0.8, f"({gDPSBR},{rDPSBR},{BDPSBR})",      fontsize=10, fontweight='bold')
+    plt.text(grBDPMBR-190, optDPMBR+0.2, f"({gDPMBR},{rDPMBR},{BDPMBR})",      fontsize=10, fontweight='bold')
+    plt.text(grBASKSBR+20, optASKSBR-0.3, f"({gASKSBR},{rASKSBR},{BASKSBR})", fontsize=10, fontweight='bold')
+    plt.text(grBASKMBR+20, optASKMBR-0.6, f"({gASKMBR},{rASKMBR},{BASKMBR})", fontsize=10, fontweight='bold')
 
     plt.tick_params(
     axis='x',          # changes apply to the x-axis

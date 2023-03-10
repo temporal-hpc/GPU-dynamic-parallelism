@@ -53,7 +53,7 @@ dfOptimalFilter = [ lambda n,g,r,B,_df,ap,BSX,BSY: Q.optimalFilter_n(n,g,r,B,_df
 dMeasure = {"time":0, "speedup":1}
 dVAR = {"n":0, "g":1, "r":2, "B":3, "grB":4}
 dVARStr = {"n":"n", "g":"g", "r":"r", "B":"B", "grB":"\{g,r,B\}"}
-dLabel = {"time":"T", "speedup":r"S"}
+dLabel = {"time":"T", "speedup":r"$\mathcal{S}$"}
 dFuncText = [lambda text: text, lambda text: text, lambda text: text, lambda text: text, lambda text: ""]
 
 dExText = {"time": lambda text: text, "speedup": lambda text: ""}
@@ -86,6 +86,7 @@ if len(sys.argv)!=24:
 dfile_prefix = sys.argv[1]
 
 GPUmodel = sys.argv[2]
+GPUmodelFile = GPUmodel.replace(' ', '_')
 
 BSX0 = int(sys.argv[3])
 BSY0 = int(sys.argv[4])
@@ -280,7 +281,7 @@ func_adjust_margins[measure]
 #fig.tight_layout()
 fig.tight_layout(rect=[0, -0.05, 1, 1])
 plt.legend(prop={"size":8}, framealpha=0.5)
-plt.savefig(f'../plots/exp-{GPUmodel}-{measure}-{VAR}-{OPT}.pdf', format='pdf')
+plt.savefig(f'../plots/exp-{GPUmodelFile}-{measure}-{VAR}-{OPT}.pdf', format='pdf')
 #plt.show()
 print("done")
 print("-------------------------------------------------------------------------------")
