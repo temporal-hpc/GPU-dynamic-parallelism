@@ -245,6 +245,9 @@ float rea_DP_MBR(int* d_dwells, unsigned int w, unsigned int h,
     cudaEventCreate(&stop);
 
     cudaEventRecord(start, 0);
+#ifdef DEBUG
+    printf("[DEBUG] DP_MBR  g0=%i  r=%i  B=%i\n", g0, r, B);
+#endif
 #ifdef RDC_TRUE
     for (int i = 0; i < REPEATS; i++) {
         dp_mbr_mandelbrot_block_k<<<gridSize, blockSize>>>(d_dwells, w, h, bottomLeftCorner, upperRightCorner, 0, 0, w / g0, 1, r, CA_MAXDWELL, B, MAX_DEPTH);

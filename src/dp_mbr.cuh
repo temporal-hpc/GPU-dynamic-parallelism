@@ -80,20 +80,53 @@ __global__ void dp_mbr_mandelbrot_block_k(int *dwells, unsigned int w, unsigned 
         if (comm_dwell != DIFF_DWELL) {
             // uniform dwell, just fill
             dim3 bs(BSX, BSY), grid(divup(d, BSX), divup(d, BSY));
-            //dp_mbr_dwell_fill_k<<<grid, bs, 0, cudaStreamTailLaunch>>>(dwells, w, x0, y0, d, comm_dwell);
-            dp_mbr_dwell_fill_k<<<grid, bs>>>(dwells, w, x0, y0, d, comm_dwell);
+
+            #ifndef CUDART_VERSION
+                #error CUDART_VERSION Undefined!
+            #elif (CUDART_VERSION >= 12000)
+                // cudaStreamTailLaunch option from CUDA 12
+                #pragma message ("DP_MBR: Using CUDA 12 cudaStreamTailLaunch")
+                //dp_mbr_dwell_fill_k<<<grid, bs, 0, cudaStreamTailLaunch>>>(dwells, w, x0, y0, d, comm_dwell);
+                dp_mbr_dwell_fill_k<<<grid, bs, 0, cudaStreamFireAndForget>>>(dwells, w, x0, y0, d, comm_dwell);
+                //dp_mbr_dwell_fill_k<<<grid, bs>>>(dwells, w, x0, y0, d, comm_dwell);
+            #else
+                #pragma message ("DP_MBR: Using CUDA < 12 code")
+                dp_mbr_dwell_fill_k<<<grid, bs>>>(dwells, w, x0, y0, d, comm_dwell);
+            #endif
         } 
         else if (depth + 1 < MAX_DEPTH && d / SUBDIV > MIN_SIZE) {
             // subdivide recursively
             dim3 bs(blockDim.x, blockDim.y), grid(SUBDIV, SUBDIV);
-            //dp_mbr_mandelbrot_block_k<<<grid, bs, 0, cudaStreamTailLaunch>>>(dwells, w, h, cmin, cmax, x0, y0, d / SUBDIV, depth + 1, SUBDIV, MAX_DWELL, MIN_SIZE, MAX_DEPTH);
-            dp_mbr_mandelbrot_block_k<<<grid, bs>>>(dwells, w, h, cmin, cmax, x0, y0, d / SUBDIV, depth + 1, SUBDIV, MAX_DWELL, MIN_SIZE, MAX_DEPTH);
+
+            #ifndef CUDART_VERSION
+                #error CUDART_VERSION Undefined!
+            #elif (CUDART_VERSION >= 12000)
+                // cudaStreamTailLaunch option from CUDA 12
+                #pragma message ("DP_MBR: Using CUDA 12 cudaStreamTailLaunch")
+                //dp_mbr_mandelbrot_block_k<<<grid, bs, 0, cudaStreamTailLaunch>>>(dwells, w, h, cmin, cmax, x0, y0, d / SUBDIV, depth + 1, SUBDIV, MAX_DWELL, MIN_SIZE, MAX_DEPTH);
+                dp_mbr_mandelbrot_block_k<<<grid, bs, 0, cudaStreamFireAndForget>>>(dwells, w, h, cmin, cmax, x0, y0, d / SUBDIV, depth + 1, SUBDIV, MAX_DWELL, MIN_SIZE, MAX_DEPTH);
+                //dp_mbr_mandelbrot_block_k<<<grid, bs>>>(dwells, w, h, cmin, cmax, x0, y0, d / SUBDIV, depth + 1, SUBDIV, MAX_DWELL, MIN_SIZE, MAX_DEPTH);
+            #else
+                #pragma message ("DP_MBR: Using CUDA < 12 code")
+                dp_mbr_mandelbrot_block_k<<<grid, bs>>>(dwells, w, h, cmin, cmax, x0, y0, d / SUBDIV, depth + 1, SUBDIV, MAX_DWELL, MIN_SIZE, MAX_DEPTH);
+            #endif
         } 
         else {
             // leaf, per-pixel kernel
             dim3 bs(BSX, BSY), grid(divup(d, BSX), divup(d, BSY));
-            //dp_mbr_mandelbrot_pixel_k<<<grid, bs, 0, cudaStreamTailLaunch>>>(dwells, w, h, cmin, cmax, x0, y0, d, MAX_DWELL);
-            dp_mbr_mandelbrot_pixel_k<<<grid, bs>>>(dwells, w, h, cmin, cmax, x0, y0, d, MAX_DWELL);
+
+            #ifndef CUDART_VERSION
+                #error CUDART_VERSION Undefined!
+            #elif (CUDART_VERSION >= 12000)
+                // cudaStreamTailLaunch option from CUDA 12
+                #pragma message ("DP_MBR: Using CUDA 12 cudaStreamTailLaunch")
+                //dp_mbr_mandelbrot_pixel_k<<<grid, bs, 0, cudaStreamTailLaunch>>>(dwells, w, h, cmin, cmax, x0, y0, d, MAX_DWELL);
+                dp_mbr_mandelbrot_pixel_k<<<grid, bs, 0, cudaStreamFireAndForget>>>(dwells, w, h, cmin, cmax, x0, y0, d, MAX_DWELL);
+                //dp_mbr_mandelbrot_pixel_k<<<grid, bs>>>(dwells, w, h, cmin, cmax, x0, y0, d, MAX_DWELL);
+            #else
+                #pragma message ("DP_MBR: Using CUDA < 12 code")
+                dp_mbr_mandelbrot_pixel_k<<<grid, bs>>>(dwells, w, h, cmin, cmax, x0, y0, d, MAX_DWELL);
+            #endif
         }
     }
 } // mandelbrot_block_k
