@@ -85,12 +85,11 @@ __global__ void dp_mbr_mandelbrot_block_k(int *dwells, unsigned int w, unsigned 
                 #error CUDART_VERSION Undefined!
             #elif (CUDART_VERSION >= 12000)
                 // cudaStreamTailLaunch option from CUDA 12
-                #pragma message ("DP_MBR: Using CUDA 12 cudaStreamTailLaunch")
+                #pragma message ("kernel dp_mbr_dwell_fill_k using CUDA 12 cudaStreamFireAndForget")
                 //dp_mbr_dwell_fill_k<<<grid, bs, 0, cudaStreamTailLaunch>>>(dwells, w, x0, y0, d, comm_dwell);
                 dp_mbr_dwell_fill_k<<<grid, bs, 0, cudaStreamFireAndForget>>>(dwells, w, x0, y0, d, comm_dwell);
-                //dp_mbr_dwell_fill_k<<<grid, bs>>>(dwells, w, x0, y0, d, comm_dwell);
             #else
-                #pragma message ("DP_MBR: Using CUDA < 12 code")
+                #pragma message ("kernel dp_mbr_dwell_fill_k using CUDA < 12 mode")
                 dp_mbr_dwell_fill_k<<<grid, bs>>>(dwells, w, x0, y0, d, comm_dwell);
             #endif
         } 
@@ -102,12 +101,11 @@ __global__ void dp_mbr_mandelbrot_block_k(int *dwells, unsigned int w, unsigned 
                 #error CUDART_VERSION Undefined!
             #elif (CUDART_VERSION >= 12000)
                 // cudaStreamTailLaunch option from CUDA 12
-                #pragma message ("DP_MBR: Using CUDA 12 cudaStreamTailLaunch")
+                #pragma message ("kernel dp_mbr_mandelbrot_block_k using CUDA 12 cudaStreamFireAndForget")
                 //dp_mbr_mandelbrot_block_k<<<grid, bs, 0, cudaStreamTailLaunch>>>(dwells, w, h, cmin, cmax, x0, y0, d / SUBDIV, depth + 1, SUBDIV, MAX_DWELL, MIN_SIZE, MAX_DEPTH);
                 dp_mbr_mandelbrot_block_k<<<grid, bs, 0, cudaStreamFireAndForget>>>(dwells, w, h, cmin, cmax, x0, y0, d / SUBDIV, depth + 1, SUBDIV, MAX_DWELL, MIN_SIZE, MAX_DEPTH);
-                //dp_mbr_mandelbrot_block_k<<<grid, bs>>>(dwells, w, h, cmin, cmax, x0, y0, d / SUBDIV, depth + 1, SUBDIV, MAX_DWELL, MIN_SIZE, MAX_DEPTH);
             #else
-                #pragma message ("DP_MBR: Using CUDA < 12 code")
+                #pragma message ("kernel dp_mbr_mandelbrot_block_k using CUDA < 12 mode")
                 dp_mbr_mandelbrot_block_k<<<grid, bs>>>(dwells, w, h, cmin, cmax, x0, y0, d / SUBDIV, depth + 1, SUBDIV, MAX_DWELL, MIN_SIZE, MAX_DEPTH);
             #endif
         } 
@@ -119,12 +117,11 @@ __global__ void dp_mbr_mandelbrot_block_k(int *dwells, unsigned int w, unsigned 
                 #error CUDART_VERSION Undefined!
             #elif (CUDART_VERSION >= 12000)
                 // cudaStreamTailLaunch option from CUDA 12
-                #pragma message ("DP_MBR: Using CUDA 12 cudaStreamTailLaunch")
+                #pragma message ("kernel dp_mbr_mandelbrot_pixel_k using CUDA 12 cudaStreamFireAndForget")
                 //dp_mbr_mandelbrot_pixel_k<<<grid, bs, 0, cudaStreamTailLaunch>>>(dwells, w, h, cmin, cmax, x0, y0, d, MAX_DWELL);
                 dp_mbr_mandelbrot_pixel_k<<<grid, bs, 0, cudaStreamFireAndForget>>>(dwells, w, h, cmin, cmax, x0, y0, d, MAX_DWELL);
-                //dp_mbr_mandelbrot_pixel_k<<<grid, bs>>>(dwells, w, h, cmin, cmax, x0, y0, d, MAX_DWELL);
             #else
-                #pragma message ("DP_MBR: Using CUDA < 12 code")
+                #pragma message ("kernel dp_mbr_mandelbrot_pixel_k using CUDA < 12")
                 dp_mbr_mandelbrot_pixel_k<<<grid, bs>>>(dwells, w, h, cmin, cmax, x0, y0, d, MAX_DWELL);
             #endif
         }
