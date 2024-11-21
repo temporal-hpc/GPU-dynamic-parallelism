@@ -54,3 +54,18 @@ Grid 1024 x 1024 --> 0.00 GiB
 <level  9> 0.036247 secs -->  P_{ 9} = 0.000000   (grid    13720 x 2 x 2 =    54880 --> 0 subdivided)
 2, 32, 32, 1024, 1024, 512, 1000, 2, 1, 0.057932
 ```
+
+# Citation 
+
+Felipe A. Quezada, Cristóbal A. Navarro, Miguel Romero, Cristhian Aguilera,
+Modeling GPU Dynamic Parallelism for self similar density workloads,
+Future Generation Computer Systems,
+Volume 145,
+2023,
+Pages 239-253,
+ISSN 0167-739X,
+https://doi.org/10.1016/j.future.2023.03.046.
+(https://www.sciencedirect.com/science/article/pii/S0167739X23001292)
+Abstract: Dynamic Parallelism (DP) is a GPU programming abstraction that can make parallel computation more efficient for problems that exhibit heterogeneous workloads. With DP, GPU threads can launch kernels with more threads, recursively, producing a subdivision effect where resources are focused on the regions that exhibit more parallel work. Doing an optimal subdivision process is not trivial, as the combination of different parameters play a relevant role in the final performance of DP. Also, the current programming abstraction of DP relies on kernel recursion, which has performance overhead. This work presents a new subdivision cost model for problems that exhibit self similar density (SSD) workloads, useful for finding efficient subdivision schemes. Also, a new subdivision implementation free of recursion overhead is presented, named Adaptive Serial Kernels (ASK). Using the Mandelbrot set as a case study, the cost model shows that optimal performance is achieved when using {g∼32,r∼2,B∼32} for the initial subdivision, recurrent subdivision and stopping size, respectively. Experimental results agree with the theoretical parameters, confirming the usability of the cost model. In terms of performance, the ASK approach runs up to ∼60% faster than DP in the Mandelbrot set, and up to 12× faster than a basic exhaustive implementation, whereas DP is up to 7.5× faster. In terms of energy efficiency, ASK is up to ∼2× and ∼20× more energy efficient than DP and the exhaustive approach, respectively. These results put the subdivision cost model and the ASK approach as useful tools for analyzing the potential improvement of subdivision based approaches and for developing more efficient GPU-based libraries or fine-tune specific codes in research teams.
+Keywords: GPU; Dynamic Parallelism; Subdivision; Heterogeneous workload; Kernel recursion overhead; Self similar density
+
